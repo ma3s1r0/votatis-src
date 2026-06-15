@@ -268,7 +268,7 @@ export default function ArchiveListPage() {
           </p>
           <ul className="list-reset">
             {state.items.map((r) => (
-              <li key={r.id} className="archive-item">
+              <li key={r.id} className="archive-item archive-item--post">
                 <div className="archive-item__thumb" aria-hidden="true" />
                 <div className="archive-item__body">
                   <Link to={`/archive/${r.id}`} className="archive-item__title">

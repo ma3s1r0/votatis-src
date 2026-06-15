@@ -19,7 +19,7 @@ h3 {
   line-height: 1.25;
 }
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.125rem; /* Figma 화면 제목 18px */
   font-weight: var(--weight-bold);
   letter-spacing: -0.01em;
   margin: 0 0 var(--space-3);
@@ -410,7 +410,7 @@ textarea.input {
   flex: 0 0 auto;
 }
 .page-head__title {
-  font-size: 1.25rem;
+  font-size: 1.125rem; /* Figma 18px */
   font-weight: var(--weight-bold);
   margin: 0;
   min-width: 0;
@@ -579,16 +579,16 @@ textarea.input {
   background: transparent;
   padding: var(--space-2) 0;
   margin-bottom: -1px;
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
+  font-size: var(--text-sm); /* Figma 14px */
+  font-weight: var(--weight-normal);
+  color: #8792a2;
   border-bottom: 3px solid transparent;
   cursor: pointer;
 }
 .tabs__btn--active {
-  color: var(--color-navy);
+  color: #635bff; /* Figma 활성 탭/언더라인 색 */
   font-weight: var(--weight-bold);
-  border-bottom-color: var(--color-navy);
+  border-bottom-color: #635bff;
 }
 
 /* 검색·필터 접이식 패널(Figma 06은 기본 노출 안 함 → 접어서 깔끔하게, 기능은 유지) */
@@ -686,10 +686,14 @@ textarea.input {
   gap: var(--space-3);
   padding: var(--space-4);
   margin-bottom: var(--space-3);
-  background: var(--color-surface-strong);
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+/* 공개 게시판(06) 카드 — Figma는 #d9d9d9 회색(검수큐는 흰색 유지) */
+.archive-item--post {
+  background: #d9d9d9;
 }
 .archive-item:hover {
   border-color: var(--color-accent-border);
@@ -701,7 +705,7 @@ textarea.input {
   width: 90px;
   height: 98px;
   border-radius: var(--radius-md);
-  background: var(--color-border);
+  background: #eef1f5;
 }
 .archive-item__body {
   flex: 1 1 auto;
@@ -716,7 +720,7 @@ textarea.input {
 }
 .archive-item__title {
   display: block;
-  font-size: var(--text-base);
+  font-size: var(--text-sm); /* Figma 14px */
   font-weight: var(--weight-bold);
   color: var(--color-text);
   text-decoration: none;
@@ -727,9 +731,9 @@ textarea.input {
 /* Figma 06: "✓ 검증됨"은 알약 배지가 아니라 초록 텍스트 한 줄 */
 .archive-item__verified {
   margin: var(--space-1) 0 var(--space-2);
-  font-size: var(--text-sm);
+  font-size: 0.6875rem; /* Figma 11px */
   font-weight: var(--weight-medium);
-  color: var(--color-state-verified);
+  color: #0f6e56; /* Figma 검증됨 초록 */
 }
 .archive-item__meta {
   display: flex;
@@ -737,8 +741,8 @@ textarea.input {
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: 0.6875rem; /* Figma 11px */
+  color: #8792a2;
 }
 .pagination {
   display: flex;
