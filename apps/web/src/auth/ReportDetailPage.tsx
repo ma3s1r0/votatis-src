@@ -7,6 +7,14 @@ import {
   type EvidenceLink,
   type FieldError,
 } from "./api";
+import { formatDateTime, shortHash, validityLabel } from "../format";
+import Header from "../Header";
+
+function regionLabel(r: AdminReportDetail): string {
+  return (
+    [r.sido, r.sigungu, r.eupMyeonDong].filter(Boolean).join(" ") || "지역 미상"
+  );
+}
 
 type LoadState =
   | { status: "loading" }
@@ -35,7 +43,9 @@ export default function ReportDetailPage() {
   const [validity, setValidity] = useState("");
   const [severity, setSeverity] = useState("");
   const [notes, setNotes] = useState("");
-  const [evidence, setEvidence] = useState<EvidenceDraft[]>([]);
+  const [unverifiedClaims, setUnverifiedClaims] = useState("");
+  // 근거 링크 블록은 기본 1개 펼쳐둔다(최소 1개 필요).
+  const [evidence, setEvidence] = useState<EvidenceDraft[]>([emptyEvidence()]);
 
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -55,8 +65,11 @@ export default function ReportDetailPage() {
     };
   }, [id]);
 
-  // 클라이언트 검증: method 비었거나 근거 0개면 제출 불가.
-  const canSubmit = method.trim().length > 0 && evidence.length > 0;
+  // 클라이언트 검증: method 비었거나 채워진 근거(URL) 0개면 제출 불가.
+  // 근거 블록은 기본 1개 펼쳐두지만, 빈 블록은 근거로 치지 않는다.
+  const canSubmit =
+    method.trim().length > 0 &&
+    evidence.some((e) => e.url.trim().length > 0);
 
   function updateEvidence(i: number, patch: Partial<EvidenceDraft>) {
     setEvidence((prev) =>
@@ -85,6 +98,7 @@ export default function ReportDetailPage() {
       ...(validity ? { validity } : {}),
       ...(severity ? { severity: Number(severity) } : {}),
       ...(notes ? { notes } : {}),
+      ...(unverifiedClaims ? { unverifiedClaims } : {}),
     });
 
     if (result.ok) {
@@ -102,26 +116,67 @@ export default function ReportDetailPage() {
     setFormError("판정 저장에 실패했습니다.");
   }
 
-  if (load.status === "loading") return <p>불러오는 중…</p>;
+  if (load.status === "loading")
+    return (
+      <>
+        <Header admin />
+        <p>불러오는 중…</p>
+      </>
+    );
   if (load.status === "error")
-    return <p role="alert">제보를 불러오지 못했습니다.</p>;
+    return (
+      <>
+        <Header admin />
+        <p role="alert">제보를 불러오지 못했습니다.</p>
+      </>
+    );
 
   const r = load.report;
 
   if (submitted) {
     return (
-      <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-        <h1>판정 완료</h1>
-        <p>판정이 저장되었습니다.</p>
-        <a href="/admin/queue">검토 큐로 돌아가기</a>
-      </main>
+      <>
+        <Header admin />
+        <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
+          <h1>판정 완료</h1>
+          <p>판정이 저장되었습니다.</p>
+          <a href="/admin/queue">검토 큐로 돌아가기</a>
+        </main>
+      </>
     );
   }
 
   return (
+    <>
+    <Header admin />
     <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>{r.title}</h1>
+      <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
+        <span>{regionLabel(r)}</span>
+        {r.occurredAt && <span> · 발생 {formatDateTime(r.occurredAt)}</span>}
+        {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
+      </div>
       <p style={{ whiteSpace: "pre-wrap" }}>{r.body}</p>
+
+      {r.verificationHistory.length > 0 && (
+        <section>
+          <h2>판정 이력</h2>
+          <ul>
+            {r.verificationHistory.map((h) => (
+              <li key={h.version}>
+                v{h.version}
+                {h.archivedAt && ` · ${formatDateTime(h.archivedAt)}`}
+                {typeof h.snapshot.method === "string" &&
+                  h.snapshot.method && <> · {h.snapshot.method}</>}
+                {typeof h.snapshot.validity === "string" &&
+                  h.snapshot.validity && (
+                    <> · {validityLabel(h.snapshot.validity)}</>
+                  )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <h2>첨부</h2>
@@ -148,7 +203,13 @@ export default function ReportDetailPage() {
               <li key={s.id}>
                 <a href={s.url}>{s.url}</a>
                 {s.contentHash && (
-                  <span style={{ color: "#777" }}> (hash: {s.contentHash})</span>
+                  <span
+                    title={s.contentHash}
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    {" "}
+                    (hash: {shortHash(s.contentHash)})
+                  </span>
                 )}
               </li>
             ))}
@@ -178,10 +239,10 @@ export default function ReportDetailPage() {
               onChange={(e) => setValidity(e.target.value)}
             >
               <option value="">선택 안 함</option>
-              <option value="valid">valid</option>
-              <option value="partly">partly</option>
-              <option value="invalid">invalid</option>
-              <option value="unclear">unclear</option>
+              <option value="valid">{validityLabel("valid")}</option>
+              <option value="partly">{validityLabel("partly")}</option>
+              <option value="invalid">{validityLabel("invalid")}</option>
+              <option value="unclear">{validityLabel("unclear")}</option>
             </select>
           </p>
 
@@ -232,6 +293,16 @@ export default function ReportDetailPage() {
             />
           </p>
 
+          <p>
+            <label htmlFor="unverified-claims">확인되지 않은 주장</label>
+            <br />
+            <textarea
+              id="unverified-claims"
+              value={unverifiedClaims}
+              onChange={(e) => setUnverifiedClaims(e.target.value)}
+            />
+          </p>
+
           <fieldset>
             <legend>근거 링크 (최소 1개)</legend>
             {evidence.map((ev, i) => (
@@ -239,9 +310,9 @@ export default function ReportDetailPage() {
                 key={i}
                 data-testid={`evidence-link-${i}`}
                 style={{
-                  border: "1px solid #ddd",
-                  padding: "0.5rem",
-                  marginBottom: "0.5rem",
+                  border: "1px solid var(--color-border)",
+                  padding: "var(--space-2)",
+                  marginBottom: "var(--space-2)",
                 }}
               >
                 <p>
@@ -305,13 +376,13 @@ export default function ReportDetailPage() {
           </fieldset>
 
           {!canSubmit && (
-            <p role="note" style={{ color: "#a00" }}>
+            <p role="note" style={{ color: "var(--color-danger)" }}>
               검증 방법과 근거 링크(최소 1개)를 입력해야 제출할 수 있습니다.
             </p>
           )}
 
           {fieldErrors.length > 0 && (
-            <ul role="alert" style={{ color: "#a00" }}>
+            <ul role="alert" style={{ color: "var(--color-danger)" }}>
               {fieldErrors.map((f, i) => (
                 <li key={i}>
                   {f.field}: {f.reason}
@@ -320,7 +391,7 @@ export default function ReportDetailPage() {
             </ul>
           )}
           {formError && (
-            <p role="alert" style={{ color: "#a00" }}>
+            <p role="alert" style={{ color: "var(--color-danger)" }}>
               {formError}
             </p>
           )}
@@ -331,5 +402,6 @@ export default function ReportDetailPage() {
         </form>
       </section>
     </main>
+    </>
   );
 }

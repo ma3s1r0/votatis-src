@@ -110,6 +110,9 @@ export default function ReportWizard() {
     setDraft((d) => ({ ...d, sigungu: value, eupMyeonDong: "" }));
   }
 
+  const selectedElectionName =
+    elections.find((el) => el.id === draft.electionId)?.name ?? "";
+
   function stepValid(step: number): boolean {
     switch (step) {
       case 1:
@@ -201,11 +204,25 @@ export default function ReportWizard() {
     setDone({ id: result.id, attachment });
   }
 
+  function startNewReport() {
+    setFile(null);
+    setFileError(null);
+    setStepError(null);
+    setFieldErrors([]);
+    setSubmitError(null);
+    setProgress(null);
+    setDone(null);
+    setDraft(emptyDraft);
+  }
+
   if (done) {
     return (
       <main style={pageStyle}>
         <h1>제보가 접수되었습니다</h1>
-        <p>접수번호: {done.id}</p>
+        <p>접수 식별자: {done.id}</p>
+        <p style={hintStyle}>
+          현재 이 번호로 진행 상황을 조회하는 기능은 제공되지 않습니다.
+        </p>
         {done.attachment && (
           <p style={done.attachment.ok ? progressStyle : errorStyle}>
             {done.attachment.ok
@@ -217,6 +234,20 @@ export default function ReportWizard() {
           제출하신 내용은 검증 절차를 거친 뒤 공개될 수 있습니다. 검증 결과에
           따라 공개되지 않을 수 있습니다.
         </p>
+        <nav
+          style={{
+            display: "flex",
+            gap: "var(--space-3)",
+            flexWrap: "wrap",
+            marginTop: "var(--space-4)",
+          }}
+        >
+          <a href="/archive">공개 아카이브 보기</a>
+          <a href="/">홈</a>
+          <button type="button" onClick={startNewReport} style={buttonStyle}>
+            새 제보 작성
+          </button>
+        </nav>
       </main>
     );
   }
@@ -397,8 +428,22 @@ export default function ReportWizard() {
               <dd style={ddStyle}>{draft.title}</dd>
             </div>
             <div>
+              <dt style={dtStyle}>본문</dt>
+              <dd style={{ ...ddStyle, whiteSpace: "pre-wrap" }}>
+                {draft.body || "없음"}
+              </dd>
+            </div>
+            <div>
+              <dt style={dtStyle}>발생 시점</dt>
+              <dd style={ddStyle}>{draft.occurredAt || "-"}</dd>
+            </div>
+            <div>
               <dt style={dtStyle}>분류</dt>
               <dd style={ddStyle}>{draft.category || "-"}</dd>
+            </div>
+            <div>
+              <dt style={dtStyle}>선거</dt>
+              <dd style={ddStyle}>{selectedElectionName || "-"}</dd>
             </div>
             <div>
               <dt style={dtStyle}>지역</dt>
@@ -407,6 +452,10 @@ export default function ReportWizard() {
                   .filter(Boolean)
                   .join(" ") || "-"}
               </dd>
+            </div>
+            <div>
+              <dt style={dtStyle}>출처 URL</dt>
+              <dd style={ddStyle}>{draft.sourceUrl || "없음"}</dd>
             </div>
             <div>
               <dt style={dtStyle}>첨부</dt>
@@ -427,6 +476,9 @@ export default function ReportWizard() {
             />
             제출 및 검증 목적의 활용에 동의합니다 (CC BY 라이선스)
           </label>
+          {!draft.consent && (
+            <p style={hintStyle}>제출하려면 동의가 필요합니다.</p>
+          )}
 
           {progress && (
             <p role="status" aria-live="polite" style={progressStyle}>

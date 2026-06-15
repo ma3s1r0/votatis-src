@@ -140,6 +140,81 @@ describe("ArchiveDetailPage", () => {
     });
   });
 
+  it("날짜를 ISO 원문이 아닌 사람이 읽는 형식으로 표시한다", async () => {
+    mockOnce(detail);
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    // ISO 원문(2026-06-10T09:00:00Z)이 화면에 노출되지 않는다.
+    expect(
+      screen.queryByText(/2026-06-10T09:00:00Z/),
+    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("출처 해시는 축약 표시하고 title 에 전체값을 담는다", async () => {
+    const longHash = {
+      ...detail,
+      sources: [
+        {
+          ...detail.sources[0],
+          contentHash:
+            "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+        },
+      ],
+    };
+    mockOnce(longHash);
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    // 64자 통째 노출 없음
+    expect(
+      screen.queryByText(
+        /abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789/,
+      ),
+    ).not.toBeInTheDocument();
+    const short = screen.getByText(/abcdef0123…/);
+    expect(short).toBeInTheDocument();
+    const titled = short.closest("[title]");
+    expect(titled?.getAttribute("title")).toContain(
+      "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+    );
+  });
+
+  it("validity/severity 를 한글 라벨로 표시한다", async () => {
+    const labeled = {
+      ...detail,
+      verification: {
+        ...detail.verification,
+        validity: "partly",
+        severity: "3",
+      },
+    };
+    mockOnce(labeled);
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    expect(screen.getByText(/부분 확인/)).toBeInTheDocument();
+    expect(screen.getByText(/보통/)).toBeInTheDocument();
+    // enum 코드 원문은 노출하지 않는다.
+    expect(screen.queryByText(/^partly$/)).not.toBeInTheDocument();
+  });
+
+  it("다운로드 발급 실패 시 일반 오류 메시지를 노출한다", async () => {
+    mockOnce(detail); // 상세 로드
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    // 다운로드 엔드포인트 404
+    mockOnce({ error: "not_found" }, 404);
+    const btn = screen.getByRole("button", { name: /다운로드/ });
+    btn.click();
+
+    expect(
+      await screen.findByText(/다운로드를 준비할 수 없습니다/),
+    ).toBeInTheDocument();
+  });
+
   it("미검증/없는 ID(404)는 Not Found 화면을 보이고 본문을 노출하지 않는다", async () => {
     mockOnce({ error: "not_found" }, 404);
     renderDetail();

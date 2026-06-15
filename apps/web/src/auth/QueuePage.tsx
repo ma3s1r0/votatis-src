@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchReports, logout, type AdminReport } from "./api";
+import { formatDateTime } from "../format";
+import Header from "../Header";
 
 type State =
   | { status: "loading" }
@@ -35,17 +37,10 @@ export default function QueuePage() {
   }
 
   return (
+    <>
+    <Header admin onLogout={onLogout} />
     <main style={{ maxWidth: 880, margin: "2rem auto", padding: "0 1rem" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
-        <h1>검토 큐</h1>
-        <button onClick={onLogout}>로그아웃</button>
-      </header>
+      <h1>검토 큐</h1>
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && <p role="alert">목록을 불러오지 못했습니다.</p>}
@@ -58,15 +53,15 @@ export default function QueuePage() {
             <li
               key={r.id}
               style={{
-                borderBottom: "1px solid #ddd",
-                padding: "0.75rem 0",
+                borderBottom: "1px solid var(--color-border)",
+                padding: "var(--space-3) 0",
               }}
             >
               <Link to={`/admin/reports/${r.id}`}>{r.title}</Link>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
                 <span>{regionLabel(r)}</span>
                 {r.collectedAt && (
-                  <span> · 수집 {r.collectedAt}</span>
+                  <span> · 수집 {formatDateTime(r.collectedAt)}</span>
                 )}
               </div>
             </li>
@@ -74,5 +69,6 @@ export default function QueuePage() {
         </ul>
       )}
     </main>
+    </>
   );
 }

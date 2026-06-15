@@ -37,7 +37,7 @@ specs/
 | 0008 | 첨부 다운로드 (presigned GET) | completed | 2026-06-15 | completed/0008-attachment-download.md |
 | 0009 | 운영 배선 (RDS/S3/Lambda 엔트리) | completed | 2026-06-15 | completed/0009-runtime-wiring.md |
 | 0010 | Figma 디자인 반영 (토큰 + 핵심 화면) | completed | 2026-06-15 | completed/0010-figma-design.md |
-| 0011 | UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함) | in-progress | 2026-06-15 | in-progress/0011-ux-improvements.md |
+| 0011 | UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함) | completed | 2026-06-15 | completed/0011-ux-improvements.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 

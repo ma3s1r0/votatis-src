@@ -1,7 +1,10 @@
 // 관리자 인증 API 클라이언트. 서버 계약은 specs/0006-auth.md 참고.
 // 모든 요청은 동일 오리진, httpOnly 세션 쿠키 사용 → credentials: "include".
 
-const base = "/api/admin";
+// 서버는 인증(login/me/logout/invites)을 /api/auth, 검토 콘솔(reports/verification)을
+// /api/admin 에 분리 마운트한다. 두 베이스를 따로 둔다.
+const AUTH_BASE = "/api/auth";
+const ADMIN_BASE = "/api/admin";
 
 export type AdminMe = {
   id: string;
@@ -18,7 +21,7 @@ export async function login(
   email: string,
   password: string,
 ): Promise<LoginResult> {
-  const res = await fetch(`${base}/login`, {
+  const res = await fetch(`${AUTH_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -31,13 +34,13 @@ export async function login(
 }
 
 export async function fetchMe(): Promise<AdminMe | null> {
-  const res = await fetch(`${base}/me`, { credentials: "include" });
+  const res = await fetch(`${AUTH_BASE}/me`, { credentials: "include" });
   if (!res.ok) return null;
   return (await res.json()) as AdminMe;
 }
 
 export async function logout(): Promise<void> {
-  await fetch(`${base}/logout`, { method: "POST", credentials: "include" });
+  await fetch(`${AUTH_BASE}/logout`, { method: "POST", credentials: "include" });
 }
 
 export type AcceptResult =
@@ -49,7 +52,7 @@ export async function acceptInvite(
   password: string,
 ): Promise<AcceptResult> {
   const res = await fetch(
-    `${base}/invites/${encodeURIComponent(token)}/accept`,
+    `${AUTH_BASE}/invites/${encodeURIComponent(token)}/accept`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -107,15 +110,23 @@ export type Verification = {
   verified: boolean;
   method: string;
   notes: string | null;
+  unverifiedClaims: string | null;
   reviewer: string | null;
   reviewedAt: string | null;
+};
+
+// 판정 이력 항목(서버: admin-routes.ts `verificationHistory`). 과거 판정 스냅샷.
+export type VerificationHistoryEntry = {
+  version: number;
+  archivedAt: string | null;
+  snapshot: Record<string, unknown>;
 };
 
 export type AdminReportDetail = AdminReport & {
   attachments: Attachment[];
   sources: Source[];
   verification: Verification | null;
-  verificationHistory: Verification[];
+  verificationHistory: VerificationHistoryEntry[];
 };
 
 export async function fetchReports(
@@ -123,7 +134,7 @@ export async function fetchReports(
   offset = 0,
 ): Promise<{ items: AdminReport[]; limit: number; offset: number }> {
   const res = await fetch(
-    `${base}/reports?limit=${limit}&offset=${offset}`,
+    `${ADMIN_BASE}/reports?limit=${limit}&offset=${offset}`,
     { credentials: "include" },
   );
   if (!res.ok) throw new Error(`reports_fetch_failed:${res.status}`);
@@ -135,7 +146,7 @@ export async function fetchReports(
 }
 
 export async function fetchReport(id: string): Promise<AdminReportDetail> {
-  const res = await fetch(`${base}/reports/${encodeURIComponent(id)}`, {
+  const res = await fetch(`${ADMIN_BASE}/reports/${encodeURIComponent(id)}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error(`report_fetch_failed:${res.status}`);
@@ -150,6 +161,7 @@ export type VerificationInput = {
   verified: boolean;
   method: string;
   notes?: string;
+  unverifiedClaims?: string;
   evidenceLinks: EvidenceLink[];
 };
 
@@ -166,7 +178,7 @@ export async function submitVerification(
   input: VerificationInput,
 ): Promise<SubmitVerificationResult> {
   const res = await fetch(
-    `${base}/reports/${encodeURIComponent(id)}/verification`,
+    `${ADMIN_BASE}/reports/${encodeURIComponent(id)}/verification`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

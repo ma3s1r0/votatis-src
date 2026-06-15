@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   fetchArchive,
   type ArchiveItem,
@@ -7,6 +7,8 @@ import {
 } from "./api";
 import { REPORT_CATEGORIES } from "../categories";
 import { fetchElections, type Election } from "../elections";
+import { formatDateTime } from "../format";
+import Header from "../Header";
 
 type State =
   | { status: "loading" }
@@ -40,20 +42,51 @@ function regionLabel(r: ArchiveItem): string {
   return [r.sido, r.sigungu].filter(Boolean).join(" ") || "지역 미상";
 }
 
+// 쿼리스트링(useSearchParams)을 검색·필터·페이지의 단일 소스로 사용한다.
+// 상세로 갔다 뒤로가기 해도 URL에 상태가 보존된다.
+function queryFromParams(params: URLSearchParams): ArchiveListQuery {
+  const offset = Number(params.get("offset"));
+  return {
+    limit: PAGE_SIZE,
+    offset: Number.isFinite(offset) && offset > 0 ? offset : 0,
+    q: params.get("q") || undefined,
+    sido: params.get("sido") || undefined,
+    category: params.get("category") || undefined,
+    electionId: params.get("electionId") || undefined,
+  };
+}
+
 export default function ArchiveListPage() {
   const [state, setState] = useState<State>({ status: "loading" });
-  const [query, setQuery] = useState<ArchiveListQuery>({
-    limit: PAGE_SIZE,
-    offset: 0,
-  });
-  // 검색 입력은 제출 전까지 query에 반영하지 않는다(요청 폭주 방지).
-  const [searchInput, setSearchInput] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = queryFromParams(searchParams);
+  // 검색 입력은 로컬 상태, 디바운스 후 쿼리스트링(q)에 반영한다.
+  const [searchInput, setSearchInput] = useState(query.q ?? "");
   const [elections, setElections] = useState<Election[]>([]);
 
+  // 쿼리스트링 일부만 갱신하는 헬퍼(offset은 검색·필터 변경 시 0으로 초기화).
+  const setSearchParamsRef = useRef(setSearchParams);
+  setSearchParamsRef.current = setSearchParams;
+  function patchParams(patch: Record<string, string | undefined>, resetOffset = true) {
+    setSearchParamsRef.current(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [k, v] of Object.entries(patch)) {
+          if (v) next.set(k, v);
+          else next.delete(k);
+        }
+        if (resetOffset) next.delete("offset");
+        return next;
+      },
+      { replace: true },
+    );
+  }
+
+  const queryKey = searchParams.toString();
   useEffect(() => {
     let alive = true;
     setState({ status: "loading" });
-    fetchArchive(query)
+    fetchArchive(queryFromParams(new URLSearchParams(queryKey)))
       .then((res) => {
         if (alive) setState({ status: "ready", items: res.items, total: res.total });
       })
@@ -63,7 +96,7 @@ export default function ArchiveListPage() {
     return () => {
       alive = false;
     };
-  }, [query]);
+  }, [queryKey]);
 
   // 선거 필터 옵션 로드(선택 사항 — 실패 시 빈 목록).
   useEffect(() => {
@@ -76,22 +109,34 @@ export default function ArchiveListPage() {
     };
   }, []);
 
+  // 검색 입력 디바운스(300ms): 입력이 현재 쿼리스트링 q와 다를 때만 반영.
+  useEffect(() => {
+    const trimmed = searchInput.trim();
+    const current = query.q ?? "";
+    if (trimmed === current) return;
+    const t = setTimeout(() => {
+      patchParams({ q: trimmed || undefined });
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  // 검색 버튼(보조): 디바운스 대기 없이 즉시 반영.
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
-    const q = searchInput.trim();
-    setQuery((prev) => ({ ...prev, q: q || undefined, offset: 0 }));
+    patchParams({ q: searchInput.trim() || undefined });
   }
 
   function onSido(value: string) {
-    setQuery((prev) => ({ ...prev, sido: value || undefined, offset: 0 }));
+    patchParams({ sido: value || undefined });
   }
 
   function onCategory(value: string) {
-    setQuery((prev) => ({ ...prev, category: value || undefined, offset: 0 }));
+    patchParams({ category: value || undefined });
   }
 
   function onElection(value: string) {
-    setQuery((prev) => ({ ...prev, electionId: value || undefined, offset: 0 }));
+    patchParams({ electionId: value || undefined });
   }
 
   const offset = query.offset ?? 0;
@@ -100,13 +145,16 @@ export default function ArchiveListPage() {
   const hasNext = offset + PAGE_SIZE < total;
 
   function goPrev() {
-    setQuery((prev) => ({ ...prev, offset: Math.max(0, offset - PAGE_SIZE) }));
+    const next = Math.max(0, offset - PAGE_SIZE);
+    patchParams({ offset: next > 0 ? String(next) : undefined }, false);
   }
   function goNext() {
-    setQuery((prev) => ({ ...prev, offset: offset + PAGE_SIZE }));
+    patchParams({ offset: String(offset + PAGE_SIZE) }, false);
   }
 
   return (
+    <>
+    <Header />
     <main
       style={{
         maxWidth: "var(--container-max)",
@@ -220,7 +268,7 @@ export default function ArchiveListPage() {
                   }}
                 >
                   <span>{regionLabel(r)}</span>
-                  {r.collectedAt && <span> · 수집 {r.collectedAt}</span>}
+                  {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
                 </div>
               </li>
             ))}
@@ -245,5 +293,6 @@ export default function ArchiveListPage() {
         </>
       )}
     </main>
+    </>
   );
 }

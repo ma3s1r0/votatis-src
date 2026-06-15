@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "./api";
+import Header from "../Header";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+    <Header admin />
     <main style={pageStyle}>
       <h1>관리자 로그인</h1>
       <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
@@ -52,7 +55,7 @@ export default function LoginPage() {
           />
         </label>
         {error && (
-          <p role="alert" style={{ color: "#b00020", margin: 0 }}>
+          <p role="alert" style={{ color: "var(--color-danger)", margin: 0 }}>
             {error}
           </p>
         )}
@@ -61,6 +64,7 @@ export default function LoginPage() {
         </button>
       </form>
     </main>
+    </>
   );
 }
 

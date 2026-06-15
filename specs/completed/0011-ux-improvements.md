@@ -1,7 +1,7 @@
 ---
 id: 0011
 title: UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함)
-status: in-progress
+status: completed
 owner: 기획/프론트
 created: 2026-06-15
 updated: 2026-06-15
@@ -149,3 +149,5 @@ updated: 2026-06-15
 
 ## Changelog
 - 2026-06-15: 초안. 로컬 라이브 테스트(pglite) UX 풀리뷰 결과 P0(인증 경로 불일치)~P2(표시 일관성) 13항목 + 스코프 결정(출처 다중 포함/첨부 다중 후속/필터 쿼리스트링 보존) 정의.
+- 2026-06-15: 구현(frontend-dev 2패스) + QA 조건부 PASS. **P0 인증 경로 분리(login/me/logout/invite→/api/auth, reports/verification/download→/api/admin)** 완료 — 관리자 로그인·세션 복구. P1(요약 보강·완료 동선·동의 안내·unverifiedClaims 입력+근거 기본1개·검색 디바운스+쿼리스트링), P2(날짜 포맷·해시 축약·enum 한글 라벨·공통 헤더·홈 랜딩·관리 콘솔 토큰화·다운로드 실패 메시지·검토 상세 맥락/이력) 구현. 게이트 통과 (api 124 + web 109), 회귀 0.
+- 2026-06-15: **의도적 미적용/deferral 명문화** — ① M1 "관리 검토상세 분류(category)": admin 상세 API가 category를 직렬화하지 않고 0011이 서버 무변경 스코프라 미표시(지역·발생·수집·이력은 적용). → 작은 후속(서버 admin 상세에 category 추가)으로 분리. ② J1 마법사(ReportWizard) 공통 헤더 미적용: 자체 단계 레이아웃 유지(완료 화면 단일 '아카이브' 링크 테스트 보존 목적), 공통 헤더는 홈·아카이브·관리 전 페이지 적용. status→completed.
