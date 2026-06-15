@@ -29,6 +29,13 @@
       "when": 1781499031838,
       "tag": "0003_labeling_console",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781501824242,
+      "tag": "0004_oval_stranger",
+      "breakpoints": true
     }
   ]
 }

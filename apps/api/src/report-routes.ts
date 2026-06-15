@@ -188,6 +188,7 @@ export function createReportApp(opts: {
     const att = await createPendingAttachment(db, {
       reportId,
       storageKey,
+      filename: body.filename,
       mime: body.mime,
       size: body.size,
       expectedSha256: body.sha256,
@@ -261,10 +262,24 @@ export function createReportApp(opts: {
   app.get("/reports/:id", async (c) => {
     const graph = await getVerifiedReport(db, c.req.param("id"));
     if (!graph) return c.json({ error: "not_found" }, 404);
+    const v = graph.verification;
     return c.json({
       ...publicReport(graph.report),
+      // verification 요약(공개 안전 필드만). reviewer 신원·confidence·내부 감사필드 제외.
+      // DB severity/legalIssue 는 text → 그대로(string) 내보냄(억지 변환 금지).
+      verification: v
+        ? {
+            verified: v.verified,
+            validity: v.validity,
+            severity: v.severity,
+            method: v.method,
+            notes: v.notes,
+            unverifiedClaims: v.unverifiedClaims,
+          }
+        : null,
       attachments: graph.attachments.map((a) => ({
         id: a.id,
+        filename: a.filename,
         mime: a.mime,
         size: a.size,
         sha256: a.sha256,

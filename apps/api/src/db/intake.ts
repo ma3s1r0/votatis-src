@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { and, eq, gt, desc, sql } from "drizzle-orm";
 import type { Db } from "./repository.js";
-import { report, attachment, source, intakeAttempt } from "./schema.js";
+import { report, attachment, source, intakeAttempt, verification } from "./schema.js";
 
 // rate limit 설정 (0001 패턴, IP 키 윈도 카운팅).
 const RATE_WINDOW_MS = 60 * 1000; // 1분
@@ -38,6 +38,7 @@ export async function createPendingAttachment(
   input: {
     reportId: string;
     storageKey: string;
+    filename?: string;
     mime: string;
     size: number;
     expectedSha256?: string;
@@ -48,6 +49,7 @@ export async function createPendingAttachment(
     .values({
       reportId: input.reportId,
       storageKey: input.storageKey,
+      filename: input.filename,
       mime: input.mime,
       size: input.size,
       expectedSha256: input.expectedSha256,
@@ -148,5 +150,10 @@ export async function getVerifiedReport(db: Db, id: string) {
     .from(attachment)
     .where(and(eq(attachment.reportId, id), eq(attachment.status, "stored")));
   const sources = await db.select().from(source).where(eq(source.reportId, id));
-  return { report: row, attachments, sources };
+  // 활성 판정(report 당 1행). 공개 직렬화의 verification 요약 근거.
+  const [activeVerification] = await db
+    .select()
+    .from(verification)
+    .where(eq(verification.reportId, id));
+  return { report: row, attachments, sources, verification: activeVerification };
 }

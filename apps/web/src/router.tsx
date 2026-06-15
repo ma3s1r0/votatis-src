@@ -6,10 +6,14 @@ import InvitePage from "./auth/InvitePage";
 import QueuePage from "./auth/QueuePage";
 import ReportDetailPage from "./auth/ReportDetailPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import ArchiveListPage from "./archive/ArchiveListPage";
+import ArchiveDetailPage from "./archive/ArchiveDetailPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/report", element: <ReportWizard /> },
+  { path: "/archive", element: <ArchiveListPage /> },
+  { path: "/archive/:id", element: <ArchiveDetailPage /> },
   { path: "/admin/login", element: <LoginPage /> },
   { path: "/admin/invite/:token", element: <InvitePage /> },
   {

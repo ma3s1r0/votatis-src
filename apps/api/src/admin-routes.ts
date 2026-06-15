@@ -28,6 +28,7 @@ type VerificationBody = {
   verified?: boolean;
   method?: string | null;
   notes?: string | null;
+  unverifiedClaims?: string | null;
   evidenceLinks?: EvidenceInput[];
 };
 
@@ -108,6 +109,7 @@ export function createAdminApp(opts: { db: Db }) {
             verified: graph.verification.verified,
             method: graph.verification.method,
             notes: graph.verification.notes,
+            unverifiedClaims: graph.verification.unverifiedClaims,
             reviewerId: graph.verification.reviewerId,
             reviewedAt: graph.verification.reviewedAt,
             version: graph.verification.version,
@@ -164,6 +166,7 @@ export function createAdminApp(opts: { db: Db }) {
         verified: body.verified === true,
         method: body.method ?? null,
         notes: body.notes ?? null,
+        unverifiedClaims: body.unverifiedClaims ?? null,
         evidenceLinks,
       },
     });

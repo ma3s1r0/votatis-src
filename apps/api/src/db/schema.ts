@@ -83,6 +83,8 @@ export const attachment = pgTable("attachment", {
     .notNull()
     .references(() => report.id),
   storageKey: text("storage_key").notNull(),
+  // 클라이언트가 신고한 원본 파일명(공개 직렬화 노출용). 스토리지 key 와 별개.
+  filename: text("filename"),
   // sha256 은 finalize 에서 확정(생성 시 미정 → nullable)
   sha256: text("sha256"),
   // 클라이언트가 create 시 주장한 sha256(검증 대조용)
@@ -179,6 +181,8 @@ export const verification = pgTable("verification", {
   // 근거(결정 1·무결성). method 필수. evidence 는 source 로 보관.
   method: text("method").notNull(),
   notes: text("notes"),
+  // 확인되지 않은 주장(제보 주장 중 사실로 확정되지 않은 부분). 공개 노출 안전 필드.
+  unverifiedClaims: text("unverified_claims"),
   // 판정자·판정 시각(무결성 기록).
   reviewerId: uuid("reviewer_id")
     .notNull()

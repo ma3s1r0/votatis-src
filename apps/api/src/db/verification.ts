@@ -31,6 +31,7 @@ export type VerificationInput = {
   verified: boolean;
   method?: string | null;
   notes?: string | null;
+  unverifiedClaims?: string | null;
   evidenceLinks: EvidenceLink[];
 };
 
@@ -119,6 +120,7 @@ export async function submitVerification(
           verified: input.verified,
           method: input.method!,
           notes: input.notes ?? null,
+          unverifiedClaims: input.unverifiedClaims ?? null,
           reviewerId: args.reviewerId,
           reviewedAt: new Date(),
           version: existing.version + 1,
@@ -137,6 +139,7 @@ export async function submitVerification(
           verified: input.verified,
           method: input.method!,
           notes: input.notes ?? null,
+          unverifiedClaims: input.unverifiedClaims ?? null,
           reviewerId: args.reviewerId,
         })
         .returning();

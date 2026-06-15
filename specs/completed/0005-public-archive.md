@@ -1,7 +1,7 @@
 ---
 id: 0005
 title: 공개 아카이브 출력 (리스트 / 검색 / 필터 / 상세, web)
-status: not-started
+status: completed
 owner: web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -64,5 +64,11 @@ dev_order: 5   # 마지막. 0002·0004 이후.
 ### 0002 의존 메모 (착수 전 확인)
 - 0005는 0002 `GET /api/reports`에 **검색(q)·필터(category/region/election)·페이지네이션** 파라미터가 필요. 0002 구현 시 포함하거나, 없으면 0002에 소규모 추가 스펙으로 반영. (0002 본문은 목록/상세를 이미 정의 — 파라미터 확장만.)
 
+### 스코프 결정 (2026-06-15, QA 계약 갭 대응)
+- **category·election 필터는 MVP 제외(후속).** report 모델(0001)에 category 컬럼·election 직접 링크가 없어 서버가 못 거름. 검색(q)·지역(sido) 필터는 유지. category/election 필터는 모델 확장(별도 스펙) 후 도입.
+- **공개 상세에 검토 요약 직렬화 추가**: 0002 `GET /reports/:id`가 verification 요약(verified·validity·severity·method·notes·**unverified_claims**)을 공개 직렬화. "확인되지 않은 주장"을 위해 verification에 `unverified_claims`(text) 필드 추가(0004 콘솔에서 입력). 공개 첨부는 filename 포함, exif 위치는 제외.
+
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: web 구현(frontend-dev) + QA 계약갭 발견. 스코프 결정 추가(위). 0002 공개 직렬화에 검토요약·첨부 filename 추가, verification.unverified_claims 신설 진행.
+- 2026-06-15: backend reconciliation(verification.unverified_claims·attachment.filename 추가/마이그레이션 0004, 공개 상세에 검토요약 직렬화, 테스트 hookTimeout 플레이크 수정) + frontend 계약 정렬(타입·필터·첨부). QA 최종 **PASS**(api 89 + web 50, 계약 web↔서버 양끝 일치, 플레이크 없음). status→completed.

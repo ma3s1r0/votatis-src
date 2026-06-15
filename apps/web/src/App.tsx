@@ -6,6 +6,9 @@ export default function App() {
       <h1>Votatis</h1>
       <p>선거 무결성 아카이브 — Vite + React 스캐폴드</p>
       <p>
+        <Link to="/archive">공개 아카이브 둘러보기</Link>
+      </p>
+      <p>
         <Link to="/report">제보하기</Link>
       </p>
     </main>
