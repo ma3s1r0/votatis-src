@@ -9,6 +9,7 @@ import { REPORT_CATEGORIES } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import { formatDateTime } from "../format";
 import Header from "../Header";
+import TabBar from "../TabBar";
 
 type State =
   | { status: "loading" }
@@ -155,47 +156,35 @@ export default function ArchiveListPage() {
   return (
     <>
     <Header />
-    <main
-      style={{
-        maxWidth: "var(--container-max)",
-        margin: "var(--space-6) auto",
-        padding: "0 var(--space-4)",
-      }}
-    >
+    <main className="container">
       <h1>공개 아카이브</h1>
-      <p style={{ color: "var(--color-text-muted)" }}>
+      <p className="page-intro">
         검증을 거친 기록만 공개합니다. 각 기록은 출처와 검토 범위를 함께
         제공합니다.
       </p>
 
-      <form
-        onSubmit={onSearch}
-        style={{
-          display: "flex",
-          gap: "var(--space-2)",
-          flexWrap: "wrap",
-          alignItems: "center",
-          margin: "var(--space-4) 0",
-          padding: "var(--space-4)",
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-md)",
-        }}
-      >
-        <label htmlFor="archive-search">검색</label>
-        <input
-          id="archive-search"
-          type="search"
-          aria-label="검색"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="제목·내용 검색"
-        />
-        <button type="submit">검색</button>
+      <form onSubmit={onSearch} className="filter-bar">
+        <label className="field" htmlFor="archive-search">
+          검색
+          <input
+            id="archive-search"
+            className="input"
+            type="search"
+            aria-label="검색"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="제목·내용 검색"
+          />
+        </label>
+        <button type="submit" className="btn btn-secondary">
+          검색
+        </button>
 
-        <label htmlFor="archive-sido">지역</label>
+        <label className="field" htmlFor="archive-sido">
+          지역
         <select
           id="archive-sido"
+          className="input"
           aria-label="지역"
           value={query.sido ?? ""}
           onChange={(e) => onSido(e.target.value)}
@@ -207,10 +196,13 @@ export default function ArchiveListPage() {
             </option>
           ))}
         </select>
+        </label>
 
-        <label htmlFor="archive-category">분류</label>
+        <label className="field" htmlFor="archive-category">
+          분류
         <select
           id="archive-category"
+          className="input"
           aria-label="분류"
           value={query.category ?? ""}
           onChange={(e) => onCategory(e.target.value)}
@@ -222,10 +214,13 @@ export default function ArchiveListPage() {
             </option>
           ))}
         </select>
+        </label>
 
-        <label htmlFor="archive-election">선거</label>
+        <label className="field" htmlFor="archive-election">
+          선거
         <select
           id="archive-election"
+          className="input"
           aria-label="선거"
           value={query.electionId ?? ""}
           onChange={(e) => onElection(e.target.value)}
@@ -237,6 +232,7 @@ export default function ArchiveListPage() {
             </option>
           ))}
         </select>
+        </label>
       </form>
 
       {state.status === "loading" && <p>불러오는 중…</p>}
@@ -251,22 +247,18 @@ export default function ArchiveListPage() {
           <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
             총 {total}건
           </p>
-          <ul style={{ listStyle: "none", padding: 0 }}>
+          <ul className="list-reset">
             {state.items.map((r) => (
-              <li
-                key={r.id}
-                style={{
-                  borderBottom: "1px solid var(--color-border)",
-                  padding: "var(--space-3) 0",
-                }}
-              >
-                <Link to={`/archive/${r.id}`}>{r.title}</Link>
-                <div
-                  style={{
-                    fontSize: "var(--text-sm)",
-                    color: "var(--color-text-muted)",
-                  }}
-                >
+              <li key={r.id} className="archive-item">
+                <div className="archive-item__thumb" aria-hidden="true" />
+                <Link to={`/archive/${r.id}`} className="archive-item__title">
+                  {r.title}
+                </Link>
+                <div className="archive-item__meta">
+                  <span className="badge badge-verified">✓ 검증됨</span>
+                  {r.category && (
+                    <span className="badge badge-accent">{r.category}</span>
+                  )}
                   <span>{regionLabel(r)}</span>
                   {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
                 </div>
@@ -274,25 +266,28 @@ export default function ArchiveListPage() {
             ))}
           </ul>
 
-          <nav
-            style={{
-              display: "flex",
-              gap: "var(--space-2)",
-              alignItems: "center",
-              marginTop: "var(--space-4)",
-            }}
-            aria-label="페이지 이동"
-          >
-            <button type="button" onClick={goPrev} disabled={!hasPrev}>
+          <nav className="pagination" aria-label="페이지 이동">
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={!hasPrev}
+              className="btn btn-secondary"
+            >
               이전
             </button>
-            <button type="button" onClick={goNext} disabled={!hasNext}>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!hasNext}
+              className="btn btn-secondary"
+            >
               다음
             </button>
           </nav>
         </>
       )}
     </main>
+    <TabBar />
     </>
   );
 }

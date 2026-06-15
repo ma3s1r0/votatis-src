@@ -27,67 +27,55 @@ export default function InvitePage() {
 
   if (status === "done") {
     return (
-      <main style={pageStyle}>
-        <h1>비밀번호 설정 완료</h1>
-        <p>이제 로그인할 수 있습니다.</p>
-        <Link to="/admin/login">로그인하러 가기</Link>
+      <main className="container container--form">
+        <div className="card">
+          <h1>비밀번호 설정 완료</h1>
+          <p>이제 로그인할 수 있습니다.</p>
+          <Link to="/admin/login" className="btn btn-secondary">
+            로그인하러 가기
+          </Link>
+        </div>
       </main>
     );
   }
 
   if (status === "gone") {
     return (
-      <main style={pageStyle}>
-        <h1>사용할 수 없는 초대</h1>
-        <p>이 초대 링크는 만료되었거나 이미 사용되었습니다.</p>
-        <p>관리자에게 재발급을 요청해 주세요.</p>
+      <main className="container container--form">
+        <div className="card">
+          <h1>사용할 수 없는 초대</h1>
+          <p>이 초대 링크는 만료되었거나 이미 사용되었습니다.</p>
+          <p>관리자에게 재발급을 요청해 주세요.</p>
+        </div>
       </main>
     );
   }
 
   return (
-    <main style={pageStyle}>
-      <h1>비밀번호 설정</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
-        <label style={labelStyle}>
-          비밀번호
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </label>
-        {status === "error" && (
-          <p role="alert" style={{ color: "#b00020", margin: 0 }}>
-            비밀번호를 설정할 수 없습니다. 입력을 확인해 주세요
-          </p>
-        )}
-        <button type="submit" disabled={submitting} style={buttonStyle}>
-          비밀번호 설정
-        </button>
-      </form>
+    <main className="container container--form">
+      <div className="card">
+        <h1>비밀번호 설정</h1>
+        <form onSubmit={onSubmit} className="form-grid">
+          <label className="field">
+            비밀번호
+            <input
+              type="password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {status === "error" && (
+            <p role="alert" className="text-danger" style={{ margin: 0 }}>
+              비밀번호를 설정할 수 없습니다. 입력을 확인해 주세요
+            </p>
+          )}
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            비밀번호 설정
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  maxWidth: 360,
-  margin: "4rem auto",
-  padding: "0 1rem",
-};
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "0.25rem",
-  fontSize: "0.9rem",
-};
-const inputStyle: React.CSSProperties = {
-  padding: "0.5rem",
-  fontSize: "1rem",
-};
-const buttonStyle: React.CSSProperties = {
-  padding: "0.6rem",
-  fontSize: "1rem",
-  cursor: "pointer",
-};

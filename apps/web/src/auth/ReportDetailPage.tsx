@@ -137,10 +137,14 @@ export default function ReportDetailPage() {
     return (
       <>
         <Header admin />
-        <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-          <h1>판정 완료</h1>
-          <p>판정이 저장되었습니다.</p>
-          <a href="/admin/queue">검토 큐로 돌아가기</a>
+        <main className="container container--narrow">
+          <div className="done-card">
+            <h1>판정 완료</h1>
+            <p>판정이 저장되었습니다.</p>
+          </div>
+          <a href="/admin/queue" className="btn btn-secondary">
+            검토 큐로 돌아가기
+          </a>
         </main>
       </>
     );
@@ -149,17 +153,17 @@ export default function ReportDetailPage() {
   return (
     <>
     <Header admin />
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
+    <main className="container container--narrow">
       <h1>{r.title}</h1>
-      <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
+      <div className="meta-row">
         <span>{regionLabel(r)}</span>
         {r.occurredAt && <span> · 발생 {formatDateTime(r.occurredAt)}</span>}
         {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
       </div>
-      <p style={{ whiteSpace: "pre-wrap" }}>{r.body}</p>
+      <p className="detail-body">{r.body}</p>
 
       {r.verificationHistory.length > 0 && (
-        <section>
+        <section className="section-card">
           <h2>판정 이력</h2>
           <ul>
             {r.verificationHistory.map((h) => (
@@ -178,7 +182,7 @@ export default function ReportDetailPage() {
         </section>
       )}
 
-      <section>
+      <section className="section-card">
         <h2>첨부</h2>
         {r.attachments.length === 0 ? (
           <p>첨부 없음</p>
@@ -193,7 +197,7 @@ export default function ReportDetailPage() {
         )}
       </section>
 
-      <section>
+      <section className="section-card">
         <h2>출처</h2>
         {r.sources.length === 0 ? (
           <p>출처 없음</p>
@@ -217,7 +221,7 @@ export default function ReportDetailPage() {
         )}
       </section>
 
-      <section>
+      <section className="section-card">
         <h2>판정</h2>
         <form onSubmit={onSubmit}>
           <p>
@@ -225,6 +229,7 @@ export default function ReportDetailPage() {
             <br />
             <input
               id="method"
+              className="input"
               value={method}
               onChange={(e) => setMethod(e.target.value)}
             />
@@ -235,6 +240,7 @@ export default function ReportDetailPage() {
             <br />
             <select
               id="validity"
+              className="input"
               value={validity}
               onChange={(e) => setValidity(e.target.value)}
             >
@@ -251,6 +257,7 @@ export default function ReportDetailPage() {
             <br />
             <input
               id="severity"
+              className="input"
               type="number"
               min={1}
               max={5}
@@ -264,6 +271,7 @@ export default function ReportDetailPage() {
             <br />
             <input
               id="confidence"
+              className="input"
               type="number"
               min={0}
               max={100}
@@ -288,6 +296,7 @@ export default function ReportDetailPage() {
             <br />
             <textarea
               id="notes"
+              className="input"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -298,6 +307,7 @@ export default function ReportDetailPage() {
             <br />
             <textarea
               id="unverified-claims"
+              className="input"
               value={unverifiedClaims}
               onChange={(e) => setUnverifiedClaims(e.target.value)}
             />
@@ -311,8 +321,9 @@ export default function ReportDetailPage() {
                 data-testid={`evidence-link-${i}`}
                 style={{
                   border: "1px solid var(--color-border)",
-                  padding: "var(--space-2)",
-                  marginBottom: "var(--space-2)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "var(--space-3)",
+                  marginBottom: "var(--space-3)",
                 }}
               >
                 <p>
@@ -320,6 +331,7 @@ export default function ReportDetailPage() {
                   <br />
                   <input
                     id={`ev-url-${i}`}
+                    className="input"
                     value={ev.url}
                     onChange={(e) => updateEvidence(i, { url: e.target.value })}
                   />
@@ -329,6 +341,7 @@ export default function ReportDetailPage() {
                   <br />
                   <input
                     id={`ev-captured-${i}`}
+                    className="input"
                     value={ev.capturedAt}
                     onChange={(e) =>
                       updateEvidence(i, { capturedAt: e.target.value })
@@ -340,6 +353,7 @@ export default function ReportDetailPage() {
                   <br />
                   <input
                     id={`ev-hash-${i}`}
+                    className="input"
                     value={ev.contentHash}
                     onChange={(e) =>
                       updateEvidence(i, { contentHash: e.target.value })
@@ -351,6 +365,7 @@ export default function ReportDetailPage() {
                   <br />
                   <input
                     id={`ev-archive-${i}`}
+                    className="input"
                     value={ev.archiveUrl}
                     onChange={(e) =>
                       updateEvidence(i, { archiveUrl: e.target.value })
@@ -359,6 +374,7 @@ export default function ReportDetailPage() {
                 </p>
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() =>
                     setEvidence((prev) => prev.filter((_, idx) => idx !== i))
                   }
@@ -369,6 +385,7 @@ export default function ReportDetailPage() {
             ))}
             <button
               type="button"
+              className="btn btn-secondary"
               onClick={() => setEvidence((prev) => [...prev, emptyEvidence()])}
             >
               근거 링크 추가
@@ -376,13 +393,13 @@ export default function ReportDetailPage() {
           </fieldset>
 
           {!canSubmit && (
-            <p role="note" style={{ color: "var(--color-danger)" }}>
+            <p role="note" className="text-danger">
               검증 방법과 근거 링크(최소 1개)를 입력해야 제출할 수 있습니다.
             </p>
           )}
 
           {fieldErrors.length > 0 && (
-            <ul role="alert" style={{ color: "var(--color-danger)" }}>
+            <ul role="alert" className="text-danger">
               {fieldErrors.map((f, i) => (
                 <li key={i}>
                   {f.field}: {f.reason}
@@ -391,12 +408,12 @@ export default function ReportDetailPage() {
             </ul>
           )}
           {formError && (
-            <p role="alert" style={{ color: "var(--color-danger)" }}>
+            <p role="alert" className="text-danger">
               {formError}
             </p>
           )}
 
-          <button type="submit" disabled={!canSubmit}>
+          <button type="submit" className="btn btn-approve" disabled={!canSubmit}>
             판정 제출
           </button>
         </form>

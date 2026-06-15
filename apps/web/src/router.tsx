@@ -8,10 +8,14 @@ import ReportDetailPage from "./auth/ReportDetailPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import ArchiveListPage from "./archive/ArchiveListPage";
 import ArchiveDetailPage from "./archive/ArchiveDetailPage";
+import MapPage from "./MapPage";
+import MyReportsPage from "./MyReportsPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/report", element: <ReportWizard /> },
+  { path: "/map", element: <MapPage /> },
+  { path: "/my", element: <MyReportsPage /> },
   { path: "/archive", element: <ArchiveListPage /> },
   { path: "/archive/:id", element: <ArchiveDetailPage /> },
   { path: "/admin/login", element: <LoginPage /> },

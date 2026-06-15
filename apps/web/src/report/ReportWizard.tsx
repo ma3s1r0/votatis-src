@@ -12,6 +12,8 @@ import {
 } from "./regions";
 import { REPORT_CATEGORIES } from "../categories";
 import { fetchElections, type Election } from "../elections";
+import Header from "../Header";
+import TabBar from "../TabBar";
 
 // 분류(category)는 서버 enum(스펙 0007)과 동일 출처. value=label(한글 enum 값 그대로 전송).
 const categories = REPORT_CATEGORIES;
@@ -218,8 +220,12 @@ export default function ReportWizard() {
   if (done) {
     return (
       <main style={pageStyle}>
-        <h1>제보가 접수되었습니다</h1>
-        <p>접수 식별자: {done.id}</p>
+        <div className="done-card">
+          <h1>제보가 접수되었습니다</h1>
+          <p>
+            접수 식별자: <span className="done-card__id">{done.id}</span>
+          </p>
+        </div>
         <p style={hintStyle}>
           현재 이 번호로 진행 상황을 조회하는 기능은 제공되지 않습니다.
         </p>
@@ -234,17 +240,18 @@ export default function ReportWizard() {
           제출하신 내용은 검증 절차를 거친 뒤 공개될 수 있습니다. 검증 결과에
           따라 공개되지 않을 수 있습니다.
         </p>
-        <nav
-          style={{
-            display: "flex",
-            gap: "var(--space-3)",
-            flexWrap: "wrap",
-            marginTop: "var(--space-4)",
-          }}
-        >
-          <a href="/archive">공개 아카이브 보기</a>
-          <a href="/">홈</a>
-          <button type="button" onClick={startNewReport} style={buttonStyle}>
+        <nav className="btn-row">
+          <a href="/archive" className="btn btn-secondary">
+            공개 아카이브 보기
+          </a>
+          <a href="/" className="btn btn-secondary">
+            홈
+          </a>
+          <button
+            type="button"
+            onClick={startNewReport}
+            className="btn btn-primary"
+          >
             새 제보 작성
           </button>
         </nav>
@@ -253,8 +260,27 @@ export default function ReportWizard() {
   }
 
   return (
+    <>
+    <Header />
     <main style={pageStyle}>
       <h1>제보하기</h1>
+      <ol className="stepper" aria-hidden="true">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((n) => (
+          <li
+            key={n}
+            className={
+              "stepper__step" +
+              (n === draft.step
+                ? " stepper__step--current"
+                : n < draft.step
+                  ? " stepper__step--done"
+                  : "")
+            }
+          >
+            {n}
+          </li>
+        ))}
+      </ol>
       <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
         {draft.step} / {TOTAL_STEPS} 단계
       </p>
@@ -512,14 +538,14 @@ export default function ReportWizard() {
         </p>
       )}
 
-      <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+      <div className="btn-row">
         {draft.step > 1 && (
-          <button type="button" onClick={prev} style={buttonStyle}>
+          <button type="button" onClick={prev} className="btn btn-secondary">
             이전
           </button>
         )}
         {draft.step < TOTAL_STEPS && (
-          <button type="button" onClick={next} style={buttonStyle}>
+          <button type="button" onClick={next} className="btn btn-primary">
             다음
           </button>
         )}
@@ -528,20 +554,26 @@ export default function ReportWizard() {
             type="button"
             onClick={onSubmit}
             disabled={!draft.consent || submitting}
-            style={buttonStyle}
+            className="btn btn-primary"
           >
             제출
           </button>
         )}
       </div>
     </main>
+    <TabBar />
+    </>
   );
 }
 
 const pageStyle: React.CSSProperties = {
-  maxWidth: 640,
-  margin: "var(--space-6) auto",
-  padding: "0 var(--space-4)",
+  maxWidth: "var(--container-max)",
+  minHeight: "100vh",
+  margin: "0 auto",
+  padding:
+    "var(--space-5) var(--space-4) calc(var(--tab-bar-height) + var(--space-6))",
+  background: "var(--color-bg)",
+  boxSizing: "border-box",
 };
 const sectionStyle: React.CSSProperties = {
   display: "grid",
@@ -561,11 +593,6 @@ const inputStyle: React.CSSProperties = {
   fontSize: "var(--text-base)",
   border: "1px solid var(--color-border)",
   borderRadius: "var(--radius-sm)",
-};
-const buttonStyle: React.CSSProperties = {
-  padding: "var(--space-2) var(--space-5)",
-  fontSize: "var(--text-base)",
-  cursor: "pointer",
 };
 const hintStyle: React.CSSProperties = {
   color: "var(--color-text-muted)",

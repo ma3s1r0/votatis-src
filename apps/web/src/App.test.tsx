@@ -38,4 +38,15 @@ describe("App (홈 랜딩)", () => {
     ).not.toBeNull();
     expect(ctaNav.querySelector('a[href="/report"]')).not.toBeNull();
   });
+
+  it("히어로 CTA가 공용 버튼 클래스(btn-primary/btn-secondary)를 사용한다", () => {
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+    const ctaNav = screen.getByRole("navigation", { name: "주요 행동" });
+    expect(ctaNav.querySelector("a.btn.btn-primary")).not.toBeNull();
+    expect(ctaNav.querySelector("a.btn.btn-secondary")).not.toBeNull();
+  });
 });

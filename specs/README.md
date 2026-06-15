@@ -38,6 +38,7 @@ specs/
 | 0009 | 운영 배선 (RDS/S3/Lambda 엔트리) | completed | 2026-06-15 | completed/0009-runtime-wiring.md |
 | 0010 | Figma 디자인 반영 (토큰 + 핵심 화면) | completed | 2026-06-15 | completed/0010-figma-design.md |
 | 0011 | UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함) | completed | 2026-06-15 | completed/0011-ux-improvements.md |
+| 0012 | 비주얼 디자인 폴리시 (Figma 네이비 모바일 정렬) | completed | 2026-06-15 | completed/0012-visual-polish.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 

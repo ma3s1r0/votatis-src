@@ -11,10 +11,12 @@ export default function AdminHome() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
+    <main className="container container--narrow">
       <h1>관리자 콘솔</h1>
       <p>인증되었습니다. (라벨링·검증 콘솔은 0004에서 구현)</p>
-      <button onClick={onLogout}>로그아웃</button>
+      <button onClick={onLogout} className="btn btn-secondary">
+        로그아웃
+      </button>
     </main>
   );
 }

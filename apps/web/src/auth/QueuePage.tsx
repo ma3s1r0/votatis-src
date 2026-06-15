@@ -39,7 +39,7 @@ export default function QueuePage() {
   return (
     <>
     <Header admin onLogout={onLogout} />
-    <main style={{ maxWidth: 880, margin: "2rem auto", padding: "0 1rem" }}>
+    <main className="container">
       <h1>검토 큐</h1>
 
       {state.status === "loading" && <p>불러오는 중…</p>}
@@ -48,17 +48,13 @@ export default function QueuePage() {
         <p>검토할 제보가 없습니다.</p>
       )}
       {state.status === "ready" && state.items.length > 0 && (
-        <ul style={{ listStyle: "none", padding: 0 }}>
+        <ul className="list-reset">
           {state.items.map((r) => (
-            <li
-              key={r.id}
-              style={{
-                borderBottom: "1px solid var(--color-border)",
-                padding: "var(--space-3) 0",
-              }}
-            >
-              <Link to={`/admin/reports/${r.id}`}>{r.title}</Link>
-              <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
+            <li key={r.id} className="archive-item">
+              <Link to={`/admin/reports/${r.id}`} className="archive-item__title">
+                {r.title}
+              </Link>
+              <div className="archive-item__meta">
                 <span>{regionLabel(r)}</span>
                 {r.collectedAt && (
                   <span> · 수집 {formatDateTime(r.collectedAt)}</span>

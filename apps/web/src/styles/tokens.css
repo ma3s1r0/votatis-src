@@ -2,26 +2,65 @@
  * Votatis 디자인 토큰 (단일 출처)
  *
  * 출처: Figma 정본(https://www.figma.com/design/VxSqEMKJRYnYZGb0QoZN5x/Votatis).
- * 현재 파일은 편집권한 부재로 MCP 읽기가 불가하여, 프로젝트 톤(객관적
- * 데이터 서비스 · 중립 · 신뢰)에 맞춘 베이스라인 값으로 정의한다.
- * Figma 실값은 권한 확보 후 이 파일에서 한 곳만 보정한다(스펙 0010 후속).
+ * 스펙 0012 재정렬: 모바일 앱 디자인에 맞춰 팔레트를 네이비 중심으로 교체한다.
  *
- * 톤 메모: accent 는 진영색을 배제한 teal 계열(중립). 빨강(--color-danger)은
- * 오류·위험도 의미로만 사용한다.
+ * 톤 메모: accent 는 진영색을 배제한 네이비(#1b2a4a) 계열(중립·신뢰).
+ * 빨강(--color-danger)은 위험·미검증·오류 의미로만 사용한다.
  */
 :root {
-  /* 색 */
+  /* 색 — 페이지는 흰색, 카드/섹션은 옅은 회색 */
   --color-bg: #ffffff;
-  --color-surface: #f6f8fa;
-  --color-border: #e2e6eb;
-  --color-text: #1a1d21;
-  --color-text-muted: #5b6573;
-  --color-accent: #0f766e;
-  --color-accent-hover: #115e59;
-  --color-danger: #b4232a;
-  --color-warning: #b45309;
-  --color-success: #15803d;
-  --color-focus: #0f766e;
+  --color-page: #ffffff;
+  --color-surface: #f3f5f8;
+  --color-surface-strong: #eaedf2;
+  --color-border: #e3e7ec;
+  --color-text: #1f2a3d;
+  --color-text-muted: #8b94a3;
+
+  /* accent = 네이비(프라이머리) */
+  --color-navy: #1b2a4a;
+  --color-navy-hover: #15223c;
+  --color-navy-soft: #eef1f6;
+  --color-accent: #1b2a4a;
+  --color-accent-hover: #15223c;
+  --color-accent-soft: #eef1f6;
+  --color-accent-border: #d3dae6;
+
+  /* 상태색 — 위험/미검증만 빨강 */
+  --color-danger: #c0392b;
+  --color-danger-soft: #fbeaea;
+  --color-warning: #c98a17;
+  --color-warning-soft: #fdf3e2;
+  --color-success: #1f9d57;
+  --color-success-soft: #e6f6ec;
+  --color-focus: #1b2a4a;
+
+  /* 관리 액션색 */
+  --color-approve: #2e7d57;
+  --color-approve-hover: #266a49;
+  --color-publish: #6c5ce7;
+  --color-publish-hover: #5a4bd4;
+  --color-publish-soft: #eeebfb;
+
+  /* 검증 상태(dot/배지) */
+  --color-state-verified: #1f9d57;
+  --color-state-verified-soft: #e6f6ec;
+  --color-state-verifying: #c98a17;
+  --color-state-verifying-soft: #fdf3e2;
+  --color-state-unverified: #c0392b;
+  --color-state-unverified-soft: #fbeaea;
+
+  /* 심각도(1~5): 낮음=중립, 높을수록 강조. 빨강은 최상위(위험)만. */
+  --color-sev-1-bg: #eef1f5;
+  --color-sev-1-fg: #475569;
+  --color-sev-2-bg: #e6f0f7;
+  --color-sev-2-fg: #2f6f9e;
+  --color-sev-3-bg: #fdf3e2;
+  --color-sev-3-fg: #946200;
+  --color-sev-4-bg: #fdeede;
+  --color-sev-4-fg: #b45309;
+  --color-sev-5-bg: #fbeaea;
+  --color-sev-5-fg: #c0392b;
 
   /* 타이포 */
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
@@ -44,11 +83,16 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  /* 반경 · 그림자 */
-  --radius-sm: 6px;
+  /* 반경 · 그림자 (카드 14 / 버튼 10 / pill 999) */
+  --radius-sm: 8px;
   --radius-md: 10px;
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(27, 42, 74, 0.05), 0 1px 3px rgba(27, 42, 74, 0.08);
+  --shadow-md: 0 2px 4px rgba(27, 42, 74, 0.05),
+    0 8px 24px rgba(27, 42, 74, 0.08);
 
-  /* 컨테이너 */
-  --container-max: 880px;
+  /* 컨테이너 — 모바일 우선(앱 프레임) */
+  --container-max: 480px;
+  --tab-bar-height: 60px;
 }

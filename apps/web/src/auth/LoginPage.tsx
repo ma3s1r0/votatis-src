@@ -31,59 +31,41 @@ export default function LoginPage() {
   return (
     <>
     <Header admin />
-    <main style={pageStyle}>
-      <h1>관리자 로그인</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
-        <label style={labelStyle}>
-          이메일
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          비밀번호
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </label>
-        {error && (
-          <p role="alert" style={{ color: "var(--color-danger)", margin: 0 }}>
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={submitting} style={buttonStyle}>
-          로그인
-        </button>
-      </form>
+    <main className="container container--form">
+      <div className="card">
+        <h1>관리자 로그인</h1>
+        <form onSubmit={onSubmit} className="form-grid">
+          <label className="field">
+            이메일
+            <input
+              type="email"
+              className="input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label className="field">
+            비밀번호
+            <input
+              type="password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && (
+            <p role="alert" style={{ color: "var(--color-danger)", margin: 0 }}>
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            로그인
+          </button>
+        </form>
+      </div>
     </main>
     </>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  maxWidth: 360,
-  margin: "4rem auto",
-  padding: "0 1rem",
-};
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "0.25rem",
-  fontSize: "0.9rem",
-};
-const inputStyle: React.CSSProperties = {
-  padding: "0.5rem",
-  fontSize: "1rem",
-};
-const buttonStyle: React.CSSProperties = {
-  padding: "0.6rem",
-  fontSize: "1rem",
-  cursor: "pointer",
-};

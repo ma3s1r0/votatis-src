@@ -12,6 +12,7 @@ import {
   severityLabel,
 } from "../format";
 import Header from "../Header";
+import TabBar from "../TabBar";
 
 type State =
   | { status: "loading" }
@@ -65,17 +66,12 @@ export default function ArchiveDetailPage() {
     return (
       <>
       <Header />
-      <main
-      style={{
-        maxWidth: "var(--container-max)",
-        margin: "var(--space-6) auto",
-        padding: "0 var(--space-4)",
-      }}
-    >
+      <main className="container">
         <h1>기록을 찾을 수 없습니다.</h1>
         <p>요청한 기록이 없거나 아직 공개되지 않았습니다.</p>
         <Link to="/archive">아카이브로 돌아가기</Link>
       </main>
+      <TabBar />
       </>
     );
   }
@@ -86,18 +82,12 @@ export default function ArchiveDetailPage() {
   return (
     <>
     <Header />
-    <main
-      style={{
-        maxWidth: "var(--container-max)",
-        margin: "var(--space-6) auto",
-        padding: "0 var(--space-4)",
-      }}
-    >
+    <main className="container">
       <p>
         <Link to="/archive">← 아카이브</Link>
       </p>
       <h1>{r.title}</h1>
-      <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
+      <div className="meta-row">
         <span>{regionLabel(r)}</span>
         {r.category && <span> · 분류 {r.category}</span>}
         {r.election && <span> · 선거 {r.election.name}</span>}
@@ -105,9 +95,11 @@ export default function ArchiveDetailPage() {
         {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
       </div>
 
-      {r.body && <p style={{ whiteSpace: "pre-wrap" }}>{r.body}</p>}
+      <div className="detail-image" aria-hidden="true" />
 
-      <section>
+      {r.body && <p className="detail-body">{r.body}</p>}
+
+      <section className="section-card">
         <h2>첨부</h2>
         {r.attachments.length === 0 ? (
           <p>첨부 없음</p>
@@ -122,6 +114,7 @@ export default function ArchiveDetailPage() {
                 )}{" "}
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => {
                     setDownloadError(false);
                     requestAttachmentDownloadUrl(r.id, a.id)
@@ -141,13 +134,13 @@ export default function ArchiveDetailPage() {
           </ul>
         )}
         {downloadError && (
-          <p role="alert" style={{ color: "var(--color-danger)" }}>
+          <p role="alert" className="text-danger">
             다운로드를 준비할 수 없습니다. 잠시 후 다시 시도해 주세요.
           </p>
         )}
       </section>
 
-      <section>
+      <section className="section-card">
         <h2>출처</h2>
         {r.sources.length === 0 ? (
           <p>출처 없음</p>
@@ -180,14 +173,7 @@ export default function ArchiveDetailPage() {
         )}
       </section>
 
-      <section
-        style={{
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-md)",
-          padding: "var(--space-4)",
-        }}
-      >
+      <section className="review-card">
         <h2>검토 요약</h2>
         {v === null ? (
           <p>검토 요약 정보가 없습니다.</p>
@@ -197,6 +183,11 @@ export default function ArchiveDetailPage() {
               아래는 검토 과정에서 확인된 범위와 한계입니다. 단정이 아니라
               검증 결과입니다.
             </p>
+            {v.verified && (
+              <p>
+                <span className="badge badge-verified">검증됨</span>
+              </p>
+            )}
             <dl>
               {v.method && (
                 <>
@@ -207,14 +198,20 @@ export default function ArchiveDetailPage() {
               {v.validity && (
                 <>
                   <dt>확인 범위(유효성)</dt>
-                  <dd>{validityLabel(v.validity)}</dd>
+                  <dd>
+                    <span className="badge badge-neutral">
+                      {validityLabel(v.validity)}
+                    </span>
+                  </dd>
                 </>
               )}
               {v.severity && (
                 <>
                   <dt>심각도</dt>
-                  <dd style={{ color: "var(--color-warning)", fontWeight: "var(--weight-medium)" }}>
-                    {severityLabel(v.severity)}
+                  <dd>
+                    <span className="badge badge-sev-4">
+                      {severityLabel(v.severity)}
+                    </span>
                   </dd>
                 </>
               )}
@@ -236,6 +233,7 @@ export default function ArchiveDetailPage() {
         )}
       </section>
     </main>
+    <TabBar />
     </>
   );
 }

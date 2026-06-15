@@ -46,7 +46,7 @@ describe("디자인 토큰 (tokens.css)", () => {
     }
   });
 
-  it("accent 는 중립(teal) 계열 값으로 둔다", () => {
-    expect(css).toContain("--color-accent: #0f766e");
+  it("accent 는 진영색을 배제한 네이비 값으로 둔다", () => {
+    expect(css).toContain("--color-accent: #1b2a4a");
   });
 });
