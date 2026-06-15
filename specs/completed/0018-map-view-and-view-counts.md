@@ -1,7 +1,7 @@
 ---
 id: 0018
 title: 지도 뷰 (시도 분포) + 공개 상세 조회수
-status: not-started
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -88,3 +88,4 @@ dev_order: 18   # 마지막. 0005 공개 아카이브 위에.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버(backend-dev): `GET /api/map-stats`(시도별 상태 버킷 카운트만, ?domain, 미지정 버킷), report.view_count + 마이그레이션 0010, 공개 상세 조회 시 원자 +1(verified 게이트·404 미증가·이력 노이즈 0). web(frontend-dev): /map SVG 핀(상태색)+범례+도메인 세그먼트+미지정 안전처리+핀→/archive?sido, 상세 조회수. QA PASS(누설 0·원자성·이력노이즈 가드). 게이트 (api 198 + web 175), 회귀 0. status→completed. 실 지도타일/지오코딩은 비목표(시도 정적 좌표+SVG).

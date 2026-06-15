@@ -223,6 +223,50 @@ export async function listVerifiedReports(db: Db, params: ListParams) {
   return { rows, total: count };
 }
 
+// 지도 통계(0018): 시도별 상태 버킷(검증됨/검증중/미검증) 카운트 집계.
+// 카운트만 — 본문·식별정보·제목 일절 미선택(공개 안전, 결정 2). sido null 은 미지정 버킷.
+// 상태 버킷: 검증됨 = v_verified=true, 검증중 = status='reviewing', 미검증 = 그 외.
+export async function mapStats(
+  db: Db,
+  params: { domain?: string },
+): Promise<
+  {
+    sido: string | null;
+    total: number;
+    byStatus: { verified: number; reviewing: number; unverified: number };
+  }[]
+> {
+  const where = params.domain ? eq(report.domain, params.domain) : undefined;
+  const rows = await db
+    .select({
+      sido: report.sido,
+      verified: sql<number>`count(*) filter (where ${report.vVerified} is true)::int`,
+      reviewing: sql<number>`count(*) filter (where ${report.vVerified} is not true and ${report.status} = 'reviewing')::int`,
+      unverified: sql<number>`count(*) filter (where ${report.vVerified} is not true and ${report.status} <> 'reviewing')::int`,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(report)
+    .where(where)
+    .groupBy(report.sido);
+
+  return rows.map((r) => ({
+    sido: r.sido,
+    total: r.total,
+    byStatus: { verified: r.verified, reviewing: r.reviewing, unverified: r.unverified },
+  }));
+}
+
+// 조회수 증가(0018): 공개 상세 조회 시 원자 UPDATE 로 +1. verified=true 게이트 포함 —
+// 미검증/없음은 0 rows 영향(증가 안 됨). 증가 후 새 viewCount 반환. report_history 미append.
+export async function incrementViewCount(db: Db, id: string): Promise<number | undefined> {
+  const [row] = await db
+    .update(report)
+    .set({ viewCount: sql`${report.viewCount} + 1` })
+    .where(and(eq(report.id, id), eq(report.vVerified, true)))
+    .returning({ viewCount: report.viewCount });
+  return row?.viewCount;
+}
+
 // 공개 상세: verified=true 인 report 만. 미검증/없음은 undefined(라우트에서 404).
 export async function getVerifiedReport(db: Db, id: string) {
   const [row] = await db

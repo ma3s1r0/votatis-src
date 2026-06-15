@@ -297,6 +297,60 @@ textarea.input {
   background: var(--color-state-unverified);
 }
 
+/* ── 지도 뷰(0018) — 시도 정적 좌표 SVG 분포 ─────────────────── */
+.map-view {
+  margin-top: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  aspect-ratio: 1 / 1;
+}
+.map-view__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.map-pin circle {
+  stroke: #fff;
+  stroke-width: 0.6;
+  cursor: pointer;
+}
+.map-pin__count {
+  font-size: 3px;
+  font-weight: var(--weight-medium);
+  fill: #fff;
+  pointer-events: none;
+}
+.map-pin--verified circle {
+  fill: var(--color-state-verified);
+}
+.map-pin--verifying circle {
+  fill: var(--color-state-verifying);
+}
+.map-pin--unverified circle {
+  fill: var(--color-state-unverified);
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-navy-soft);
+  border-radius: var(--radius-md);
+}
+.map-legend__total {
+  margin-left: auto;
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+}
+.map-unmapped {
+  margin-top: var(--space-3);
+}
+
 /* ── 헤더(상단 바) ─────────────────────────────────────────── */
 .app-header {
   position: sticky;

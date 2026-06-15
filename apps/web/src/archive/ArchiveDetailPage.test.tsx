@@ -41,6 +41,7 @@ const detail = {
       archiveUrl: "https://archive.example/snap",
     },
   ],
+  viewCount: 7,
 };
 
 function renderDetail(entry = "/archive/r1") {

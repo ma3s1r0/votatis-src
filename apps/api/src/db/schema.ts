@@ -59,6 +59,9 @@ export const report = pgTable("report", {
   submitter: text("submitter"),
   consent: boolean("consent"),
   license: text("license"),
+  // 공개 상세 조회수(0018). 분석용 카운터(무결성 핵심 아님). 공개 상세 조회 시 원자
+  // UPDATE 로 +1. report_history 스냅샷 대상 아님(감사 노이즈 회피).
+  viewCount: integer("view_count").notNull().default(0),
   // verification 필드 예약 (값은 0004에서 채움 — nullable)
   vConfidence: real("v_confidence"),
   vValidity: text("v_validity"),

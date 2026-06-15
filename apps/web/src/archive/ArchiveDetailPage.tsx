@@ -93,6 +93,7 @@ export default function ArchiveDetailPage() {
         {r.election && <span> · 선거 {r.election.name}</span>}
         {r.occurredAt && <span> · 발생 {formatDateTime(r.occurredAt)}</span>}
         {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
+        <span> · 조회 {r.viewCount.toLocaleString()}</span>
       </div>
 
       <div className="detail-image" aria-hidden="true" />

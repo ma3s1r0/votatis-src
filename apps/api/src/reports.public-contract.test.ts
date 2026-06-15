@@ -143,6 +143,25 @@ describe("0005 공개 상세 계약 — attachment filename", () => {
   });
 });
 
+describe("0018 공개 상세 계약 — viewCount", () => {
+  it("공개 상세에 viewCount 노출, 민감 필드는 여전히 비노출", async () => {
+    const r = await makeReport(ctx.db, "조회수 제보");
+    await verify(r.id);
+
+    const res = await ctx.app.request(`/api/reports/${r.id}`);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    const json = JSON.parse(body) as { viewCount: number };
+    expect(typeof json.viewCount).toBe("number");
+    expect(json.viewCount).toBe(1);
+
+    // 민감 필드 비노출 불변(0005 계약).
+    expect(body).not.toContain("submitter");
+    expect(body).not.toContain("reviewerId");
+    expect(body).not.toContain("vVerified");
+  });
+});
+
 describe("0004 판정 — unverifiedClaims 저장·admin 상세 노출", () => {
   it("판정 입력의 unverifiedClaims 저장 + admin 상세 verification 에 노출", async () => {
     const r = await makeReport(ctx.db, "미확인 주장 포함 제보");

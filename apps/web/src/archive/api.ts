@@ -69,6 +69,8 @@ export type ArchiveDetail = {
   verification: ArchiveVerificationSummary | null;
   attachments: ArchiveAttachment[];
   sources: ArchiveSource[];
+  // 공개 상세 조회수(0018). 서버가 조회 시 +1 후 현재값을 내려준다.
+  viewCount: number;
 };
 
 export type ArchiveListQuery = {

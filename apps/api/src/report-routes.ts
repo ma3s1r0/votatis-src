@@ -15,6 +15,8 @@ import {
   getVerifiedReport,
   listElections,
   getReportByTrackingNumber,
+  mapStats,
+  incrementViewCount,
 } from "./db/intake.js";
 import { isReportCategory, isReportDomain, type ReportDomain } from "./categories.js";
 import { currentStage, buildTimeline } from "./tracking.js";
@@ -362,6 +364,16 @@ export function createReportApp(opts: {
     });
   });
 
+  // B5. 공개 지도 통계(0018) — 시도별 상태 버킷 카운트. 카운트만(본문·식별정보 0).
+  // sido null 은 미지정 버킷(별도 항목). ?domain= 으로 도메인 필터(election|assembly).
+  // 미지(허용 외) domain 은 빈 결과가 아니라 필터 미적용이면 혼동 → 그대로 통과시켜
+  // 해당 도메인 0건이면 빈 집계가 되도록 둔다(단순). 좌표는 서버가 주지 않음(web 정적 매핑).
+  app.get("/map-stats", async (c) => {
+    const domain = c.req.query("domain") || undefined;
+    const items = await mapStats(db, { domain });
+    return c.json({ items });
+  });
+
   // B3. 공개 선거 목록 — 아카이브 필터 드롭다운 옵션(0007).
   app.get("/elections", async (c) => {
     const items = await listElections(db);
@@ -370,11 +382,18 @@ export function createReportApp(opts: {
 
   // B2. 공개 상세 — verified=true 만, 아니면 404(존재 누설 금지)
   app.get("/reports/:id", async (c) => {
-    const graph = await getVerifiedReport(db, c.req.param("id"));
+    const id = c.req.param("id");
+    // 0018: 조회수는 verified-gated 원자 UPDATE. undefined(미검증·없음)면 404 — 미증가.
+    // 이 단일 UPDATE 가 verified 게이트도 겸하므로 404 경로는 viewCount 증가 0.
+    const viewCount = await incrementViewCount(db, id);
+    if (viewCount === undefined) return c.json({ error: "not_found" }, 404);
+
+    const graph = await getVerifiedReport(db, id);
     if (!graph) return c.json({ error: "not_found" }, 404);
     const v = graph.verification;
     return c.json({
       ...publicReport(graph.report),
+      viewCount,
       // 0007: report.election_id 직접 링크의 선거 요약(id+name), 없으면 null.
       election: graph.election,
       // verification 요약(공개 안전 필드만). reviewer 신원·confidence·내부 감사필드 제외.
