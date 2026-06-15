@@ -1,7 +1,7 @@
 ---
 id: 0010
 title: Figma 디자인 반영 (디자인 토큰 + 핵심 화면, MVP 스코프)
-status: not-started
+status: completed
 owner: web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -72,3 +72,4 @@ dev_order: 10
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현 (frontend-dev) + QA 조건부 PASS. ⚠️ Figma 파일 편집권한 부재로 MCP 읽기 불가 → 프로젝트 톤(중립·데이터 서비스) 기반 **베이스라인 토큰** 사용(스펙 리스크 항목이 허용한 축소). tokens.css(CSS 변수 SSOT) 전역 import, 아카이브 목록/상세·제보 마법사·전역 베이스에 토큰 적용. DOM/role/text/testid 보존(회귀 0), 토큰 SSOT 변이 테스트로 실증. 게이트 통과 (api 124 + web 63). status→completed. **후속(별도): Figma 편집권한 확보 시 실값으로 tokens.css 한 곳 보정 + ArchiveList/Detail 토큰-회귀 단언 추가 + 다크테마.**

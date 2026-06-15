@@ -107,16 +107,32 @@ export default function ArchiveListPage() {
   }
 
   return (
-    <main style={{ maxWidth: 880, margin: "2rem auto", padding: "0 1rem" }}>
+    <main
+      style={{
+        maxWidth: "var(--container-max)",
+        margin: "var(--space-6) auto",
+        padding: "0 var(--space-4)",
+      }}
+    >
       <h1>공개 아카이브</h1>
-      <p style={{ color: "#555" }}>
+      <p style={{ color: "var(--color-text-muted)" }}>
         검증을 거친 기록만 공개합니다. 각 기록은 출처와 검토 범위를 함께
         제공합니다.
       </p>
 
       <form
         onSubmit={onSearch}
-        style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", margin: "1rem 0" }}
+        style={{
+          display: "flex",
+          gap: "var(--space-2)",
+          flexWrap: "wrap",
+          alignItems: "center",
+          margin: "var(--space-4) 0",
+          padding: "var(--space-4)",
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-md)",
+        }}
       >
         <label htmlFor="archive-search">검색</label>
         <input
@@ -184,15 +200,25 @@ export default function ArchiveListPage() {
       )}
       {state.status === "ready" && state.items.length > 0 && (
         <>
-          <p style={{ color: "#555", fontSize: "0.85rem" }}>총 {total}건</p>
+          <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
+            총 {total}건
+          </p>
           <ul style={{ listStyle: "none", padding: 0 }}>
             {state.items.map((r) => (
               <li
                 key={r.id}
-                style={{ borderBottom: "1px solid #ddd", padding: "0.75rem 0" }}
+                style={{
+                  borderBottom: "1px solid var(--color-border)",
+                  padding: "var(--space-3) 0",
+                }}
               >
                 <Link to={`/archive/${r.id}`}>{r.title}</Link>
-                <div style={{ fontSize: "0.85rem", color: "#555" }}>
+                <div
+                  style={{
+                    fontSize: "var(--text-sm)",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
                   <span>{regionLabel(r)}</span>
                   {r.collectedAt && <span> · 수집 {r.collectedAt}</span>}
                 </div>
@@ -201,7 +227,12 @@ export default function ArchiveListPage() {
           </ul>
 
           <nav
-            style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+            style={{
+              display: "flex",
+              gap: "var(--space-2)",
+              alignItems: "center",
+              marginTop: "var(--space-4)",
+            }}
             aria-label="페이지 이동"
           >
             <button type="button" onClick={goPrev} disabled={!hasPrev}>

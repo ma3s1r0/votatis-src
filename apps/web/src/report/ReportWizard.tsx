@@ -224,7 +224,7 @@ export default function ReportWizard() {
   return (
     <main style={pageStyle}>
       <h1>제보하기</h1>
-      <p style={{ color: "#555" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
         {draft.step} / {TOTAL_STEPS} 단계
       </p>
 
@@ -488,43 +488,49 @@ export default function ReportWizard() {
 
 const pageStyle: React.CSSProperties = {
   maxWidth: 640,
-  margin: "3rem auto",
-  padding: "0 1rem",
+  margin: "var(--space-6) auto",
+  padding: "0 var(--space-4)",
 };
 const sectionStyle: React.CSSProperties = {
   display: "grid",
-  gap: "0.75rem",
+  gap: "var(--space-3)",
+  background: "var(--color-surface)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-md)",
+  padding: "var(--space-4)",
 };
 const labelStyle: React.CSSProperties = {
   display: "grid",
-  gap: "0.25rem",
-  fontSize: "0.9rem",
+  gap: "var(--space-1)",
+  fontSize: "var(--text-sm)",
 };
 const inputStyle: React.CSSProperties = {
-  padding: "0.5rem",
-  fontSize: "1rem",
+  padding: "var(--space-2)",
+  fontSize: "var(--text-base)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-sm)",
 };
 const buttonStyle: React.CSSProperties = {
-  padding: "0.6rem 1.2rem",
-  fontSize: "1rem",
+  padding: "var(--space-2) var(--space-5)",
+  fontSize: "var(--text-base)",
   cursor: "pointer",
 };
 const hintStyle: React.CSSProperties = {
-  color: "#555",
-  fontSize: "0.9rem",
+  color: "var(--color-text-muted)",
+  fontSize: "var(--text-sm)",
 };
 const errorStyle: React.CSSProperties = {
-  color: "#b00020",
+  color: "var(--color-danger)",
   margin: 0,
 };
 const progressStyle: React.CSSProperties = {
-  color: "#333",
+  color: "var(--color-text)",
   margin: 0,
-  fontSize: "0.9rem",
+  fontSize: "var(--text-sm)",
 };
 const dtStyle: React.CSSProperties = {
-  fontWeight: 600,
-  fontSize: "0.85rem",
-  color: "#555",
+  fontWeight: "var(--weight-medium)",
+  fontSize: "var(--text-sm)",
+  color: "var(--color-text-muted)",
 };
 const ddStyle: React.CSSProperties = { margin: 0 };

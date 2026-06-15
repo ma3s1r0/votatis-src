@@ -43,7 +43,13 @@ export default function ArchiveDetailPage() {
     return <p role="alert">기록을 불러오지 못했습니다.</p>;
   if (state.status === "not_found") {
     return (
-      <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
+      <main
+      style={{
+        maxWidth: "var(--container-max)",
+        margin: "var(--space-6) auto",
+        padding: "0 var(--space-4)",
+      }}
+    >
         <h1>기록을 찾을 수 없습니다.</h1>
         <p>요청한 기록이 없거나 아직 공개되지 않았습니다.</p>
         <Link to="/archive">아카이브로 돌아가기</Link>
@@ -55,12 +61,18 @@ export default function ArchiveDetailPage() {
   const v = r.verification;
 
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
+    <main
+      style={{
+        maxWidth: "var(--container-max)",
+        margin: "var(--space-6) auto",
+        padding: "0 var(--space-4)",
+      }}
+    >
       <p>
         <Link to="/archive">← 아카이브</Link>
       </p>
       <h1>{r.title}</h1>
-      <div style={{ fontSize: "0.85rem", color: "#555" }}>
+      <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
         <span>{regionLabel(r)}</span>
         {r.category && <span> · 분류 {r.category}</span>}
         {r.election && <span> · 선거 {r.election.name}</span>}
@@ -81,7 +93,7 @@ export default function ArchiveDetailPage() {
               <li key={a.id}>
                 <span>{a.filename ?? "(파일명 미상)"}</span>
                 {a.size !== null && (
-                  <span style={{ color: "#777" }}> · {a.size.toLocaleString()} bytes</span>
+                  <span style={{ color: "var(--color-text-muted)" }}> · {a.size.toLocaleString()} bytes</span>
                 )}{" "}
                 <button
                   type="button"
@@ -113,10 +125,10 @@ export default function ArchiveDetailPage() {
               <li key={s.id}>
                 {s.url ? <a href={s.url}>{s.url}</a> : <span>(URL 미상)</span>}
                 {s.capturedAt && (
-                  <span style={{ color: "#777" }}> (수집 시점: {s.capturedAt})</span>
+                  <span style={{ color: "var(--color-text-muted)" }}> (수집 시점: {s.capturedAt})</span>
                 )}
                 {s.contentHash && (
-                  <span style={{ color: "#777" }}> (hash: {s.contentHash})</span>
+                  <span style={{ color: "var(--color-text-muted)" }}> (hash: {s.contentHash})</span>
                 )}
                 {s.archiveUrl && (
                   <>
@@ -130,13 +142,20 @@ export default function ArchiveDetailPage() {
         )}
       </section>
 
-      <section>
+      <section
+        style={{
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-md)",
+          padding: "var(--space-4)",
+        }}
+      >
         <h2>검토 요약</h2>
         {v === null ? (
           <p>검토 요약 정보가 없습니다.</p>
         ) : (
           <>
-            <p style={{ color: "#555", fontSize: "0.85rem" }}>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
               아래는 검토 과정에서 확인된 범위와 한계입니다. 단정이 아니라
               검증 결과입니다.
             </p>
@@ -156,7 +175,9 @@ export default function ArchiveDetailPage() {
               {v.severity && (
                 <>
                   <dt>심각도</dt>
-                  <dd>{v.severity}</dd>
+                  <dd style={{ color: "var(--color-warning)", fontWeight: "var(--weight-medium)" }}>
+                    {v.severity}
+                  </dd>
                 </>
               )}
               {v.notes && (

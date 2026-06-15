@@ -1,0 +1,54 @@
+/*
+ * Votatis 디자인 토큰 (단일 출처)
+ *
+ * 출처: Figma 정본(https://www.figma.com/design/VxSqEMKJRYnYZGb0QoZN5x/Votatis).
+ * 현재 파일은 편집권한 부재로 MCP 읽기가 불가하여, 프로젝트 톤(객관적
+ * 데이터 서비스 · 중립 · 신뢰)에 맞춘 베이스라인 값으로 정의한다.
+ * Figma 실값은 권한 확보 후 이 파일에서 한 곳만 보정한다(스펙 0010 후속).
+ *
+ * 톤 메모: accent 는 진영색을 배제한 teal 계열(중립). 빨강(--color-danger)은
+ * 오류·위험도 의미로만 사용한다.
+ */
+:root {
+  /* 색 */
+  --color-bg: #ffffff;
+  --color-surface: #f6f8fa;
+  --color-border: #e2e6eb;
+  --color-text: #1a1d21;
+  --color-text-muted: #5b6573;
+  --color-accent: #0f766e;
+  --color-accent-hover: #115e59;
+  --color-danger: #b4232a;
+  --color-warning: #b45309;
+  --color-success: #15803d;
+  --color-focus: #0f766e;
+
+  /* 타이포 */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
+    sans-serif;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --leading: 1.5;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  /* 간격 (4px 기준) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* 반경 · 그림자 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+
+  /* 컨테이너 */
+  --container-max: 880px;
+}
