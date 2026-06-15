@@ -1,0 +1,12 @@
+{
+  "name": "votatis-src",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Votatis 모노레포 — 선거 무결성 아카이브 (Vite+React · Hono 서버리스 · AWS)",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
