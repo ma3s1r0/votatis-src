@@ -1,7 +1,7 @@
 ---
 id: 0002
 title: 제보 수집 API (생성 / 첨부 업로드 / 공개 조회)
-status: not-started
+status: completed
 owner: backend-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -72,3 +72,5 @@ dev_order: 2   # 0006과 독립이라 병렬 가능.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현 (backend-dev). StoragePort 추상화(presign/headObject, 테스트 InMemory fake), 첨부 2단계(create→PUT→finalize, sha256/객체존재 검증), 공개 조회 verified-only(미검증 404)+민감필드 제외, 페이지네이션·q·sido 필터. 마이그레이션 0002. QA 조건부 PASS.
+- 2026-06-15: QA 수정 (backend). 첨부 create 에 POST /reports 와 동일한 IP rate limit(429) 적용, 없는 reportId create 시 FK 위반 500 대신 404. expectedSha256 은 선택; 서버는 finalize 시 항상 storage 의 실제 sha256 을 기록(+ size 검증), expectedSha256 제출 시에만 추가 대조해 불일치면 409. → QA 재검증 통과, status→completed.

@@ -74,17 +74,25 @@ export const reportHistory = pgTable("report_history", {
     .defaultNow(),
 });
 
-// attachment — 첨부 (S3 storage_key + sha256)
+// attachment — 첨부 (S3 storage_key + sha256). 2단계 업로드(create→finalize).
+// create 시 storage_key·expected_sha256·status=pending 으로 행 생성, finalize 에서
+// S3 객체 존재·크기 확인 후 sha256 확정 + status=stored.
 export const attachment = pgTable("attachment", {
   id: uuid("id").primaryKey().defaultRandom(),
   reportId: uuid("report_id")
     .notNull()
     .references(() => report.id),
   storageKey: text("storage_key").notNull(),
-  sha256: text("sha256").notNull(),
+  // sha256 은 finalize 에서 확정(생성 시 미정 → nullable)
+  sha256: text("sha256"),
+  // 클라이언트가 create 시 주장한 sha256(검증 대조용)
+  expectedSha256: text("expected_sha256"),
   mime: text("mime"),
   size: integer("size"),
   exif: jsonb("exif"),
+  // pending | stored
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // admin_user — 관리자 계정. role ∈ {root, reviewer}, status ∈ {invited, active, disabled}
@@ -126,6 +134,13 @@ export const adminSession = pgTable("admin_session", {
 export const loginAttempt = pgTable("login_attempt", {
   id: uuid("id").primaryKey().defaultRandom(),
   key: text("key").notNull(), // ip|email
+  attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// intake_attempt — 제보 수집 rate limit (DB 기반, 0001 패턴). IP 키 윈도 카운팅.
+export const intakeAttempt = pgTable("intake_attempt", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull(), // ip
   attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
