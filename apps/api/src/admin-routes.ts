@@ -10,6 +10,8 @@ import {
   type EvidenceLink,
 } from "./db/verification.js";
 import { getStoredAttachmentForReview } from "./db/intake.js";
+import type { MosaicPort } from "./mosaic.js";
+import { processMosaicForReport } from "./db/mosaic.js";
 
 // presigned GET 만료(0008 결정 2: 5분, 공개 다운로드와 동일 보수값).
 const DOWNLOAD_TTL_SECONDS = 5 * 60;
@@ -66,8 +68,8 @@ function adminReport(r: {
   };
 }
 
-export function createAdminApp(opts: { db: Db; storage: StoragePort }) {
-  const { db, storage } = opts;
+export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: MosaicPort }) {
+  const { db, storage, mosaic } = opts;
   const app = new Hono<AuthEnv>();
 
   // db 주입 + 세션 로드 → 모든 라우트 reviewer 보호.
@@ -198,6 +200,12 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort }) {
     if (!result.ok) {
       if ("reason" in result) return c.json({ error: "not_found" }, 404);
       return c.json({ error: "validation_error", fields: result.errors }, 422);
+    }
+
+    // 0016 공표 처리: verified=true(공표) 확정 시 assembly 첨부의 공개본(모자이크) 생성.
+    // election 은 no-op(processMosaicForReport 내부 domain 분기). 멱등(이미 처리분 skip).
+    if (result.verification.verified) {
+      await processMosaicForReport(db, { reportId, mosaic, storage });
     }
 
     const v = result.verification;

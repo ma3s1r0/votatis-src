@@ -92,6 +92,10 @@ export const attachment = pgTable("attachment", {
     .notNull()
     .references(() => report.id),
   storageKey: text("storage_key").notNull(),
+  // 공개본(모자이크) 스토리지 키(0016). assembly 제보 공표 처리 시 MosaicPort 가
+  // public/ prefix 아래 생성한 객체 키를 1회 기록(이후 불변). null 이면 미처리 →
+  // 공개 다운로드 fail-closed(404). 원본 storage_key 는 그대로 보존(원본 미노출).
+  publicKey: text("public_key"),
   // 클라이언트가 신고한 원본 파일명(공개 직렬화 노출용). 스토리지 key 와 별개.
   filename: text("filename"),
   // sha256 은 finalize 에서 확정(생성 시 미정 → nullable)

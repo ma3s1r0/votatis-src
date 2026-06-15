@@ -42,7 +42,7 @@ specs/
 | 0013 | 접수번호 추적 + 공개 상태조회 + 내 제보 | completed | 2026-06-15 | completed/0013-tracking-number-status-lookup.md |
 | 0014 | 도메인 세그먼트 (선거 의혹 / 집회 현장) | completed | 2026-06-15 | completed/0014-domain-segment.md |
 | 0015 | 클라이언트 EXIF 검증 + 원본 아님 차단 | completed | 2026-06-15 | completed/0015-client-exif-validation.md |
-| 0016 | 모자이크/원본분리 포렌식 (공표 처리) | not-started | 2026-06-15 | not-started/0016-mosaic-public-original-separation.md |
+| 0016 | 모자이크/원본분리 포렌식 (공표 처리) | completed | 2026-06-15 | completed/0016-mosaic-public-original-separation.md |
 | 0017 | 2인 교차검증 (서로 다른 reviewer 2인 동의) | not-started | 2026-06-15 | not-started/0017-dual-reviewer-verification.md |
 | 0018 | 지도 뷰 (시도 분포) + 공개 상세 조회수 | not-started | 2026-06-15 | not-started/0018-map-view-and-view-counts.md |
 

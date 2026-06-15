@@ -18,6 +18,7 @@ import {
 } from "./db/intake.js";
 import { isReportCategory, isReportDomain, type ReportDomain } from "./categories.js";
 import { currentStage, buildTimeline } from "./tracking.js";
+import { ORIGINAL_PREFIX } from "./mosaic.js";
 
 // 접수번호 형식(0013). 무차별 조회 시 형식 불일치는 DB 조회 전 컷.
 const TRACKING_RE = /^VT-\d{4}-\d{4}-\d{4}$/;
@@ -250,7 +251,8 @@ export function createReportApp(opts: {
     }
 
     const ext = body.filename?.split(".").pop()?.toLowerCase();
-    const storageKey = `${bucketPrefix}/${reportId}/${crypto.randomUUID()}${ext ? "." + ext : ""}`;
+    // 0016: 원본은 original/ prefix 아래 생성(공개본은 공표 처리에서 public/ 로 분리).
+    const storageKey = `${ORIGINAL_PREFIX}${bucketPrefix}/${reportId}/${crypto.randomUUID()}${ext ? "." + ext : ""}`;
 
     const att = await createPendingAttachment(db, {
       reportId,
@@ -319,8 +321,14 @@ export function createReportApp(opts: {
     });
     if (!row) return c.json({ error: "not_found" }, 404);
 
+    // 0016 공개 게이트: assembly 는 모자이크된 공개본(publicKey)만 노출. 원본 storageKey
+    // (original/...) 는 절대 외부 미노출. publicKey 미처리(null) → 404(fail-closed).
+    // election 은 기존 0008 동작 그대로(storageKey 발급).
+    const key = row.domain === "assembly" ? row.publicKey : row.storageKey;
+    if (!key) return c.json({ error: "not_found" }, 404);
+
     const presigned = await storage.presignGet({
-      key: row.storageKey,
+      key,
       expiresInSeconds: PRESIGN_TTL_SECONDS,
     });
     // storageKey 등 민감 메타는 비노출 — URL·만료만 반환.

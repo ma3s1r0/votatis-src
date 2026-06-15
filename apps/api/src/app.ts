@@ -5,6 +5,7 @@ import type { StoragePort } from "./storage.js";
 import { createAuthApp } from "./auth-routes.js";
 import { createReportApp } from "./report-routes.js";
 import { createAdminApp } from "./admin-routes.js";
+import { FakeMosaic, type MosaicPort } from "./mosaic.js";
 
 // 메인 앱 팩토리. db·storage 를 주입(0002 패턴)하고 하위 앱을 마운트한다.
 //  - /api/auth/*  : 인증(0006). 로그인/세션/초대.
@@ -13,17 +14,20 @@ import { createAdminApp } from "./admin-routes.js";
 export function createApp(opts: {
   db: Db;
   storage: StoragePort;
+  // 0016 공표 처리(모자이크) 포트. 미주입 시 FakeMosaic(비목표: 실 얼굴검출은 후속 인프라).
+  mosaic?: MosaicPort;
   submitterSalt?: string;
   inviteBaseUrl?: string;
 }) {
   const app = new Hono();
+  const mosaic = opts.mosaic ?? new FakeMosaic();
 
   app.get("/health", (c) => c.json({ ok: true, service: "votatis-api" }));
 
   app.route("/api/auth", createAuthApp(opts.db, { inviteBaseUrl: opts.inviteBaseUrl }));
   app.route(
     "/api/admin",
-    createAdminApp({ db: opts.db, storage: opts.storage }),
+    createAdminApp({ db: opts.db, storage: opts.storage, mosaic }),
   );
   app.route(
     "/api",
@@ -44,6 +48,7 @@ export function createApp(opts: {
 export function buildApp(opts: {
   db: Db;
   storage: StoragePort;
+  mosaic?: MosaicPort;
   corsOrigins: string[];
   submitterSalt?: string;
   inviteBaseUrl?: string;
@@ -66,6 +71,7 @@ export function buildApp(opts: {
     createApp({
       db: opts.db,
       storage: opts.storage,
+      mosaic: opts.mosaic,
       submitterSalt: opts.submitterSalt,
       inviteBaseUrl: opts.inviteBaseUrl,
     }),

@@ -120,12 +120,18 @@ export async function finalizeAttachment(
 
 // 공개 다운로드용 첨부 조회: report.vVerified=true ∧ attachment.status=stored ∧ 소속 일치.
 // 게이트 미충족(미검증·pending·소속불일치·없음)은 모두 undefined → 라우트에서 404(존재 누설 금지).
+// 0016: domain·publicKey 도 반환 — 라우트가 assembly 면 publicKey(모자이크본)만 노출하고
+// 원본 storageKey 는 절대 외부 미노출. publicKey 미처리(null) assembly 는 라우트에서 404.
 export async function getStoredAttachmentForVerifiedReport(
   db: Db,
   args: { reportId: string; attachmentId: string },
-): Promise<{ storageKey: string } | undefined> {
+): Promise<{ storageKey: string; publicKey: string | null; domain: string } | undefined> {
   const [row] = await db
-    .select({ storageKey: attachment.storageKey })
+    .select({
+      storageKey: attachment.storageKey,
+      publicKey: attachment.publicKey,
+      domain: report.domain,
+    })
     .from(attachment)
     .innerJoin(report, eq(attachment.reportId, report.id))
     .where(

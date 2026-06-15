@@ -1,7 +1,7 @@
 ---
 id: 0016
 title: 모자이크 / 원본분리 포렌식 (공표 처리)
-status: not-started
+status: completed
 owner: backend-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -77,3 +77,5 @@ dev_order: 16   # 0014(domain) 이후. assembly 도메인 분기에 의존.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현(backend-dev): MosaicPort+FakeMosaic, attachment.public_key(마이그레이션 drizzle idx 8 — 순번일 뿐 스펙0008과 무관), original/·public/ 키 분리, 공표(verified=true) 시 assembly 첨부 모자이크 트리거(election no-op), 공개 다운로드 public만·미처리 404(fail-closed)·원본 미노출, 멱등. 실 얼굴검출/블러는 비목표(인터페이스+Fake). QA PASS(원본 누설·fail-closed·키추측 차단 검증). 게이트 (api 175 + web 158), 회귀 0. status→completed.
+- 2026-06-15: ⚠️ **배포 책임(비목표 경계)**: `createApp`이 mosaic 미주입 시 FakeMosaic(원본→public 키 복사)로 폴백 → **운영 배포 전 실 MosaicPort(얼굴검출/블러) 주입 필수**. 0009 배선 후속에 포함.
