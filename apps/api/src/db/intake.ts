@@ -184,15 +184,17 @@ export type ListParams = {
   sido?: string;
   category?: string;
   electionId?: string;
+  domain?: string;
 };
 
-// 공개 목록: verified=true 인 report 만. q(제목/본문 부분일치)·sido·category·electionId
-// 필터(AND 조합)·페이지네이션.
+// 공개 목록: verified=true 인 report 만. q(제목/본문 부분일치)·sido·category·electionId·domain
+// 필터(AND 조합)·페이지네이션. domain 미지정 시 두 도메인 모두(0014 결정 4).
 export async function listVerifiedReports(db: Db, params: ListParams) {
   const conds = [eq(report.vVerified, true)];
   if (params.sido) conds.push(eq(report.sido, params.sido));
   if (params.category) conds.push(eq(report.category, params.category));
   if (params.electionId) conds.push(eq(report.electionId, params.electionId));
+  if (params.domain) conds.push(eq(report.domain, params.domain));
   if (params.q) {
     const like = `%${params.q}%`;
     conds.push(sql`(${report.title} ILIKE ${like} OR ${report.body} ILIKE ${like})`);

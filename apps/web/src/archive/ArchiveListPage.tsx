@@ -5,11 +5,12 @@ import {
   type ArchiveItem,
   type ArchiveListQuery,
 } from "./api";
-import { REPORT_CATEGORIES } from "../categories";
+import { categoriesForDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import { formatDateTime } from "../format";
 import Header from "../Header";
 import TabBar from "../TabBar";
+import DomainSegment, { type DomainOption } from "../DomainSegment";
 
 type State =
   | { status: "loading" }
@@ -54,7 +55,13 @@ function queryFromParams(params: URLSearchParams): ArchiveListQuery {
     sido: params.get("sido") || undefined,
     category: params.get("category") || undefined,
     electionId: params.get("electionId") || undefined,
+    domain: params.get("domain") || undefined,
   };
+}
+
+function domainOf(params: URLSearchParams): DomainOption {
+  const d = params.get("domain");
+  return d === "election" || d === "assembly" ? d : null;
 }
 
 export default function ArchiveListPage() {
@@ -128,6 +135,13 @@ export default function ArchiveListPage() {
     patchParams({ q: searchInput.trim() || undefined });
   }
 
+  const selectedDomain = domainOf(searchParams);
+  // 도메인 전환 시 분류는 도메인별 집합이므로 함께 초기화한다.
+  function onDomain(next: DomainOption) {
+    patchParams({ domain: next ?? undefined, category: undefined });
+  }
+  const categoryOptions = categoriesForDomain(selectedDomain ?? "election");
+
   function onSido(value: string) {
     patchParams({ sido: value || undefined });
   }
@@ -162,6 +176,13 @@ export default function ArchiveListPage() {
         검증을 거친 기록만 공개합니다. 각 기록은 출처와 검토 범위를 함께
         제공합니다.
       </p>
+
+      <DomainSegment
+        value={selectedDomain}
+        onChange={onDomain}
+        includeAll
+        assemblyLabel="집회 신고"
+      />
 
       <form onSubmit={onSearch} className="filter-bar">
         <label className="field" htmlFor="archive-search">
@@ -208,7 +229,7 @@ export default function ArchiveListPage() {
           onChange={(e) => onCategory(e.target.value)}
         >
           <option value="">전체 분류</option>
-          {REPORT_CATEGORIES.map((c) => (
+          {categoryOptions.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>

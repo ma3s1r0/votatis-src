@@ -1,0 +1,1 @@
+ALTER TABLE "report" ADD COLUMN "domain" text DEFAULT 'election' NOT NULL;

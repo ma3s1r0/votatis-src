@@ -9,6 +9,7 @@ export type ReportInput = {
   sigungu?: string;
   eupMyeonDong?: string;
   occurredAt?: string;
+  domain?: string;
   category?: string;
   electionId?: string;
   consent?: boolean;

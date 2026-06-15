@@ -16,7 +16,7 @@ import {
   listElections,
   getReportByTrackingNumber,
 } from "./db/intake.js";
-import { isReportCategory } from "./categories.js";
+import { isReportCategory, isReportDomain, type ReportDomain } from "./categories.js";
 import { currentStage, buildTimeline } from "./tracking.js";
 
 // 접수번호 형식(0013). 무차별 조회 시 형식 불일치는 DB 조회 전 컷.
@@ -39,6 +39,7 @@ function publicReport(r: {
   eupMyeonDong: string | null;
   category: string | null;
   electionId: string | null;
+  domain: string;
   occurredAt: Date | null;
   collectedAt: Date;
 }) {
@@ -51,6 +52,7 @@ function publicReport(r: {
     eupMyeonDong: r.eupMyeonDong,
     category: r.category,
     electionId: r.electionId,
+    domain: r.domain,
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
   };
@@ -74,6 +76,7 @@ type CreateReportBody = {
   occurredAt?: string;
   category?: string;
   electionId?: string;
+  domain?: string;
   consent?: boolean;
   license?: string;
   sources?: SourceInput[];
@@ -125,8 +128,14 @@ export function createReportApp(opts: {
     const errors: Record<string, string> = {};
     if (!body.title || typeof body.title !== "string") errors.title = "required";
 
-    // 0007: category 는 고정 enum 집합에 속할 때만(허용 외 → 400).
-    if (body.category != null && !isReportCategory(body.category)) {
+    // 0014: domain 은 {election, assembly} 집합. 미지정 시 election 기본.
+    if (body.domain != null && !isReportDomain(body.domain)) {
+      errors.domain = "invalid";
+    }
+    const domain: ReportDomain = isReportDomain(body.domain) ? body.domain : "election";
+
+    // 0007/0014: category 는 도메인별 고정 enum 집합에 속할 때만(허용 외 → 400).
+    if (body.category != null && !isReportCategory(body.category, domain)) {
       errors.category = "invalid";
     }
     // 0007: electionId 가 있으면 실재해야 한다(없는 FK → 500 대신 400).
@@ -156,6 +165,7 @@ export function createReportApp(opts: {
       occurredAt: body.occurredAt ? new Date(body.occurredAt) : undefined,
       category: body.category,
       electionId: body.electionId,
+      domain,
       consent: body.consent,
       license: body.license,
       status: "submitted",
@@ -325,6 +335,7 @@ export function createReportApp(opts: {
     const sido = c.req.query("sido") || undefined;
     const category = c.req.query("category") || undefined;
     const electionId = c.req.query("electionId") || undefined;
+    const domain = c.req.query("domain") || undefined;
 
     const { rows, total } = await listVerifiedReports(db, {
       limit,
@@ -333,6 +344,7 @@ export function createReportApp(opts: {
       sido,
       category,
       electionId,
+      domain,
     });
     return c.json({
       items: rows.map(publicReport),

@@ -181,6 +181,82 @@ describe("0007 공개 필터 — category·election", () => {
   });
 });
 
+describe("0014 공개 필터 — domain", () => {
+  it("domain=assembly 는 verified 범위 내 assembly 만, total 갱신", async () => {
+    const a = await createReport("집회 제보", { domain: "assembly" }, "21.0.0.1");
+    const e = await createReport("선거 제보", { domain: "election" }, "21.0.0.2");
+    await markVerified(ctx.db, a);
+    await markVerified(ctx.db, e);
+
+    const res = await ctx.app.request("/reports?domain=assembly");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(a);
+  });
+
+  it("domain=election 은 election 만", async () => {
+    const a = await createReport("집회 제보", { domain: "assembly" }, "22.0.0.1");
+    const e = await createReport("선거 제보", { domain: "election" }, "22.0.0.2");
+    await markVerified(ctx.db, a);
+    await markVerified(ctx.db, e);
+
+    const res = await ctx.app.request("/reports?domain=election");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(e);
+  });
+
+  it("domain 미지정 → 두 도메인 모두 반환(결정 4)", async () => {
+    const a = await createReport("집회 제보", { domain: "assembly" }, "23.0.0.1");
+    const e = await createReport("선거 제보", { domain: "election" }, "23.0.0.2");
+    await markVerified(ctx.db, a);
+    await markVerified(ctx.db, e);
+
+    const res = await ctx.app.request("/reports");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(2);
+  });
+
+  it("domain 은 q·sido 와 AND 로 좁힌다", async () => {
+    const target = await createReport(
+      "충돌 의혹",
+      { domain: "assembly", sido: "서울" },
+      "24.0.0.1",
+    );
+    // domain 다름
+    const other1 = await createReport(
+      "충돌 의혹",
+      { domain: "election", sido: "서울" },
+      "24.0.0.2",
+    );
+    // sido 다름
+    const other2 = await createReport(
+      "충돌 의혹",
+      { domain: "assembly", sido: "부산" },
+      "24.0.0.3",
+    );
+    for (const id of [target, other1, other2]) await markVerified(ctx.db, id);
+
+    const res = await ctx.app.request("/reports?domain=assembly&q=충돌&sido=서울");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(target);
+  });
+
+  it("목록 item·상세에 domain 직렬화", async () => {
+    const id = await createReport("집회 직렬화", { domain: "assembly" }, "25.0.0.1");
+    await markVerified(ctx.db, id);
+
+    const list = await ctx.app.request("/reports");
+    const listJson = (await list.json()) as { items: { id: string; domain: string }[] };
+    expect(listJson.items.find((i) => i.id === id)!.domain).toBe("assembly");
+
+    const detail = await ctx.app.request(`/reports/${id}`);
+    const detailJson = (await detail.json()) as { domain: string };
+    expect(detailJson.domain).toBe("assembly");
+  });
+});
+
 describe("0007 GET /elections — 필터 옵션", () => {
   it("seeded election 목록 반환", async () => {
     const e = await seedElection(ctx.db, "제8회 지선", "지선");

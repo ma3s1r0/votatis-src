@@ -15,6 +15,7 @@ export type ArchiveItem = {
   collectedAt: string;
   category: string | null;
   electionId: string | null;
+  domain?: string;
 };
 
 export type ArchiveListResponse = {
@@ -77,6 +78,7 @@ export type ArchiveListQuery = {
   sido?: string;
   category?: string;
   electionId?: string;
+  domain?: string;
 };
 
 export async function fetchArchive(
@@ -89,6 +91,7 @@ export async function fetchArchive(
   if (query.sido) params.set("sido", query.sido);
   if (query.category) params.set("category", query.category);
   if (query.electionId) params.set("electionId", query.electionId);
+  if (query.domain) params.set("domain", query.domain);
 
   const res = await fetch(`${base}?${params.toString()}`);
   if (!res.ok) throw new Error(`archive_fetch_failed:${res.status}`);

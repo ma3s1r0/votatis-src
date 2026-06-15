@@ -410,6 +410,31 @@ textarea.input {
 }
 
 /* ── 아카이브 목록 ─────────────────────────────────────────── */
+/* 도메인 세그먼트 컨트롤(0014): 선택=navy 채움, 비선택=연회색. */
+.segment {
+  display: inline-flex;
+  gap: 0;
+  margin: var(--space-4) 0 0;
+  padding: 2px;
+  background: var(--color-navy-soft);
+  border-radius: var(--radius-md);
+}
+.segment__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  padding: var(--space-2) var(--space-4);
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+}
+.segment__btn--active {
+  background: var(--color-navy);
+  color: #fff;
+}
+
 .filter-bar {
   display: flex;
   gap: var(--space-3);

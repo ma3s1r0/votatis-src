@@ -120,6 +120,84 @@ describe("제보 생성", () => {
     expect(json.fields.electionId).toBeTruthy();
   });
 
+  // 0014 수용 기준: domain 미지정 → election 으로 저장.
+  it("domain 미지정 → election 기본 저장", async () => {
+    const res = await ctx.app.request("/reports", jsonReq({ title: "도메인 없는 제보" }));
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.domain).toBe("election");
+  });
+
+  // 0014 수용 기준: domain=assembly 저장.
+  it("domain=assembly 저장 → 201", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "집회 현장 제보", domain: "assembly" }),
+    );
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.domain).toBe("assembly");
+  });
+
+  // 0014 수용 기준: 허용 외 domain → 400 + fields.domain.
+  it("허용 외 domain → 400 + fields.domain", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "잘못된 도메인", domain: "protest" }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { error: string; fields: Record<string, string> };
+    expect(json.error).toBe("validation_error");
+    expect(json.fields.domain).toBe("invalid");
+  });
+
+  // 0014 결정 3: assembly 분류는 assembly 도메인에서 허용.
+  it("domain=assembly + assembly 분류 → 201", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "충돌 제보", domain: "assembly", category: "충돌·물리력" }),
+    );
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.category).toBe("충돌·물리력");
+  });
+
+  // 0014 결정 2: election 전용 분류를 assembly 로 보내면 400.
+  it("domain=assembly + election 전용 분류 → 400", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "도메인-분류 불일치", domain: "assembly", category: "사전투표" }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { fields: Record<string, string> };
+    expect(json.fields.category).toBeTruthy();
+  });
+
+  // 0014 결정 2(역방향): assembly 전용 분류를 election(기본 포함) 으로 보내면 400.
+  it("domain=election + assembly 전용 분류 → 400", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "역방향 도메인-분류 불일치", domain: "election", category: "충돌·물리력" }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { fields: Record<string, string> };
+    expect(json.fields.category).toBeTruthy();
+  });
+
+  // 0014 결정 2(역방향, domain 생략 → election 기본): assembly 전용 분류 → 400.
+  it("domain 생략 + assembly 전용 분류 → 400(기본 election 적용)", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "기본 도메인 분류 불일치", category: "채증·촬영" }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { fields: Record<string, string> };
+    expect(json.fields.category).toBeTruthy();
+  });
+
   // 수용 기준: 동일 IP rate limit → 429.
   it("동일 IP 임계 초과 → 429", async () => {
     let last = 0;

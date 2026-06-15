@@ -1,7 +1,7 @@
 ---
 id: 0014
 title: 도메인 세그먼트 (선거 의혹 / 집회 현장)
-status: not-started
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -87,3 +87,4 @@ dev_order: 14   # 0013 다음. 0016(모자이크)이 domain=assembly 에 의존.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버(backend-dev): report.domain(election|assembly, default election) + 마이그레이션 0007, 도메인별 분류 검증(불일치 400 양방향), 목록/검수 ?domain 필터(AND·미지정=둘다), 직렬화, assembly 시드. web(frontend-dev): DomainSegment 컴포넌트, 마법사·아카이브·검수 큐 세그먼트 + 도메인별 분류 전환. QA PASS(web↔서버 값 일치, 양방향 정합, 마이그레이션 정합). 게이트 (api 158 + web 136), 회귀 0. status→completed.

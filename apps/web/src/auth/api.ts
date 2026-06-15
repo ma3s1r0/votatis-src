@@ -79,6 +79,7 @@ export type AdminReport = {
   occurredAt: string | null;
   collectedAt: string | null;
   verified: boolean;
+  domain?: string;
 };
 
 export type Attachment = {
@@ -132,11 +133,16 @@ export type AdminReportDetail = AdminReport & {
 export async function fetchReports(
   limit = 20,
   offset = 0,
+  domain?: string,
 ): Promise<{ items: AdminReport[]; limit: number; offset: number }> {
-  const res = await fetch(
-    `${ADMIN_BASE}/reports?limit=${limit}&offset=${offset}`,
-    { credentials: "include" },
-  );
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (domain) params.set("domain", domain);
+  const res = await fetch(`${ADMIN_BASE}/reports?${params.toString()}`, {
+    credentials: "include",
+  });
   if (!res.ok) throw new Error(`reports_fetch_failed:${res.status}`);
   return (await res.json()) as {
     items: AdminReport[];

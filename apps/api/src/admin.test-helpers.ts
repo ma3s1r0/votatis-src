@@ -45,8 +45,8 @@ export async function loginCookie(
   return setCookie.split(";")[0];
 }
 
-export async function makeReport(db: Db, title = "테스트 제보") {
-  const r = await createReport(db, { title, status: "submitted" });
+export async function makeReport(db: Db, title = "테스트 제보", domain?: string) {
+  const r = await createReport(db, { title, status: "submitted", domain });
   return r;
 }
 

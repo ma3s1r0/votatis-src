@@ -75,6 +75,18 @@ describe("0005 공개 상세 계약 — verification 요약", () => {
   });
 });
 
+describe("0014 공개 상세 계약 — domain 직렬화", () => {
+  it("assembly 제보의 공개 상세에 domain=assembly 노출", async () => {
+    const r = await makeReport(ctx.db, "집회 현장 제보", "assembly");
+    await verify(r.id);
+
+    const res = await ctx.app.request(`/api/reports/${r.id}`);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { domain: string };
+    expect(json.domain).toBe("assembly");
+  });
+});
+
 describe("0005 공개 상세 계약 — attachment filename", () => {
   it("공개 상세 attachments[] 에 filename 포함, 스토리지 key·expectedSha256·exif 제외", async () => {
     const r = await makeReport(ctx.db, "첨부 있는 제보");

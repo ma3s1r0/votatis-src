@@ -11,14 +11,12 @@ import {
   sigunguList,
   eupMyeonDongList,
 } from "./regions";
-import { REPORT_CATEGORIES } from "../categories";
+import { categoriesForDomain, type ReportDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import Header from "../Header";
 import TabBar from "../TabBar";
+import DomainSegment from "../DomainSegment";
 import { addMyReport } from "../track/storage";
-
-// 분류(category)는 서버 enum(스펙 0007)과 동일 출처. value=label(한글 enum 값 그대로 전송).
-const categories = REPORT_CATEGORIES;
 
 const TOTAL_STEPS = 5;
 const DRAFT_KEY = "votatis_report_draft";
@@ -28,6 +26,7 @@ type Draft = {
   title: string;
   body: string;
   occurredAt: string;
+  domain: ReportDomain;
   category: string;
   electionId: string;
   sido: string;
@@ -49,6 +48,7 @@ const emptyDraft: Draft = {
   title: "",
   body: "",
   occurredAt: "",
+  domain: "election",
   category: "",
   electionId: "",
   sido: "",
@@ -105,6 +105,14 @@ export default function ReportWizard() {
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setStepError(null);
     setDraft((d) => ({ ...d, [key]: value }));
+  }
+
+  // 도메인 전환 시 분류는 다른 집합이므로 초기화(전환된 도메인 분류로 다시 선택).
+  // 제보폼은 "전체" 옵션이 없어 항상 domain 값이 온다(null 아님).
+  function onSelectDomain(value: ReportDomain | null) {
+    if (value == null) return;
+    setStepError(null);
+    setDraft((d) => ({ ...d, domain: value, category: "" }));
   }
 
   function onSelectSido(value: string) {
@@ -169,6 +177,7 @@ export default function ReportWizard() {
       title: draft.title,
       body: draft.body || undefined,
       occurredAt: draft.occurredAt || undefined,
+      domain: draft.domain,
       category: draft.category || undefined,
       electionId: draft.electionId || undefined,
       sido: draft.sido || undefined,
@@ -373,6 +382,7 @@ export default function ReportWizard() {
       {draft.step === 2 && (
         <section style={sectionStyle}>
           <h2>분류</h2>
+          <DomainSegment value={draft.domain} onChange={onSelectDomain} />
           <label style={labelStyle}>
             분류
             <select
@@ -381,7 +391,7 @@ export default function ReportWizard() {
               style={inputStyle}
             >
               <option value="">선택하세요</option>
-              {categories.map((c) => (
+              {categoriesForDomain(draft.domain).map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

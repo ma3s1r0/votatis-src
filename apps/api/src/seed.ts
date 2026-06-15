@@ -24,6 +24,8 @@ type SeedReportSpec = {
   sido?: string;
   sigungu?: string;
   category?: string;
+  // 도메인 세그먼트(0014). 미지정 시 election.
+  domain?: string;
   occurredAt?: string;
   withElection?: boolean;
   sources?: { url: string; capturedAt: string }[];
@@ -153,6 +155,39 @@ const REPORTS: SeedReportSpec[] = [
     category: "기타",
     occurredAt: "2026-06-01T20:00:00.000Z",
   },
+  // ----- 집회 현장(0014 domain=assembly) -----
+  {
+    title: "집회 현장 경찰 채증 과잉 제보",
+    body: "평화 집회 참가자를 근거리에서 무차별 촬영했다는 제보. 검증됨.",
+    sido: "서울특별시",
+    sigungu: "중구",
+    category: "채증·촬영",
+    domain: "assembly",
+    occurredAt: "2026-06-08T15:00:00.000Z",
+    sources: [{ url: "https://example.org/news/rally-1", capturedAt: "2026-06-08T18:00:00.000Z" }],
+    attachment: { filename: "rally.jpg", mime: "image/jpeg", size: 153600 },
+    verification: {
+      confidence: 70,
+      validity: "partly",
+      severity: "3",
+      method: "현장 영상 메타데이터 및 참가자 진술 대조",
+      notes: "근거리 촬영은 사실로 확인. 채증 절차의 적법성은 판단 보류.",
+      unverifiedClaims: "고의적 표적 채증 주장은 근거 미확보.",
+      evidence: [
+        { url: "https://example.org/evidence/rally-video", capturedAt: "2026-06-08T19:00:00.000Z" },
+      ],
+    },
+  },
+  {
+    title: "집회 해산 과정 물리적 충돌 제보",
+    body: "해산 명령 후 진압 과정에서 참가자와 물리적 충돌이 있었다는 제보. 검토 대기.",
+    sido: "서울특별시",
+    sigungu: "종로구",
+    category: "충돌·물리력",
+    domain: "assembly",
+    occurredAt: "2026-06-08T16:30:00.000Z",
+    sources: [{ url: "https://example.org/news/rally-2", capturedAt: "2026-06-08T20:00:00.000Z" }],
+  },
 ];
 
 const toEvidence = (
@@ -199,6 +234,7 @@ export async function seed(db: Db, storage: InMemoryStorage): Promise<SeedResult
       sido: spec.sido,
       sigungu: spec.sigungu,
       category: spec.category,
+      domain: spec.domain,
       electionId: spec.withElection ? election9.id : undefined,
       occurredAt: spec.occurredAt ? T(spec.occurredAt) : undefined,
       collectedAt: spec.occurredAt ? T(spec.occurredAt) : T("2026-06-02T00:00:00.000Z"),

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { fetchReports, logout, type AdminReport } from "./api";
 import { formatDateTime } from "../format";
 import Header from "../Header";
+import DomainSegment, { type DomainOption } from "../DomainSegment";
 
 type State =
   | { status: "loading" }
@@ -15,11 +16,13 @@ function regionLabel(r: AdminReport): string {
 
 export default function QueuePage() {
   const [state, setState] = useState<State>({ status: "loading" });
+  const [domain, setDomain] = useState<DomainOption>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     let alive = true;
-    fetchReports()
+    setState({ status: "loading" });
+    fetchReports(20, 0, domain ?? undefined)
       .then((res) => {
         if (alive) setState({ status: "ready", items: res.items });
       })
@@ -29,7 +32,7 @@ export default function QueuePage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [domain]);
 
   async function onLogout() {
     await logout();
@@ -41,6 +44,7 @@ export default function QueuePage() {
     <Header admin onLogout={onLogout} />
     <main className="container">
       <h1>검토 큐</h1>
+      <DomainSegment value={domain} onChange={setDomain} includeAll />
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && <p role="alert">목록을 불러오지 못했습니다.</p>}

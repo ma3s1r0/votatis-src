@@ -46,6 +46,7 @@ function adminReport(r: {
   sido: string | null;
   sigungu: string | null;
   eupMyeonDong: string | null;
+  domain: string;
   occurredAt: Date | null;
   collectedAt: Date;
   vVerified: boolean | null;
@@ -58,6 +59,7 @@ function adminReport(r: {
     sido: r.sido,
     sigungu: r.sigungu,
     eupMyeonDong: r.eupMyeonDong,
+    domain: r.domain,
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
     verified: r.vVerified ?? false,
@@ -80,7 +82,8 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort }) {
   app.get("/reports", async (c) => {
     const limit = Math.min(Number(c.req.query("limit") ?? 20) || 20, 100);
     const offset = Math.max(Number(c.req.query("offset") ?? 0) || 0, 0);
-    const rows = await listPendingReports(db, { limit, offset });
+    const domain = c.req.query("domain") || undefined;
+    const rows = await listPendingReports(db, { limit, offset, domain });
     return c.json({ items: rows.map(adminReport), limit, offset });
   });
 

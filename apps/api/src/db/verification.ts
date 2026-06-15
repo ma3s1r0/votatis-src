@@ -176,11 +176,14 @@ export async function submitVerification(
 }
 
 // 검토 큐: 미검증(verified != true) 제보. 관리자 전용 — 공개 0002 와 가시성 분리.
+// domain 미지정 시 두 도메인 모두(0014).
 export async function listPendingReports(
   db: Db,
-  params: { limit: number; offset: number },
+  params: { limit: number; offset: number; domain?: string },
 ) {
-  const where = isNull(report.vVerified);
+  const conds = [isNull(report.vVerified)];
+  if (params.domain) conds.push(eq(report.domain, params.domain));
+  const where = and(...conds);
   const rows = await db
     .select()
     .from(report)

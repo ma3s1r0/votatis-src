@@ -50,6 +50,13 @@
       "when": 1781519215918,
       "tag": "0006_absurd_squadron_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781521841268,
+      "tag": "0007_curved_the_captain",
+      "breakpoints": true
     }
   ]
 }

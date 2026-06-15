@@ -41,6 +41,9 @@ export const report = pgTable("report", {
   eupMyeonDong: text("eup_myeon_dong"),
   // 공개 접수번호(0013). VT-YYYY-MMDD-NNNN. 발급 후 불변. 유니크.
   trackingNumber: text("tracking_number").unique(),
+  // 도메인 세그먼트(0014). election | assembly. 앱 레벨 enum 검증(DB enum 타입 아님).
+  // NOT NULL + default 로 기존 행 백필 자동, 모든 제보가 항상 한 도메인에 속함.
+  domain: text("domain").notNull().default("election"),
   title: text("title").notNull(),
   body: text("body"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }),
