@@ -25,21 +25,18 @@ describe("App (홈 랜딩)", () => {
     expect(screen.queryByText(/Vite \+ React/)).not.toBeInTheDocument();
   });
 
-  it("CTA 2개(아카이브·제보)를 제공한다", () => {
+  it("주 CTA(제보)와 상태 조회 링크를 제공한다(Figma 01)", () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>,
     );
-    // 헤더에도 같은 링크가 있으므로 본문 CTA 영역에서 확인.
     const ctaNav = screen.getByRole("navigation", { name: "주요 행동" });
-    expect(
-      ctaNav.querySelector('a[href="/archive"]'),
-    ).not.toBeNull();
     expect(ctaNav.querySelector('a[href="/report"]')).not.toBeNull();
+    expect(ctaNav.querySelector('a[href="/track"]')).not.toBeNull();
   });
 
-  it("히어로 CTA가 공용 버튼 클래스(btn-primary/btn-secondary)를 사용한다", () => {
+  it("주 CTA가 공용 버튼 클래스(btn-primary)를 사용한다", () => {
     render(
       <MemoryRouter>
         <App />
@@ -47,6 +44,5 @@ describe("App (홈 랜딩)", () => {
     );
     const ctaNav = screen.getByRole("navigation", { name: "주요 행동" });
     expect(ctaNav.querySelector("a.btn.btn-primary")).not.toBeNull();
-    expect(ctaNav.querySelector("a.btn.btn-secondary")).not.toBeNull();
   });
 });

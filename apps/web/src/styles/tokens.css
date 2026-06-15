@@ -92,7 +92,7 @@
   --shadow-md: 0 2px 4px rgba(27, 42, 74, 0.05),
     0 8px 24px rgba(27, 42, 74, 0.08);
 
-  /* 컨테이너 — 모바일 우선(앱 프레임) */
-  --container-max: 480px;
-  --tab-bar-height: 60px;
+  /* 컨테이너 — 모바일 우선(앱 프레임, Figma 정본 390px) */
+  --container-max: 390px;
+  --tab-bar-height: 58px;
 }
