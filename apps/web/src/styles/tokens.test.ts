@@ -47,6 +47,6 @@ describe("디자인 토큰 (tokens.css)", () => {
   });
 
   it("accent 는 진영색을 배제한 네이비 값으로 둔다", () => {
-    expect(css).toContain("--color-accent: #1b2a4a");
+    expect(css).toContain("--color-accent: #0a2540");
   });
 });

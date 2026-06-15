@@ -15,11 +15,11 @@ export default function App() {
             기술과 팩트로 지킵니다
           </h1>
           <p className="hero__sub">
-            현장에서 발견된 선거·집회 현장 증거를 안전하게 기록하고 검증합니다.
+            현장에서 발견한 선거·집회 현장 증거를 안전하게 기록하고 검증합니다.
           </p>
           <nav aria-label="주요 행동" className="hero__cta">
             <Link to="/report" className="btn btn-primary">
-              제보하기
+              증거 제보하기 →
             </Link>
             <Link to="/archive" className="btn btn-secondary">
               아카이브 보기
@@ -29,23 +29,21 @@ export default function App() {
 
         <div className="principles">
           <div className="principle">
-            <p className="principle__title">데이터 우선</p>
+            <p className="principle__title">증거가 휘발된다</p>
             <p className="principle__body">
-              주장보다 사실. 모든 기록은 원본 출처와 수집 시점을 함께 보존합니다.
+              커뮤니티에 흩어진 물증이 시간이 지나면 사라진다.
             </p>
           </div>
           <div className="principle">
-            <p className="principle__title">검증</p>
+            <p className="principle__title">진위가 불분명하다</p>
             <p className="principle__body">
-              사람 검토를 거친 항목만 공개하며, 확인된 범위와 한계를 함께
-              제공합니다.
+              메타데이터 검증 없이는 신뢰를 얻기 어렵다.
             </p>
           </div>
           <div className="principle">
-            <p className="principle__title">투명성</p>
+            <p className="principle__title">기록이 체계가 없다</p>
             <p className="principle__body">
-              검토 방법과 근거를 공개해, 무엇을 어떻게 확인했는지 추적할 수
-              있게 합니다.
+              분산된 제보를 한곳에 정형화해 보존해야 한다.
             </p>
           </div>
         </div>

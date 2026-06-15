@@ -4,26 +4,26 @@
  * 출처: Figma 정본(https://www.figma.com/design/VxSqEMKJRYnYZGb0QoZN5x/Votatis).
  * 스펙 0012 재정렬: 모바일 앱 디자인에 맞춰 팔레트를 네이비 중심으로 교체한다.
  *
- * 톤 메모: accent 는 진영색을 배제한 네이비(#1b2a4a) 계열(중립·신뢰).
+ * 톤 메모: accent 는 진영색을 배제한 네이비(#0a2540) 계열(중립·신뢰).
  * 빨강(--color-danger)은 위험·미검증·오류 의미로만 사용한다.
  */
 :root {
-  /* 색 — 페이지는 흰색, 카드/섹션은 옅은 회색 */
+  /* 색 — 페이지/섹션은 옅은 파랑(#f6f9fc), 카드는 흰색 */
   --color-bg: #ffffff;
-  --color-page: #ffffff;
-  --color-surface: #f3f5f8;
-  --color-surface-strong: #eaedf2;
-  --color-border: #e3e7ec;
-  --color-text: #1f2a3d;
-  --color-text-muted: #8b94a3;
+  --color-page: #f6f9fc;
+  --color-surface: #f6f9fc;
+  --color-surface-strong: #eef3f8;
+  --color-border: #e3e8ed;
+  --color-text: #0a2540;
+  --color-text-muted: #425566;
 
   /* accent = 네이비(프라이머리) */
-  --color-navy: #1b2a4a;
-  --color-navy-hover: #15223c;
-  --color-navy-soft: #eef1f6;
-  --color-accent: #1b2a4a;
-  --color-accent-hover: #15223c;
-  --color-accent-soft: #eef1f6;
+  --color-navy: #0a2540;
+  --color-navy-hover: #0e3354;
+  --color-navy-soft: #eef3f8;
+  --color-accent: #0a2540;
+  --color-accent-hover: #0e3354;
+  --color-accent-soft: #eef3f8;
   --color-accent-border: #d3dae6;
 
   /* 상태색 — 위험/미검증만 빨강 */
@@ -33,7 +33,7 @@
   --color-warning-soft: #fdf3e2;
   --color-success: #1f9d57;
   --color-success-soft: #e6f6ec;
-  --color-focus: #1b2a4a;
+  --color-focus: #0a2540;
 
   /* 관리 액션색 */
   --color-approve: #2e7d57;
@@ -63,8 +63,8 @@
   --color-sev-5-fg: #c0392b;
 
   /* 타이포 */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
-    sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Noto Sans KR", sans-serif;
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;

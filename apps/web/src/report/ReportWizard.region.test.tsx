@@ -53,8 +53,8 @@ describe("ReportWizard 지역 종속 드롭다운", () => {
     const dong = screen.getByLabelText("읍면동");
     expect(dong).not.toBeDisabled();
     // 종속 옵션이 반영됨
-    await userEvent.selectOptions(dong, "역삼동");
-    expect((dong as HTMLSelectElement).value).toBe("역삼동");
+    await userEvent.selectOptions(dong, "신사동");
+    expect((dong as HTMLSelectElement).value).toBe("신사동");
   });
 
   it("시도를 바꾸면 하위 선택이 초기화된다", async () => {
