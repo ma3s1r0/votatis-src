@@ -37,6 +37,7 @@ specs/
 | 0008 | 첨부 다운로드 (presigned GET) | completed | 2026-06-15 | completed/0008-attachment-download.md |
 | 0009 | 운영 배선 (RDS/S3/Lambda 엔트리) | completed | 2026-06-15 | completed/0009-runtime-wiring.md |
 | 0010 | Figma 디자인 반영 (토큰 + 핵심 화면) | completed | 2026-06-15 | completed/0010-figma-design.md |
+| 0011 | UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함) | in-progress | 2026-06-15 | in-progress/0011-ux-improvements.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 
@@ -71,3 +72,7 @@ specs/
 - **0010** Figma 디자인 — 토큰 + 핵심 화면(MVP 스코프). 화면(0003/0005) 안정 후.
 
 권장 직렬 순서: **0007 → 0008 → 0009 → 0010** (0008은 0007과 독립이라 병렬 가능).
+
+## 통합 보강 (0011, 라이브 테스트 후)
+
+- **0011** UX 풀리뷰 + 라이브 테스트 개선 — 로컬 dev(pglite) 실구동에서 발견한 결함·UX 이슈 묶음. **P0: 관리자 인증 경로 불일치 버그**(web `auth/api.ts`가 login/me/logout/invite까지 `/api/admin`으로 호출 → 401). P1 플로우(요약 누락·완료 막다른 길·unverifiedClaims 입력·검색/필터 통일), P2 표시 일관성(날짜 포맷·해시 축약·enum 한글 라벨·공통 네비·토큰 적용). 거의 web 전용, 서버 무변경. 0001~0010 전 스펙 의존(보강 대상). 회귀 0이 절대 조건.

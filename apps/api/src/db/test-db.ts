@@ -9,7 +9,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(here, "..", "..", "drizzle");
 
 // pglite 인메모리 DB 생성 후 drizzle-kit 마이그레이션 SQL 을 적용.
-export async function makeTestDb(): Promise<Db> {
+// 테스트(makeTestDb)와 로컬 dev 서버(dev-server.ts)가 공유하는 공용 헬퍼.
+export async function makeMigratedDb(): Promise<Db> {
   const client = new PGlite();
   const db = drizzle(client);
 
@@ -29,4 +30,9 @@ export async function makeTestDb(): Promise<Db> {
   }
 
   return db as Db;
+}
+
+// 기존 테스트 호환 별칭.
+export async function makeTestDb(): Promise<Db> {
+  return makeMigratedDb();
 }
