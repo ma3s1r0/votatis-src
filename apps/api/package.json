@@ -13,14 +13,17 @@
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.36.4",
-    "hono": "^4.6.13"
+    "hono": "^4.6.13",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.13",
     "@hono/node-server": "^1.13.7",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.28.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

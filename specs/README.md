@@ -35,7 +35,7 @@ specs/
 | 0006 | 인증·권한 (로그인/초대 발급/수정 게이트) | completed | 2026-06-15 | completed/0006-auth.md |
 | 0007 | 분류·선거 모델 확장 + 공개 필터 복원 | completed | 2026-06-15 | completed/0007-category-election-model.md |
 | 0008 | 첨부 다운로드 (presigned GET) | completed | 2026-06-15 | completed/0008-attachment-download.md |
-| 0009 | 운영 배선 (RDS/S3/Lambda 엔트리) | not-started | 2026-06-15 | not-started/0009-runtime-wiring.md |
+| 0009 | 운영 배선 (RDS/S3/Lambda 엔트리) | completed | 2026-06-15 | completed/0009-runtime-wiring.md |
 | 0010 | Figma 디자인 반영 (토큰 + 핵심 화면) | not-started | 2026-06-15 | not-started/0010-figma-design.md |
 
 ## 권장 개발 순서 (MVP 백로그)

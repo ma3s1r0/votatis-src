@@ -1,7 +1,7 @@
 ---
 id: 0009
 title: 운영 배선 (RDS / S3 / Lambda 엔트리)
-status: not-started
+status: completed
 owner: backend-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -82,3 +82,4 @@ dev_order: 9
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현 (backend-dev) + QA PASS. config env 파서(fail-fast), createPostgresDb(pg 드라이버), S3Storage(aws4fetch SigV4 presign, 네트워크 없이 단위검증), buildApp+CORS(명시 오리진·credentials·와일드카드 금지), lambda.ts/index.ts createConfiguredApp 배선, Db 타입 일반화(pglite↔pg). 실 RDS/S3 연결·마이그레이션 실행은 비목표(배포). api 124 통과. status→completed.

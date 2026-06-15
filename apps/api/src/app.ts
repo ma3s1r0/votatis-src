@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { Db } from "./db/repository.js";
 import type { StoragePort } from "./storage.js";
 import { createAuthApp } from "./auth-routes.js";
@@ -30,6 +31,43 @@ export function createApp(opts: {
       db: opts.db,
       storage: opts.storage,
       submitterSalt: opts.submitterSalt,
+    }),
+  );
+
+  return app;
+}
+
+// 엔트리 구성 함수. createApp 에 CORS 를 입혀 운영/dev 엔트리가 동일하게 쓴다.
+//  - CORS 는 0006 쿠키 인증 때문에 명시 오리진 + credentials:true (와일드카드 금지).
+//    corsOrigins 가 비어있으면 동일 오리진 배포로 보고 CORS 미적용.
+//  - /health 는 DB·구성과 무관하게 200(로드밸런서 헬스용).
+export function buildApp(opts: {
+  db: Db;
+  storage: StoragePort;
+  corsOrigins: string[];
+  submitterSalt?: string;
+  inviteBaseUrl?: string;
+}) {
+  const app = new Hono();
+
+  if (opts.corsOrigins.length > 0) {
+    const allow = new Set(opts.corsOrigins);
+    app.use(
+      "*",
+      cors({
+        origin: (origin) => (allow.has(origin) ? origin : null),
+        credentials: true,
+      }),
+    );
+  }
+
+  app.route(
+    "/",
+    createApp({
+      db: opts.db,
+      storage: opts.storage,
+      submitterSalt: opts.submitterSalt,
+      inviteBaseUrl: opts.inviteBaseUrl,
     }),
   );
 

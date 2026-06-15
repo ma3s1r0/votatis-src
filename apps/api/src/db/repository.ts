@@ -1,5 +1,5 @@
 import { eq, asc } from "drizzle-orm";
-import type { PgliteDatabase } from "drizzle-orm/pglite";
+import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import {
   election,
   event,
@@ -9,7 +9,10 @@ import {
   source,
 } from "./schema.js";
 
-export type Db = PgliteDatabase<Record<string, never>>;
+// 운영(node-postgres)·테스트(pglite) 양쪽 드라이버가 공유하는 공용 Postgres DB 타입.
+// 두 드라이버 모두 PgDatabase<QueryResultHKT, ...> 를 상속하므로, 쿼리 결과 HKT 를
+// 베이스로 두면 repository/auth/intake 계층이 드라이버에 결합되지 않는다.
+export type Db = PgDatabase<PgQueryResultHKT, Record<string, never>>;
 
 type ElectionInsert = typeof election.$inferInsert;
 type EventInsert = typeof event.$inferInsert;
