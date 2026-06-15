@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import Header from "./Header";
 import TabBar from "./TabBar";
 import { getMyReports } from "./track/storage";
 
@@ -10,7 +9,6 @@ export default function MyReportsPage() {
 
   return (
     <>
-      <Header />
       <main className="container">
         <h1>내 제보</h1>
         <p className="page-intro">

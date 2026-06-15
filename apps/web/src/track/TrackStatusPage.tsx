@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import Header from "../Header";
 import TabBar from "../TabBar";
 import { fetchTrackingStatus, type TrackingStatus } from "./api";
 
@@ -54,9 +53,13 @@ export default function TrackStatusPage() {
 
   return (
     <>
-      <Header />
       <main className="container">
-        <h1>제보 상태 조회</h1>
+        <div className="page-head">
+          <Link to="/" className="page-back" aria-label="홈으로">
+            ←
+          </Link>
+          <h1 className="page-head__title">제보 상태 조회</h1>
+        </div>
         <p className="page-intro">
           접수번호로 제보의 진행 상태를 확인할 수 있습니다. 본문·첨부 등 내용은
           공개되지 않으며 단계만 표시됩니다.

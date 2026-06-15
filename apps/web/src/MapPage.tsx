@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import Header from "./Header";
 import TabBar from "./TabBar";
 import DomainSegment, { type DomainOption } from "./DomainSegment";
 import { fetchMapStats, type MapStatItem } from "./map/api";
@@ -94,9 +93,8 @@ export default function MapPage() {
 
   return (
     <>
-      <Header />
       <main className="container">
-        <h1>지도</h1>
+        <h1>지도 뷰</h1>
         <p className="page-intro">
           검증을 거친 기록을 시도별로 집계한 분포입니다. 핀을 누르면 해당 지역
           기록 목록으로 이동합니다.
