@@ -210,6 +210,8 @@ export type SeedResult = {
 export async function seed(db: Db, storage: InMemoryStorage): Promise<SeedResult> {
   // 1) 루트 관리자(seedRoot — 멱등).
   const root = await seedRoot(db, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD);
+  // 0017: verified 확정은 서로 다른 reviewer 2인 동의 필요 → 2번째 검증자 시드.
+  const reviewer2 = await seedRoot(db, "reviewer2@votatis.local", SEED_ADMIN_PASSWORD);
 
   // 2) 선거.
   const election9 = await createElection(db, {
@@ -291,6 +293,24 @@ export async function seed(db: Db, storage: InMemoryStorage): Promise<SeedResult
       });
       if (!result.ok) {
         throw new Error(`seed verification failed: ${JSON.stringify(result)}`);
+      }
+      // 0017: 2번째 reviewer 동의로 2/2 확정 → verified 공개.
+      const result2 = await submitVerification(db, {
+        reportId: report.id,
+        reviewerId: reviewer2.id,
+        input: {
+          confidence: spec.verification.confidence,
+          validity: spec.verification.validity,
+          severity: spec.verification.severity,
+          verified: true,
+          method: spec.verification.method,
+          notes: spec.verification.notes,
+          unverifiedClaims: spec.verification.unverifiedClaims,
+          evidenceLinks: spec.verification.evidence.map(toEvidence),
+        },
+      });
+      if (!result2.ok) {
+        throw new Error(`seed verification(2nd) failed: ${JSON.stringify(result2)}`);
       }
       verified++;
     } else {
