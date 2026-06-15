@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { setup, jsonReq, markVerified } from "./report.test-helpers.js";
+import { setup, jsonReq, markVerified, seedElection } from "./report.test-helpers.js";
 
 let ctx: Awaited<ReturnType<typeof setup>>;
 
@@ -88,5 +88,108 @@ describe("공개 조회 — verified=true 만", () => {
     const json = (await res.json()) as { items: { id: string }[]; total: number };
     expect(json.total).toBe(1);
     expect(json.items[0].id).toBe(a);
+  });
+});
+
+describe("0007 공개 필터 — category·election", () => {
+  it("category 필터는 verified 범위 내 해당 category 만", async () => {
+    const a = await createReport("투개표 제보", { category: "투개표" }, "11.0.0.1");
+    const b = await createReport("사전투표 제보", { category: "사전투표" }, "11.0.0.2");
+    await markVerified(ctx.db, a);
+    await markVerified(ctx.db, b);
+
+    const res = await ctx.app.request("/reports?category=투개표");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(a);
+  });
+
+  it("electionId 필터는 verified 범위 내 해당 선거 만", async () => {
+    const e1 = await seedElection(ctx.db, "선거1");
+    const e2 = await seedElection(ctx.db, "선거2");
+    const a = await createReport("선거1 제보", { electionId: e1.id }, "12.0.0.1");
+    const b = await createReport("선거2 제보", { electionId: e2.id }, "12.0.0.2");
+    await markVerified(ctx.db, a);
+    await markVerified(ctx.db, b);
+
+    const res = await ctx.app.request(`/reports?electionId=${e1.id}`);
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(a);
+  });
+
+  it("q+sido+category 조합은 AND 로 좁힌다", async () => {
+    const target = await createReport(
+      "부정 의혹",
+      { body: "투표함", sido: "서울", category: "투개표" },
+      "13.0.0.1",
+    );
+    // category 다름
+    const other1 = await createReport(
+      "부정 의혹",
+      { body: "투표함", sido: "서울", category: "사전투표" },
+      "13.0.0.2",
+    );
+    // sido 다름
+    const other2 = await createReport(
+      "부정 의혹",
+      { body: "투표함", sido: "부산", category: "투개표" },
+      "13.0.0.3",
+    );
+    // q 불일치
+    const other3 = await createReport(
+      "정상",
+      { body: "이상없음", sido: "서울", category: "투개표" },
+      "13.0.0.4",
+    );
+    for (const id of [target, other1, other2, other3]) await markVerified(ctx.db, id);
+
+    const res = await ctx.app.request("/reports?q=부정&sido=서울&category=투개표");
+    const json = (await res.json()) as { items: { id: string }[]; total: number };
+    expect(json.total).toBe(1);
+    expect(json.items[0].id).toBe(target);
+  });
+
+  it("목록 item·상세에 category·election 직렬화", async () => {
+    const e = await seedElection(ctx.db, "제8회 지선", "지선");
+    const id = await createReport("직렬화 제보", { category: "개표참관", electionId: e.id }, "14.0.0.1");
+    await markVerified(ctx.db, id);
+
+    const list = await ctx.app.request("/reports");
+    const listJson = (await list.json()) as {
+      items: { id: string; category: string | null; electionId: string | null }[];
+    };
+    const item = listJson.items.find((i) => i.id === id)!;
+    expect(item.category).toBe("개표참관");
+    expect(item.electionId).toBe(e.id);
+
+    const detail = await ctx.app.request(`/reports/${id}`);
+    const detailJson = (await detail.json()) as {
+      category: string | null;
+      election: { id: string; name: string } | null;
+    };
+    expect(detailJson.category).toBe("개표참관");
+    expect(detailJson.election).toEqual({ id: e.id, name: "제8회 지선" });
+  });
+
+  it("election 없는 상세는 election=null", async () => {
+    const id = await createReport("선거 없음", { category: "기타" }, "14.0.0.2");
+    await markVerified(ctx.db, id);
+    const detail = await ctx.app.request(`/reports/${id}`);
+    const json = (await detail.json()) as { election: unknown };
+    expect(json.election).toBeNull();
+  });
+});
+
+describe("0007 GET /elections — 필터 옵션", () => {
+  it("seeded election 목록 반환", async () => {
+    const e = await seedElection(ctx.db, "제8회 지선", "지선");
+    const res = await ctx.app.request("/elections");
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      items: { id: string; name: string; type: string }[];
+    };
+    const found = json.items.find((i) => i.id === e.id);
+    expect(found).toEqual({ id: e.id, name: "제8회 지선", type: "지선" });
   });
 });

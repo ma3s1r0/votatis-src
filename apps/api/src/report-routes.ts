@@ -7,11 +7,14 @@ import {
   isIntakeRateLimited,
   recordIntakeAttempt,
   reportExists,
+  electionExists,
   createPendingAttachment,
   finalizeAttachment,
   listVerifiedReports,
   getVerifiedReport,
+  listElections,
 } from "./db/intake.js";
+import { isReportCategory } from "./categories.js";
 
 // 첨부 허용 정책 (스펙 결정 6).
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
@@ -28,6 +31,8 @@ function publicReport(r: {
   sido: string | null;
   sigungu: string | null;
   eupMyeonDong: string | null;
+  category: string | null;
+  electionId: string | null;
   occurredAt: Date | null;
   collectedAt: Date;
 }) {
@@ -38,6 +43,8 @@ function publicReport(r: {
     sido: r.sido,
     sigungu: r.sigungu,
     eupMyeonDong: r.eupMyeonDong,
+    category: r.category,
+    electionId: r.electionId,
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
   };
@@ -59,6 +66,8 @@ type CreateReportBody = {
   sigungu?: string;
   eupMyeonDong?: string;
   occurredAt?: string;
+  category?: string;
+  electionId?: string;
   consent?: boolean;
   license?: string;
   sources?: SourceInput[];
@@ -110,6 +119,15 @@ export function createReportApp(opts: {
     const errors: Record<string, string> = {};
     if (!body.title || typeof body.title !== "string") errors.title = "required";
 
+    // 0007: category 는 고정 enum 집합에 속할 때만(허용 외 → 400).
+    if (body.category != null && !isReportCategory(body.category)) {
+      errors.category = "invalid";
+    }
+    // 0007: electionId 가 있으면 실재해야 한다(없는 FK → 500 대신 400).
+    if (body.electionId != null && !(await electionExists(db, body.electionId))) {
+      errors.electionId = "not_found";
+    }
+
     // source 무결성 사전 검증(0001): captured_at + content_hash 필수.
     const sources = body.sources ?? [];
     sources.forEach((s, i) => {
@@ -130,6 +148,8 @@ export function createReportApp(opts: {
       sigungu: body.sigungu,
       eupMyeonDong: body.eupMyeonDong,
       occurredAt: body.occurredAt ? new Date(body.occurredAt) : undefined,
+      category: body.category,
+      electionId: body.electionId,
       consent: body.consent,
       license: body.license,
       status: "submitted",
@@ -248,14 +268,29 @@ export function createReportApp(opts: {
     const offset = Math.max(Number(c.req.query("offset") ?? 0) || 0, 0);
     const q = c.req.query("q") || undefined;
     const sido = c.req.query("sido") || undefined;
+    const category = c.req.query("category") || undefined;
+    const electionId = c.req.query("electionId") || undefined;
 
-    const { rows, total } = await listVerifiedReports(db, { limit, offset, q, sido });
+    const { rows, total } = await listVerifiedReports(db, {
+      limit,
+      offset,
+      q,
+      sido,
+      category,
+      electionId,
+    });
     return c.json({
       items: rows.map(publicReport),
       total,
       limit,
       offset,
     });
+  });
+
+  // B3. 공개 선거 목록 — 아카이브 필터 드롭다운 옵션(0007).
+  app.get("/elections", async (c) => {
+    const items = await listElections(db);
+    return c.json({ items });
   });
 
   // B2. 공개 상세 — verified=true 만, 아니면 404(존재 누설 금지)
@@ -265,6 +300,8 @@ export function createReportApp(opts: {
     const v = graph.verification;
     return c.json({
       ...publicReport(graph.report),
+      // 0007: report.election_id 직접 링크의 선거 요약(id+name), 없으면 null.
+      election: graph.election,
       // verification 요약(공개 안전 필드만). reviewer 신원·confidence·내부 감사필드 제외.
       // DB severity/legalIssue 는 text → 그대로(string) 내보냄(억지 변환 금지).
       verification: v

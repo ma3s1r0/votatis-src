@@ -12,6 +12,8 @@ const detail = {
   eupMyeonDong: "역삼동",
   occurredAt: "2024-04-10T00:00:00Z",
   collectedAt: "2026-06-10T09:00:00Z",
+  category: "투개표",
+  election: { id: "el-1", name: "제22대 국회의원선거" },
   verification: {
     verified: true,
     validity: "부분 확인",
@@ -94,6 +96,17 @@ describe("ArchiveDetailPage", () => {
     expect(screen.getByText(/확인되지 않은 주장/)).toBeInTheDocument();
     expect(
       screen.getByText(/조작 의도가 있었다는 주장/),
+    ).toBeInTheDocument();
+  });
+
+  it("분류(category)·선거(election 이름)를 표시한다(0007)", async () => {
+    mockOnce(detail);
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    expect(screen.getByText(/분류 투개표/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/선거 제22대 국회의원선거/),
     ).toBeInTheDocument();
   });
 

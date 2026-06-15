@@ -13,6 +13,8 @@ export type ArchiveItem = {
   eupMyeonDong: string | null;
   occurredAt: string | null;
   collectedAt: string;
+  category: string | null;
+  electionId: string | null;
 };
 
 export type ArchiveListResponse = {
@@ -61,6 +63,8 @@ export type ArchiveDetail = {
   eupMyeonDong: string | null;
   occurredAt: string | null;
   collectedAt: string;
+  category: string | null;
+  election: { id: string; name: string } | null;
   verification: ArchiveVerificationSummary | null;
   attachments: ArchiveAttachment[];
   sources: ArchiveSource[];
@@ -71,6 +75,8 @@ export type ArchiveListQuery = {
   offset?: number;
   q?: string;
   sido?: string;
+  category?: string;
+  electionId?: string;
 };
 
 export async function fetchArchive(
@@ -81,6 +87,8 @@ export async function fetchArchive(
   params.set("offset", String(query.offset ?? 0));
   if (query.q) params.set("q", query.q);
   if (query.sido) params.set("sido", query.sido);
+  if (query.category) params.set("category", query.category);
+  if (query.electionId) params.set("electionId", query.electionId);
 
   const res = await fetch(`${base}?${params.toString()}`);
   if (!res.ok) throw new Error(`archive_fetch_failed:${res.status}`);

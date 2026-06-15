@@ -37,7 +37,7 @@ describe("ReportWizard 단계 이동", () => {
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  it("Step1 제목 입력 후 Step2 분류로 이동하고, 분류 미선택 시 다음 차단", async () => {
+  it("Step1 제목 입력 후 Step2 분류로 이동하고, 분류는 선택 사항이라 미선택도 다음 진행(미분류 허용, 0007)", async () => {
     renderWizard();
     await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
     await userEvent.click(screen.getByRole("button", { name: "다음" }));
@@ -46,8 +46,8 @@ describe("ReportWizard 단계 이동", () => {
     expect(screen.getByLabelText("분류")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // 분류 미선택 → 여전히 Step2
-    expect(screen.getByText(/2\s*\/\s*5/)).toBeInTheDocument();
+    // 분류 미선택이어도 Step3 으로 진행
+    expect(screen.getByText(/3\s*\/\s*5/)).toBeInTheDocument();
   });
 
   it("이전 버튼으로 직전 단계로 돌아간다", async () => {

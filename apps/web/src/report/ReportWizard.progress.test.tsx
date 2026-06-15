@@ -16,7 +16,7 @@ function renderWizard() {
 async function gotoAttachStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 지역 skip
 }
@@ -30,9 +30,14 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+// 마운트 시 GET /api/elections(0007) 1회 호출. 기본 응답은 빈 선거 목록.
+function electionsResponse() {
+  return new Response(JSON.stringify({ items: [] }), { status: 200 });
+}
+
 describe("ReportWizard 진행 상태 표시", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
   });
   afterEach(() => {
@@ -48,6 +53,7 @@ describe("ReportWizard 진행 상태 표시", () => {
     const put = deferred<Response>();
     const finalize = deferred<Response>();
     fetchMock
+      .mockResolvedValueOnce(electionsResponse()) // 마운트: GET /api/elections
       .mockReturnValueOnce(create.promise) // POST /api/reports
       .mockReturnValueOnce(attachCreate.promise) // attachments/create
       .mockReturnValueOnce(put.promise) // PUT uploadUrl
@@ -104,6 +110,7 @@ describe("ReportWizard 진행 상태 표시", () => {
 
   it("첨부 업로드 실패 시 해당 파일을 실패로 표시하되 제보는 접수 완료로 처리한다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     // report 생성 성공
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "rep_2", status: "received" }), {
@@ -132,6 +139,7 @@ describe("ReportWizard 진행 상태 표시", () => {
   it("첨부가 없으면 '접수 중'만 거쳐 완료 화면으로 간다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     const create = deferred<Response>();
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockReturnValueOnce(create.promise);
 
     renderWizard();

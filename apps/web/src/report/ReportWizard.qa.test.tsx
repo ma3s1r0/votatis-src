@@ -15,7 +15,7 @@ function renderWizard() {
 async function gotoSubmitStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 지역 skip
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 출처 skip
@@ -24,14 +24,19 @@ async function gotoSubmitStep() {
 async function gotoAttachStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 지역 skip
 }
 
+// 마운트 시 GET /api/elections(0007) 1회 호출. 기본 응답은 빈 선거 목록.
+function electionsResponse() {
+  return new Response(JSON.stringify({ items: [] }), { status: 200 });
+}
+
 describe("QA 회귀 — 0003 빈틈 점검", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
   });
   afterEach(() => {
@@ -59,6 +64,7 @@ describe("QA 회귀 — 0003 빈틈 점검", () => {
   // 수용기준: 제출 실패(429) 시에도 입력이 보존된다
   it("429 실패 후에도 입력(제목·consent)이 보존된다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ error: "rate_limited" }), { status: 429 }),
     );
@@ -84,7 +90,7 @@ describe("QA 회귀 — 0003 빈틈 점검", () => {
         title: "복원된 제목",
         body: "",
         occurredAt: "",
-        category: "vote_count",
+        category: "투개표",
         sido: "",
         sigungu: "",
         eupMyeonDong: "",
@@ -97,7 +103,7 @@ describe("QA 회귀 — 0003 빈틈 점검", () => {
     expect(screen.getByText(/2\s*\/\s*5/)).toBeInTheDocument();
     expect(
       (screen.getByLabelText("분류") as HTMLSelectElement).value,
-    ).toBe("vote_count");
+    ).toBe("투개표");
     // 이전 단계로 돌아가면 복원된 제목이 보임
     await userEvent.click(screen.getByRole("button", { name: "이전" }));
     expect((screen.getByLabelText("제목") as HTMLInputElement).value).toBe(
@@ -108,6 +114,7 @@ describe("QA 회귀 — 0003 빈틈 점검", () => {
   // 수용기준: report 생성 후에만 첨부 — report 생성 실패 시 첨부 호출 안 함
   it("report 생성이 400 으로 실패하면 첨부(create) 는 호출되지 않는다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({ error: "validation_error", fields: { title: "짧음" } }),
@@ -123,8 +130,11 @@ describe("QA 회귀 — 0003 빈틈 점검", () => {
     await userEvent.click(screen.getByRole("button", { name: "제출" }));
 
     expect(await screen.findByText("짧음")).toBeInTheDocument();
-    // 첨부 호출 없이 reports POST 단 1회만
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/reports");
+    // reports POST 단 1회만(첨부 create 미호출). elections(마운트) 제외하고 카운트.
+    const reportCalls = fetchMock.mock.calls.filter((c) =>
+      String(c[0]).startsWith("/api/reports"),
+    );
+    await waitFor(() => expect(reportCalls.length).toBe(1));
+    expect(reportCalls[0][0]).toBe("/api/reports");
   });
 });

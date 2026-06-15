@@ -16,16 +16,28 @@ function renderWizard() {
 async function gotoSubmitStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 지역 skip
   await userEvent.click(screen.getByRole("button", { name: "다음" })); // 출처 skip
   // Step5
 }
 
+// 마운트 시 GET /api/elections 가 1회 호출된다(0007). 모든 fetch 호출에 대해
+// 선거 목록을 기본 응답으로 돌려주고, 테스트별 응답은 onceValue 로 덮어쓴다.
+function electionsResponse() {
+  return new Response(JSON.stringify({ items: [] }), { status: 200 });
+}
+
+function postCall(fetchMock: ReturnType<typeof vi.fn>) {
+  return fetchMock.mock.calls.find(
+    (c) => c[0] === "/api/reports" && c[1]?.method === "POST",
+  );
+}
+
 describe("ReportWizard 제출", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
   });
   afterEach(() => {
@@ -41,6 +53,7 @@ describe("ReportWizard 제출", () => {
 
   it("제출 성공 시 POST /api/reports 가 호출되고 완료 화면이 보이며 상태가 초기화된다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "rep_9", status: "received" }), {
         status: 201,
@@ -56,7 +69,7 @@ describe("ReportWizard 제출", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/rep_9/)).toBeInTheDocument();
     // POST body 검증
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const body = JSON.parse(postCall(fetchMock)![1].body);
     expect(body.title).toBe("관찰한 정황");
     expect(body.consent).toBe(true);
     // sessionStorage 클리어
@@ -65,6 +78,7 @@ describe("ReportWizard 제출", () => {
 
   it("400 validation_error 시 필드 에러를 표시하고 입력을 보존한다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -88,6 +102,7 @@ describe("ReportWizard 제출", () => {
 
   it("429 시 잠시 후 재시도 안내를 표시한다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ error: "rate_limited" }), { status: 429 }),
     );

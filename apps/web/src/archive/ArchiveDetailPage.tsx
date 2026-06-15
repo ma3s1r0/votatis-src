@@ -58,6 +58,8 @@ export default function ArchiveDetailPage() {
       <h1>{r.title}</h1>
       <div style={{ fontSize: "0.85rem", color: "#555" }}>
         <span>{regionLabel(r)}</span>
+        {r.category && <span> · 분류 {r.category}</span>}
+        {r.election && <span> · 선거 {r.election.name}</span>}
         {r.occurredAt && <span> · 발생 {r.occurredAt}</span>}
         {r.collectedAt && <span> · 수집 {r.collectedAt}</span>}
       </div>

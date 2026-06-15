@@ -5,6 +5,8 @@ import {
   type ArchiveItem,
   type ArchiveListQuery,
 } from "./api";
+import { REPORT_CATEGORIES } from "../categories";
+import { fetchElections, type Election } from "../elections";
 
 type State =
   | { status: "loading" }
@@ -46,6 +48,7 @@ export default function ArchiveListPage() {
   });
   // 검색 입력은 제출 전까지 query에 반영하지 않는다(요청 폭주 방지).
   const [searchInput, setSearchInput] = useState("");
+  const [elections, setElections] = useState<Election[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -62,6 +65,17 @@ export default function ArchiveListPage() {
     };
   }, [query]);
 
+  // 선거 필터 옵션 로드(선택 사항 — 실패 시 빈 목록).
+  useEffect(() => {
+    let alive = true;
+    fetchElections().then((items) => {
+      if (alive) setElections(items);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = searchInput.trim();
@@ -70,6 +84,14 @@ export default function ArchiveListPage() {
 
   function onSido(value: string) {
     setQuery((prev) => ({ ...prev, sido: value || undefined, offset: 0 }));
+  }
+
+  function onCategory(value: string) {
+    setQuery((prev) => ({ ...prev, category: value || undefined, offset: 0 }));
+  }
+
+  function onElection(value: string) {
+    setQuery((prev) => ({ ...prev, electionId: value || undefined, offset: 0 }));
   }
 
   const offset = query.offset ?? 0;
@@ -118,6 +140,36 @@ export default function ArchiveListPage() {
           {SIDO_OPTIONS.map((s) => (
             <option key={s} value={s}>
               {s}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="archive-category">분류</label>
+        <select
+          id="archive-category"
+          aria-label="분류"
+          value={query.category ?? ""}
+          onChange={(e) => onCategory(e.target.value)}
+        >
+          <option value="">전체 분류</option>
+          {REPORT_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="archive-election">선거</label>
+        <select
+          id="archive-election"
+          aria-label="선거"
+          value={query.electionId ?? ""}
+          onChange={(e) => onElection(e.target.value)}
+        >
+          <option value="">전체 선거</option>
+          {elections.map((el) => (
+            <option key={el.id} value={el.id}>
+              {el.name}
             </option>
           ))}
         </select>

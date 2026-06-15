@@ -1,7 +1,7 @@
 ---
 id: 0007
 title: 분류·선거 모델 확장 + 공개 필터 복원
-status: not-started
+status: in-progress
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -88,3 +88,5 @@ dev_order: 7   # 0008과 독립이라 병렬 가능.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버 구현 (backend-dev). report.category(enum 앱검증)·election_id(FK) 추가/마이그레이션 0005, 생성 검증(허용외 400), 목록 category·electionId 필터(verified·q·sido AND), 공개 직렬화, GET /elections. api 99 통과.
+- 2026-06-15: web 구현 (frontend-dev). 마법사 category/election 전송, 아카이브 category·선거 필터 복원(0005 결정 대체), 상세 표시. QA 조건부 PASS → 마법사 category 필수 게이트 해제(선택·미분류 허용). api 99 + web 57 통과. status→completed.

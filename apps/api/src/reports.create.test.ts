@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import { setup, jsonReq } from "./report.test-helpers.js";
+import { setup, jsonReq, seedElection } from "./report.test-helpers.js";
 import { report } from "./db/schema.js";
 
 let ctx: Awaited<ReturnType<typeof setup>>;
@@ -67,6 +67,57 @@ describe("제보 생성", () => {
       }),
     );
     expect(res.status).toBe(201);
+  });
+
+  // 0007 수용 기준: category·electionId 저장(둘 다 선택 필드).
+  it("category·electionId 저장 → 201", async () => {
+    const election = await seedElection(ctx.db);
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "분류 있는 제보", category: "투개표", electionId: election.id }),
+    );
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.category).toBe("투개표");
+    expect(row.electionId).toBe(election.id);
+  });
+
+  // 0007 수용 기준: category·electionId 누락도 생성 성공(선택 필드).
+  it("category·electionId 둘 다 누락 → 201", async () => {
+    const res = await ctx.app.request("/reports", jsonReq({ title: "분류 없는 제보" }));
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.category).toBeNull();
+    expect(row.electionId).toBeNull();
+  });
+
+  // 0007 수용 기준: 허용 외 category → 400 + 필드 표기(500 아님).
+  it("허용 외 category → 400 + 필드 표기", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "잘못된 분류", category: "허용안됨" }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { error: string; fields: Record<string, string> };
+    expect(json.error).toBe("validation_error");
+    expect(json.fields.category).toBeTruthy();
+  });
+
+  // 0007 수용 기준: 존재하지 않는 electionId → FK 500 대신 400.
+  it("존재하지 않는 electionId → 400", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({
+        title: "없는 선거",
+        electionId: "00000000-0000-0000-0000-000000000000",
+      }),
+    );
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { error: string; fields: Record<string, string> };
+    expect(json.error).toBe("validation_error");
+    expect(json.fields.electionId).toBeTruthy();
   });
 
   // 수용 기준: 동일 IP rate limit → 429.

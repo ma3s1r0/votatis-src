@@ -10,6 +10,7 @@ export type ReportInput = {
   eupMyeonDong?: string;
   occurredAt?: string;
   category?: string;
+  electionId?: string;
   consent?: boolean;
   license?: string;
   sources?: string[];

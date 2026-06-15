@@ -17,7 +17,7 @@ async function gotoRegionStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   // Step2 분류
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   // Step3 지역
 }

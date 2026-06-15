@@ -10,15 +10,11 @@ import {
   sigunguList,
   eupMyeonDongList,
 } from "./regions";
+import { REPORT_CATEGORIES } from "../categories";
+import { fetchElections, type Election } from "../elections";
 
-// 사건 분류 (0001 category 샘플). 후속에 서버 카테고리와 동기화.
-const categories: { value: string; label: string }[] = [
-  { value: "vote_count", label: "개표·집계 이상" },
-  { value: "early_vote", label: "사전투표 관련" },
-  { value: "ballot", label: "투표용지·투표함" },
-  { value: "statistics", label: "통계 이상" },
-  { value: "other", label: "기타" },
-];
+// 분류(category)는 서버 enum(스펙 0007)과 동일 출처. value=label(한글 enum 값 그대로 전송).
+const categories = REPORT_CATEGORIES;
 
 const TOTAL_STEPS = 5;
 const DRAFT_KEY = "votatis_report_draft";
@@ -29,6 +25,7 @@ type Draft = {
   body: string;
   occurredAt: string;
   category: string;
+  electionId: string;
   sido: string;
   sigungu: string;
   eupMyeonDong: string;
@@ -49,6 +46,7 @@ const emptyDraft: Draft = {
   body: "",
   occurredAt: "",
   category: "",
+  electionId: "",
   sido: "",
   sigungu: "",
   eupMyeonDong: "",
@@ -68,6 +66,7 @@ function loadDraft(): Draft {
 
 export default function ReportWizard() {
   const [draft, setDraft] = useState<Draft>(loadDraft);
+  const [elections, setElections] = useState<Election[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -79,6 +78,17 @@ export default function ReportWizard() {
     id: string;
     attachment?: { fileName: string; ok: boolean };
   } | null>(null);
+
+  // 선거 선택 옵션 로드(선택 사항 — 실패 시 빈 목록).
+  useEffect(() => {
+    let alive = true;
+    fetchElections().then((items) => {
+      if (alive) setElections(items);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 진행 중 입력을 sessionStorage 에 저장 (새로고침 복원).
   useEffect(() => {
@@ -104,20 +114,14 @@ export default function ReportWizard() {
     switch (step) {
       case 1:
         return draft.title.trim().length > 0;
-      case 2:
-        return draft.category !== "";
       default:
-        return true; // 지역(3)·출처(4)는 선택, 5는 별도 consent 게이트
+        return true; // 분류(2, 미분류 허용)·지역(3)·출처(4)는 선택, 5는 별도 consent 게이트
     }
   }
 
   function next() {
     if (!stepValid(draft.step)) {
-      setStepError(
-        draft.step === 1
-          ? "제목을 입력해 주세요"
-          : "분류를 선택해 주세요",
-      );
+      setStepError("제목을 입력해 주세요");
       return;
     }
     setStepError(null);
@@ -157,6 +161,7 @@ export default function ReportWizard() {
       body: draft.body || undefined,
       occurredAt: draft.occurredAt || undefined,
       category: draft.category || undefined,
+      electionId: draft.electionId || undefined,
       sido: draft.sido || undefined,
       sigungu: draft.sigungu || undefined,
       eupMyeonDong: draft.eupMyeonDong || undefined,
@@ -272,8 +277,23 @@ export default function ReportWizard() {
             >
               <option value="">선택하세요</option>
               {categories.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label style={labelStyle}>
+            선거 (선택)
+            <select
+              value={draft.electionId}
+              onChange={(e) => set("electionId", e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">선택 안 함</option>
+              {elections.map((el) => (
+                <option key={el.id} value={el.id}>
+                  {el.name}
                 </option>
               ))}
             </select>
@@ -378,10 +398,7 @@ export default function ReportWizard() {
             </div>
             <div>
               <dt style={dtStyle}>분류</dt>
-              <dd style={ddStyle}>
-                {categories.find((c) => c.value === draft.category)?.label ??
-                  "-"}
-              </dd>
+              <dd style={ddStyle}>{draft.category || "-"}</dd>
             </div>
             <div>
               <dt style={dtStyle}>지역</dt>

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { and, eq, gt, desc, sql } from "drizzle-orm";
 import type { Db } from "./repository.js";
-import { report, attachment, source, intakeAttempt, verification } from "./schema.js";
+import { report, attachment, source, intakeAttempt, verification, election } from "./schema.js";
 
 // rate limit 설정 (0001 패턴, IP 키 윈도 카운팅).
 const RATE_WINDOW_MS = 60 * 1000; // 1분
@@ -30,6 +30,20 @@ export async function recordIntakeAttempt(db: Db, key: string): Promise<void> {
 export async function reportExists(db: Db, reportId: string): Promise<boolean> {
   const rows = await db.select({ id: report.id }).from(report).where(eq(report.id, reportId));
   return rows.length > 0;
+}
+
+// election 존재 여부(0007: 없는 electionId 의 FK 위반 500 방지 → 400 분기용).
+export async function electionExists(db: Db, electionId: string): Promise<boolean> {
+  const rows = await db.select({ id: election.id }).from(election).where(eq(election.id, electionId));
+  return rows.length > 0;
+}
+
+// 공개 election 목록(0007: 필터 드롭다운 옵션). 단순 전체 반환.
+export async function listElections(db: Db) {
+  return db
+    .select({ id: election.id, name: election.name, type: election.type })
+    .from(election)
+    .orderBy(desc(election.heldOn));
 }
 
 // 첨부 create: pending 행 생성(sha256 미정, expected_sha256·storage_key 기록).
@@ -109,12 +123,17 @@ export type ListParams = {
   offset: number;
   q?: string;
   sido?: string;
+  category?: string;
+  electionId?: string;
 };
 
-// 공개 목록: verified=true 인 report 만. q(제목/본문 부분일치)·sido 필터·페이지네이션.
+// 공개 목록: verified=true 인 report 만. q(제목/본문 부분일치)·sido·category·electionId
+// 필터(AND 조합)·페이지네이션.
 export async function listVerifiedReports(db: Db, params: ListParams) {
   const conds = [eq(report.vVerified, true)];
   if (params.sido) conds.push(eq(report.sido, params.sido));
+  if (params.category) conds.push(eq(report.category, params.category));
+  if (params.electionId) conds.push(eq(report.electionId, params.electionId));
   if (params.q) {
     const like = `%${params.q}%`;
     conds.push(sql`(${report.title} ILIKE ${like} OR ${report.body} ILIKE ${like})`);
@@ -155,5 +174,14 @@ export async function getVerifiedReport(db: Db, id: string) {
     .select()
     .from(verification)
     .where(eq(verification.reportId, id));
-  return { report: row, attachments, sources, verification: activeVerification };
+  // 0007: report.election_id 직접 링크로 선거 요약(id+name) 동봉.
+  let elec: { id: string; name: string } | null = null;
+  if (row.electionId) {
+    const [e] = await db
+      .select({ id: election.id, name: election.name })
+      .from(election)
+      .where(eq(election.id, row.electionId));
+    elec = e ?? null;
+  }
+  return { report: row, attachments, sources, verification: activeVerification, election: elec };
 }

@@ -16,16 +16,21 @@ function renderWizard() {
 async function gotoAttachStep() {
   await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "vote_count");
+  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   // Step3 지역 (선택)
   await userEvent.click(screen.getByRole("button", { name: "다음" }));
   // Step4 출처·사진
 }
 
+// 마운트 시 GET /api/elections(0007) 1회 호출. 기본 응답은 빈 선거 목록.
+function electionsResponse() {
+  return new Response(JSON.stringify({ items: [] }), { status: 200 });
+}
+
 describe("ReportWizard 첨부", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
   });
   afterEach(() => {
@@ -48,6 +53,7 @@ describe("ReportWizard 첨부", () => {
 
   it("제출 시 report 생성 후 첨부가 create→PUT→finalize 순서로 호출된다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
     // 1) POST /api/reports
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "rep_1", status: "received" }), {
@@ -84,9 +90,11 @@ describe("ReportWizard 첨부", () => {
     await userEvent.click(screen.getByLabelText(/동의/));
     await userEvent.click(screen.getByRole("button", { name: "제출" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
-
-    const calls = fetchMock.mock.calls;
+    // 마운트의 GET /api/elections 를 제외하면 report 관련 호출은 4회.
+    const reportCalls = () =>
+      fetchMock.mock.calls.filter((c) => c[0] !== "/api/elections");
+    await waitFor(() => expect(reportCalls().length).toBe(4));
+    const calls = reportCalls();
     expect(calls[0][0]).toBe("/api/reports");
     expect(calls[1][0]).toBe("/api/reports/rep_1/attachments/create");
     expect(calls[2][0]).toBe("https://s3.example/upload");

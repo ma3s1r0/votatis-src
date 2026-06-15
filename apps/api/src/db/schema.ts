@@ -42,6 +42,10 @@ export const report = pgTable("report", {
   title: text("title").notNull(),
   body: text("body"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }),
+  // 분류(0007). 앱 레벨 enum 검증(DB enum 타입 아님). 선택 필드(nullable).
+  category: text("category"),
+  // 선거 직접 링크(0007). event 경유 아님. 선택 필드(nullable).
+  electionId: uuid("election_id").references(() => election.id),
   // 무결성: 수집 시점 필수
   collectedAt: timestamp("collected_at", { withTimezone: true }).notNull(),
   status: text("status").notNull().default("submitted"),

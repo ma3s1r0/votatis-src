@@ -48,6 +48,21 @@ function mockOnce(body: unknown, status = 200) {
   );
 }
 
+// GET /api/elections 응답(마운트 시 선거 필터 옵션 로드). 목록 mock 다음에 호출됨.
+function mockElections() {
+  (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+    new Response(
+      JSON.stringify({
+        items: [
+          { id: "el-1", name: "제22대 국회의원선거", type: "national" },
+          { id: "el-2", name: "제8회 지방선거", type: "local" },
+        ],
+      }),
+      { status: 200 },
+    ),
+  );
+}
+
 function lastUrl(): string {
   const f = fetch as ReturnType<typeof vi.fn>;
   return String(f.mock.calls[f.mock.calls.length - 1][0]);
@@ -138,14 +153,39 @@ describe("ArchiveListPage 필터", () => {
     expect(lastUrl()).toContain("sido=%EC%84%9C%EC%9A%B8");
   });
 
-  it("분류(category) 필터 UI가 없다(서버 미지원)", async () => {
+  // 0007: 0005 스코프 결정("category 필터 미지원")을 해제 — 필터 복원.
+  it("분류(category) 선택 시 category 파라미터로 재요청한다", async () => {
+    const userEvent = (await import("@testing-library/user-event")).default;
     mockOnce(page1);
+    mockElections();
     renderList();
     await screen.findByText("이상 득표율 기록");
 
-    expect(
-      screen.queryByRole("combobox", { name: /분류/ }),
-    ).not.toBeInTheDocument();
+    mockOnce({ items: [page1.items[0]], total: 1, limit: 20, offset: 0 });
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: /분류/ }),
+      "투개표",
+    );
+
+    expect(lastUrl()).toContain("category=%ED%88%AC%EA%B0%9C%ED%91%9C");
+  });
+
+  it("GET /api/elections 로 선거 필터 옵션을 채우고, 선택 시 electionId 로 재요청한다", async () => {
+    const userEvent = (await import("@testing-library/user-event")).default;
+    mockOnce(page1);
+    mockElections();
+    renderList();
+    await screen.findByText("이상 득표율 기록");
+
+    await screen.findByRole("option", { name: "제22대 국회의원선거" });
+
+    mockOnce({ items: [page1.items[0]], total: 1, limit: 20, offset: 0 });
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: /선거/ }),
+      "el-1",
+    );
+
+    expect(lastUrl()).toContain("electionId=el-1");
   });
 });
 
