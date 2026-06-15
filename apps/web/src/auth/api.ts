@@ -62,3 +62,130 @@ export async function acceptInvite(
   if (res.status === 400) return { ok: false, error: "invalid" };
   return { ok: false, error: "unknown" };
 }
+
+// ── 0004 라벨링·검증 콘솔 ───────────────────────────────────────────────
+
+export type AdminReport = {
+  id: string;
+  title: string;
+  body: string;
+  status: string;
+  sido: string | null;
+  sigungu: string | null;
+  eupMyeonDong: string | null;
+  occurredAt: string | null;
+  collectedAt: string | null;
+  verified: boolean;
+};
+
+export type Attachment = {
+  id: string;
+  filename: string;
+  url: string;
+};
+
+export type Source = {
+  id: string;
+  url: string;
+  capturedAt: string | null;
+  contentHash: string | null;
+  archiveUrl: string | null;
+};
+
+export type EvidenceLink = {
+  url: string;
+  capturedAt: string;
+  contentHash: string;
+  archiveUrl?: string;
+};
+
+export type Verification = {
+  confidence: number | null;
+  validity: string | null;
+  severity: number | null;
+  legalIssue: boolean | null;
+  verified: boolean;
+  method: string;
+  notes: string | null;
+  reviewer: string | null;
+  reviewedAt: string | null;
+};
+
+export type AdminReportDetail = AdminReport & {
+  attachments: Attachment[];
+  sources: Source[];
+  verification: Verification | null;
+  verificationHistory: Verification[];
+};
+
+export async function fetchReports(
+  limit = 20,
+  offset = 0,
+): Promise<{ items: AdminReport[]; limit: number; offset: number }> {
+  const res = await fetch(
+    `${base}/reports?limit=${limit}&offset=${offset}`,
+    { credentials: "include" },
+  );
+  if (!res.ok) throw new Error(`reports_fetch_failed:${res.status}`);
+  return (await res.json()) as {
+    items: AdminReport[];
+    limit: number;
+    offset: number;
+  };
+}
+
+export async function fetchReport(id: string): Promise<AdminReportDetail> {
+  const res = await fetch(`${base}/reports/${encodeURIComponent(id)}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`report_fetch_failed:${res.status}`);
+  return (await res.json()) as AdminReportDetail;
+}
+
+export type VerificationInput = {
+  confidence?: number;
+  validity?: string;
+  severity?: number;
+  legalIssue?: boolean;
+  verified: boolean;
+  method: string;
+  notes?: string;
+  evidenceLinks: EvidenceLink[];
+};
+
+export type FieldError = { field: string; reason: string };
+
+export type SubmitVerificationResult =
+  | { ok: true }
+  | { ok: false; error: "validation_error"; fields: FieldError[] }
+  | { ok: false; error: "not_found" }
+  | { ok: false; error: "unknown" };
+
+export async function submitVerification(
+  id: string,
+  input: VerificationInput,
+): Promise<SubmitVerificationResult> {
+  const res = await fetch(
+    `${base}/reports/${encodeURIComponent(id)}/verification`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(input),
+    },
+  );
+  if (res.ok) return { ok: true };
+  if (res.status === 422) {
+    const data = (await res.json()) as {
+      error: string;
+      fields?: FieldError[];
+    };
+    return {
+      ok: false,
+      error: "validation_error",
+      fields: data.fields ?? [],
+    };
+  }
+  if (res.status === 404) return { ok: false, error: "not_found" };
+  return { ok: false, error: "unknown" };
+}

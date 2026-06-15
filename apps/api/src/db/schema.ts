@@ -149,6 +149,8 @@ export const source = pgTable("source", {
   id: uuid("id").primaryKey().defaultRandom(),
   reportId: uuid("report_id").references(() => report.id),
   eventId: uuid("event_id").references(() => event.id),
+  // 판정 근거 링크(0004)도 source 로 보관 → verification 과 연결(결정 2).
+  verificationId: uuid("verification_id"),
   // url | text
   kind: text("kind").notNull(),
   url: text("url"),
@@ -156,4 +158,43 @@ export const source = pgTable("source", {
   contentHash: text("content_hash").notNull(),
   archiveUrl: text("archive_url"),
   snapshotRef: text("snapshot_ref"),
+});
+
+// verification — 제보 판정(0004). report 당 활성 1행. 수정 시 직전 상태를
+// verification_history 에 append 후 갱신(0001 report_history 패턴, 결정 3).
+// 근거 강제(결정 1): method + evidence source(≥1) 없으면 라우트/계층에서 거부.
+export const verification = pgTable("verification", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reportId: uuid("report_id")
+    .notNull()
+    .references(() => report.id)
+    .unique(),
+  // 0001 verification 필드와 동형. confidence 0–100, validity enum,
+  // severity 1–5, legal_issue free text(nullable), verified bool.
+  confidence: real("confidence"),
+  validity: text("validity"),
+  severity: text("severity"),
+  legalIssue: text("legal_issue"),
+  verified: boolean("verified").notNull().default(false),
+  // 근거(결정 1·무결성). method 필수. evidence 는 source 로 보관.
+  method: text("method").notNull(),
+  notes: text("notes"),
+  // 판정자·판정 시각(무결성 기록).
+  reviewerId: uuid("reviewer_id")
+    .notNull()
+    .references(() => adminUser.id),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
+});
+
+// verification_history — 판정 변경 이력(0001 패턴). 직전 상태 스냅샷 보존.
+export const verificationHistory = pgTable("verification_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  verificationId: uuid("verification_id")
+    .notNull()
+    .references(() => verification.id),
+  reportId: uuid("report_id").notNull(),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+  archivedAt: timestamp("archived_at", { withTimezone: true }).notNull().defaultNow(),
 });

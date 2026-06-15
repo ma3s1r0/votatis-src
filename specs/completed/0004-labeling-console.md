@@ -1,7 +1,7 @@
 ---
 id: 0004
 title: 라벨링·검증 콘솔 (검토 큐 / 판정 / 근거 강제)
-status: not-started
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -68,3 +68,6 @@ dev_order: 3   # 0006(인증) 이후.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버 구현 (backend-dev). verification·verification_history 테이블, `/api/admin/*` 라우트(검토 큐·상세·판정), 근거 강제(method+evidence≥1 없으면 422, 서버 권위·레코드 미생성), evidence는 0001 source로 무결성 스냅샷 보관, 판정 변경 시 이력 보존. **0006 후속 처리**: app.ts `createApp`에 auth/공개/admin 마운트, admin 라우트 `requireReviewer` 보호(미인증 401·비reviewer/disabled 403).
+- 2026-06-15: web 구현 (frontend-dev). 검토 큐·상세·판정 폼(클라 검증+서버 422 fields 표시), ProtectedRoute 가드. react-router 배선.
+- 2026-06-15: QA 조건부 PASS(근거강제·인증·이력·가시성 불변식 확인, 회귀 테스트 추가) → backend가 drizzle 마이그레이션 journal(0003) 정합 수정(drizzle-kit "no changes" 확인). api 84 + web 16 통과. status→completed.

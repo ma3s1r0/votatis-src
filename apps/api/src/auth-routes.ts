@@ -136,4 +136,5 @@ export function createAuthApp(db: Db, opts: { inviteBaseUrl?: string } = {}) {
   return app;
 }
 
-export { requireReviewer, requireRoot, SESSION_COOKIE };
+export { loadSession, requireReviewer, requireRoot, SESSION_COOKIE };
+export type { Env as AuthEnv, AdminUser };
