@@ -22,7 +22,7 @@ function postCall(fetchMock: ReturnType<typeof vi.fn>) {
   );
 }
 
-describe("ReportWizard 도메인 세그먼트(0014)", () => {
+describe("ReportForm 도메인 세그먼트(0014)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
@@ -32,12 +32,9 @@ describe("ReportWizard 도메인 세그먼트(0014)", () => {
     sessionStorage.clear();
   });
 
-  it("기본 도메인은 election이며 분류 옵션이 election 7종이다", async () => {
+  it("기본 도메인은 election이며 분류 옵션이 election 종류다", () => {
     renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-
-    const select = screen.getByLabelText("분류") as HTMLSelectElement;
+    const select = screen.getByLabelText("의혹 유형") as HTMLSelectElement;
     const values = Array.from(select.options).map((o) => o.value);
     expect(values).toEqual(
       expect.arrayContaining(["투개표", "사전투표", "기타"]),
@@ -47,12 +44,9 @@ describe("ReportWizard 도메인 세그먼트(0014)", () => {
 
   it("집회 현장 도메인 선택 시 분류 옵션이 assembly 분류로 전환된다", async () => {
     renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "집회 현장 관찰");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-
     await userEvent.click(screen.getByRole("button", { name: "집회 현장" }));
 
-    const select = screen.getByLabelText("분류") as HTMLSelectElement;
+    const select = screen.getByLabelText("의혹 유형") as HTMLSelectElement;
     const values = Array.from(select.options).map((o) => o.value);
     expect(values).toEqual(
       expect.arrayContaining(["집회·시위", "충돌·물리력", "채증·촬영", "기타"]),
@@ -70,15 +64,11 @@ describe("ReportWizard 도메인 세그먼트(0014)", () => {
     );
     renderWizard();
 
-    await userEvent.type(screen.getByLabelText("제목"), "집회 현장 관찰");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+    await userEvent.type(screen.getByLabelText("상세 설명"), "집회 현장 관찰");
     await userEvent.click(screen.getByRole("button", { name: "집회 현장" }));
-    await userEvent.selectOptions(screen.getByLabelText("분류"), "채증·촬영");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+    await userEvent.selectOptions(screen.getByLabelText("의혹 유형"), "채증·촬영");
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
     const body = JSON.parse(postCall(fetchMock)![1].body);
@@ -96,21 +86,16 @@ describe("ReportWizard 도메인 세그먼트(0014)", () => {
     );
     renderWizard();
 
-    await userEvent.type(screen.getByLabelText("제목"), "관찰");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // election 분류 선택 후 집회로 전환
-    await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰");
+    // election 분류 선택 후 집회로 전환 → 분류 초기화
+    await userEvent.selectOptions(screen.getByLabelText("의혹 유형"), "투개표");
     await userEvent.click(screen.getByRole("button", { name: "집회 현장" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
     const body = JSON.parse(postCall(fetchMock)![1].body);
     expect(body.domain).toBe("assembly");
-    // election 분류값(투개표)은 assembly 도메인으로 넘어가면 안 됨
     expect(body.category).toBeUndefined();
   });
 });

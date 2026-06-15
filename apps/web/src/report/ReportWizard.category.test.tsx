@@ -27,7 +27,7 @@ function mockElections() {
   );
 }
 
-describe("ReportWizard 분류·선거(0007)", () => {
+describe("ReportForm 분류·선거(0007)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     sessionStorage.clear();
@@ -37,13 +37,11 @@ describe("ReportWizard 분류·선거(0007)", () => {
     sessionStorage.clear();
   });
 
-  it("Step2 분류 옵션이 서버 category enum 값으로 렌더된다", async () => {
+  it("분류 옵션이 서버 category enum 값으로 렌더된다", () => {
     mockElections();
     renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
 
-    const select = screen.getByLabelText("분류") as HTMLSelectElement;
+    const select = screen.getByLabelText("의혹 유형") as HTMLSelectElement;
     const values = Array.from(select.options).map((o) => o.value);
     expect(values).toEqual(
       expect.arrayContaining([
@@ -61,8 +59,6 @@ describe("ReportWizard 분류·선거(0007)", () => {
   it("GET /api/elections 로 선거 드롭다운 옵션을 채운다", async () => {
     mockElections();
     renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
 
     expect(
       await screen.findByRole("option", { name: "제22대 국회의원선거" }),
@@ -82,16 +78,12 @@ describe("ReportWizard 분류·선거(0007)", () => {
     );
     renderWizard();
 
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
+    await userEvent.selectOptions(screen.getByLabelText("의혹 유형"), "투개표");
     await screen.findByRole("option", { name: "제22대 국회의원선거" });
     await userEvent.selectOptions(screen.getByLabelText(/선거/), "el-1");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
     const postCall = fetchMock.mock.calls.find(
@@ -113,14 +105,10 @@ describe("ReportWizard 분류·선거(0007)", () => {
     );
     renderWizard();
 
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.selectOptions(screen.getByLabelText("분류"), "기타");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
+    await userEvent.selectOptions(screen.getByLabelText("의혹 유형"), "기타");
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
     const postCall = fetchMock.mock.calls.find(
@@ -141,14 +129,9 @@ describe("ReportWizard 분류·선거(0007)", () => {
     );
     renderWizard();
 
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // 분류 미선택 그대로 다음 진행
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
     const postCall = fetchMock.mock.calls.find(

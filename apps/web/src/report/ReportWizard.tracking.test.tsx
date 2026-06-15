@@ -25,16 +25,12 @@ function createResponse(trackingNumber: string) {
 }
 
 async function submitOnce() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
+  await userEvent.type(screen.getByLabelText("상세 설명"), "관찰 정황");
   await userEvent.click(screen.getByLabelText(/동의/));
-  await userEvent.click(screen.getByRole("button", { name: "제출" }));
+  await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 }
 
-describe("ReportWizard 접수번호 추적(0013)", () => {
+describe("ReportForm 접수번호 추적(0013)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();

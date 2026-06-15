@@ -17,16 +17,12 @@ function electionsResponse() {
 }
 
 async function submitOnce() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
+  await userEvent.type(screen.getByLabelText("상세 설명"), "관찰 정황");
   await userEvent.click(screen.getByLabelText(/동의/));
-  await userEvent.click(screen.getByRole("button", { name: "제출" }));
+  await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 }
 
-describe("ReportWizard 완료 화면 접수번호 클립보드 복사(0013)", () => {
+describe("ReportForm 완료 화면 접수번호 클립보드 복사(0013)", () => {
   let writeText: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {

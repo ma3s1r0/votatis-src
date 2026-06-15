@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import ReportWizard from "./ReportWizard";
 
@@ -12,7 +11,7 @@ function renderWizard() {
   );
 }
 
-describe("ReportWizard 단계 이동", () => {
+describe("ReportForm 단일 페이지(0019)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     sessionStorage.clear();
@@ -22,40 +21,20 @@ describe("ReportWizard 단계 이동", () => {
     sessionStorage.clear();
   });
 
-  it("5단계 마법사가 렌더되고 현재 진행도가 표시된다", () => {
+  it("단계 네비 없이 핵심 입력이 한 화면에 모두 보인다", () => {
     renderWizard();
-    expect(screen.getByText(/1\s*\/\s*5/)).toBeInTheDocument();
-    // Step 1 = 상황 설명
-    expect(screen.getByLabelText("제목")).toBeInTheDocument();
+    expect(screen.getByLabelText("의혹 유형")).toBeInTheDocument();
+    expect(screen.getByLabelText("위치")).toBeInTheDocument();
+    expect(screen.getByLabelText("상세 설명")).toBeInTheDocument();
+    expect(screen.getByLabelText("사진/PDF 첨부")).toBeInTheDocument();
+    // 위저드 잔재(다음/이전/단계 인디케이터)가 없다
+    expect(screen.queryByRole("button", { name: "다음" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "이전" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/\/\s*5\s*단계/)).not.toBeInTheDocument();
   });
 
-  it("Step1 제목 미입력 시 다음으로 진행할 수 없다", async () => {
+  it("동의 전에는 제출 버튼이 비활성", () => {
     renderWizard();
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // 여전히 Step1
-    expect(screen.getByText(/1\s*\/\s*5/)).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-  });
-
-  it("Step1 제목 입력 후 Step2 분류로 이동하고, 분류는 선택 사항이라 미선택도 다음 진행(미분류 허용, 0007)", async () => {
-    renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // Step2
-    expect(screen.getByText(/2\s*\/\s*5/)).toBeInTheDocument();
-    expect(screen.getByLabelText("분류")).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    // 분류 미선택이어도 Step3 으로 진행
-    expect(screen.getByText(/3\s*\/\s*5/)).toBeInTheDocument();
-  });
-
-  it("이전 버튼으로 직전 단계로 돌아간다", async () => {
-    renderWizard();
-    await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    expect(screen.getByText(/2\s*\/\s*5/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "이전" }));
-    expect(screen.getByText(/1\s*\/\s*5/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "제보 제출" })).toBeDisabled();
   });
 });

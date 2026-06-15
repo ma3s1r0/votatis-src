@@ -12,23 +12,11 @@ function renderWizard() {
   );
 }
 
-// 첨부 단계(Step4)까지 진입
-async function gotoAttachStep() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  // Step3 지역 (선택)
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  // Step4 출처·사진
-}
-
-// 마운트 시 GET /api/elections(0007) 1회 호출. 기본 응답은 빈 선거 목록.
 function electionsResponse() {
   return new Response(JSON.stringify({ items: [] }), { status: 200 });
 }
 
-describe("ReportWizard 첨부", () => {
+describe("ReportForm 첨부", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
@@ -40,8 +28,6 @@ describe("ReportWizard 첨부", () => {
 
   it("허용 외 파일(초과 size)은 클라이언트에서 거부하고 안내를 표시한다", async () => {
     renderWizard();
-    await gotoAttachStep();
-    // 허용 mime 이지만 10MB 초과 — accept 필터를 통과해 onChange 가 발생.
     const big = new File([new Uint8Array(11 * 1024 * 1024)], "big.png", {
       type: "image/png",
     });
@@ -54,13 +40,11 @@ describe("ReportWizard 첨부", () => {
   it("제출 시 report 생성 후 첨부가 create→PUT→finalize 순서로 호출된다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
-    // 1) POST /api/reports
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "rep_1", status: "received" }), {
         status: 201,
       }),
     );
-    // 2) attachments/create
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -73,24 +57,18 @@ describe("ReportWizard 첨부", () => {
         { status: 201 },
       ),
     );
-    // 3) PUT uploadUrl
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
-    // 4) finalize
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ status: "stored" }), { status: 200 }),
     );
 
     renderWizard();
-    await gotoAttachStep();
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
     const good = new File(["imgdata"], "photo.png", { type: "image/png" });
     await userEvent.upload(screen.getByLabelText("사진/PDF 첨부"), good);
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-
-    // Step5 검토·제출 → consent 후 제출
     await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
-    // 마운트의 GET /api/elections 를 제외하면 report 관련 호출은 4회.
     const reportCalls = () =>
       fetchMock.mock.calls.filter((c) => c[0] !== "/api/elections");
     await waitFor(() => expect(reportCalls().length).toBe(4));
@@ -99,8 +77,6 @@ describe("ReportWizard 첨부", () => {
     expect(calls[1][0]).toBe("/api/reports/rep_1/attachments/create");
     expect(calls[2][0]).toBe("https://s3.example/upload");
     expect(calls[2][1].method).toBe("PUT");
-    expect(calls[3][0]).toBe(
-      "/api/reports/rep_1/attachments/att_1/finalize",
-    );
+    expect(calls[3][0]).toBe("/api/reports/rep_1/attachments/att_1/finalize");
   });
 });

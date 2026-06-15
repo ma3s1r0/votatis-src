@@ -17,16 +17,12 @@ function electionsResponse() {
 }
 
 async function submitOnce() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
+  await userEvent.type(screen.getByLabelText("상세 설명"), "관찰 정황");
   await userEvent.click(screen.getByLabelText(/동의/));
-  await userEvent.click(screen.getByRole("button", { name: "제출" }));
+  await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 }
 
-describe("ReportWizard 완료 화면", () => {
+describe("ReportForm 완료 화면(Figma 04)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
@@ -36,7 +32,7 @@ describe("ReportWizard 완료 화면", () => {
     sessionStorage.clear();
   });
 
-  it("완료 화면에 아카이브·홈·추가 제보 링크가 있다", async () => {
+  it("완료 화면에 상태조회·홈·추가 제보 액션이 있다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockResolvedValueOnce(
@@ -54,11 +50,13 @@ describe("ReportWizard 완료 화면", () => {
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
 
-    const archive = screen.getByRole("link", { name: /아카이브/ });
-    expect(archive).toHaveAttribute("href", "/archive");
-    const home = screen.getByRole("link", { name: /^홈$/ });
+    const status = screen.getByRole("link", { name: /상태 조회/ });
+    expect(status).toHaveAttribute(
+      "href",
+      expect.stringContaining("/track"),
+    );
+    const home = screen.getByRole("link", { name: "홈으로 돌아가기" });
     expect(home).toHaveAttribute("href", "/");
-    // 추가 제보(새 빈 마법사로 진입)
     expect(
       screen.getByRole("button", { name: /새 제보|추가 제보/ }),
     ).toBeInTheDocument();
@@ -83,13 +81,12 @@ describe("ReportWizard 완료 화면", () => {
 
     expect(screen.getByText("접수번호")).toBeInTheDocument();
     expect(screen.getByText("VT-2026-0615-0042")).toBeInTheDocument();
-    // 0012 의 "조회 기능 미제공" 문구는 0013 에서 제거된다.
     expect(
       screen.queryByText(/조회하는 기능은 제공되지 않습니다/),
     ).not.toBeInTheDocument();
   });
 
-  it("추가 제보 클릭 시 새 빈 마법사로 진입한다", async () => {
+  it("추가 제보 클릭 시 새 빈 폼으로 진입한다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockResolvedValueOnce(
@@ -105,7 +102,9 @@ describe("ReportWizard 완료 화면", () => {
       screen.getByRole("button", { name: /새 제보|추가 제보/ }),
     );
 
-    expect(screen.getByLabelText("제목")).toHaveValue("");
-    expect(screen.getByRole("heading", { name: "제보하기" })).toBeInTheDocument();
+    expect(screen.getByLabelText("상세 설명")).toHaveValue("");
+    expect(
+      screen.getByRole("heading", { name: /증거 제보/ }),
+    ).toBeInTheDocument();
   });
 });
