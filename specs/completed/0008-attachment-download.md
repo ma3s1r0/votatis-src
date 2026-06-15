@@ -1,7 +1,7 @@
 ---
 id: 0008
 title: 첨부 다운로드 (presigned GET)
-status: not-started
+status: completed
 owner: backend-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -78,3 +78,4 @@ dev_order: 8   # 0007과 독립이라 병렬 가능.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현 (backend-dev) + QA PASS. StoragePort.presignGet 추가, 공개 다운로드 `GET /api/reports/:id/attachments/:aid/download`(verified∧stored∧소속만, 그 외 404·만료 5분), 관리 다운로드(`/api/admin/...` requireReviewer, verified 무관 stored), 민감 메타 비노출. web 아카이브 상세 다운로드 버튼(엔드포인트 경유). 게이트 통과 (api 112 + web 58). status→completed.

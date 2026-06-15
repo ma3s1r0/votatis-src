@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchArchiveDetail, type ArchiveDetail } from "./api";
+import {
+  fetchArchiveDetail,
+  requestAttachmentDownloadUrl,
+  type ArchiveDetail,
+} from "./api";
 
 type State =
   | { status: "loading" }
@@ -72,13 +76,27 @@ export default function ArchiveDetailPage() {
           <p>첨부 없음</p>
         ) : (
           <ul>
-            {/* 다운로드 URL은 공개 계약에 없다 — 파일명·크기만 표기한다. */}
+            {/* 다운로드 URL은 상세 응답에 없다 — 클릭 시 별도 엔드포인트에서 단기 URL을 발급받아 이동(0008). */}
             {r.attachments.map((a) => (
               <li key={a.id}>
                 <span>{a.filename ?? "(파일명 미상)"}</span>
                 {a.size !== null && (
                   <span style={{ color: "#777" }}> · {a.size.toLocaleString()} bytes</span>
-                )}
+                )}{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    requestAttachmentDownloadUrl(r.id, a.id)
+                      .then((url) => {
+                        window.location.assign(url);
+                      })
+                      .catch(() => {
+                        /* 발급 실패(404 등)는 무음 처리 — 존재 누설 방지. */
+                      });
+                  }}
+                >
+                  다운로드
+                </button>
               </li>
             ))}
           </ul>

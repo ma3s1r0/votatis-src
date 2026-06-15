@@ -12,9 +12,16 @@ export type HeadObjectResult =
   | { exists: false }
   | { exists: true; size: number; sha256: string };
 
+export type PresignGetInput = {
+  key: string;
+  expiresInSeconds: number;
+};
+
 export interface StoragePort {
   // 단기 만료 presigned PUT URL 발급. 메서드 PUT, Content-Type/Length 바인딩.
   presignPut(input: PresignPutInput): Promise<{ url: string; expiresInSeconds: number }>;
+  // 단기 만료 presigned GET URL 발급(다운로드). 메서드 GET 한정.
+  presignGet(input: PresignGetInput): Promise<{ url: string; expiresInSeconds: number }>;
   // 객체 존재·크기·sha256 확인(finalize 무결성 검증용).
   headObject(key: string): Promise<HeadObjectResult>;
 }
@@ -26,6 +33,13 @@ export class InMemoryStorage implements StoragePort {
 
   async presignPut(input: PresignPutInput) {
     const url = `https://fake-s3.local/${input.key}?expires=${input.expiresInSeconds}`;
+    return { url, expiresInSeconds: input.expiresInSeconds };
+  }
+
+  // presigned GET 더블. 객체 존재 여부와 무관하게 가짜 URL 을 반환한다(존재 게이트는
+  // 라우트가 attachment.status=stored 로 강제 — presign 자체는 객체를 검증하지 않음).
+  async presignGet(input: PresignGetInput) {
+    const url = `https://fake-s3.local/${input.key}?method=GET&expires=${input.expiresInSeconds}`;
     return { url, expiresInSeconds: input.expiresInSeconds };
   }
 

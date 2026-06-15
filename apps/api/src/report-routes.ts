@@ -10,6 +10,7 @@ import {
   electionExists,
   createPendingAttachment,
   finalizeAttachment,
+  getStoredAttachmentForVerifiedReport,
   listVerifiedReports,
   getVerifiedReport,
   listElections,
@@ -260,6 +261,24 @@ export function createReportApp(opts: {
       size: outcome.attachment.size,
       status: outcome.attachment.status,
     });
+  });
+
+  // A4. 공개 첨부 다운로드 — on-demand presigned GET URL 발급(0008).
+  // 게이트(서버 단일 지점 강제): report.verified ∧ attachment.stored ∧ 소속 일치.
+  // 미충족(미검증·pending·소속불일치·없음)은 모두 404(존재 누설 금지).
+  app.get("/reports/:id/attachments/:attachmentId/download", async (c) => {
+    const row = await getStoredAttachmentForVerifiedReport(db, {
+      reportId: c.req.param("id"),
+      attachmentId: c.req.param("attachmentId"),
+    });
+    if (!row) return c.json({ error: "not_found" }, 404);
+
+    const presigned = await storage.presignGet({
+      key: row.storageKey,
+      expiresInSeconds: PRESIGN_TTL_SECONDS,
+    });
+    // storageKey 등 민감 메타는 비노출 — URL·만료만 반환.
+    return c.json({ url: presigned.url, expiresInSeconds: presigned.expiresInSeconds });
   });
 
   // B1. 공개 목록 — verified=true 만

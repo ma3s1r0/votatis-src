@@ -121,6 +121,25 @@ describe("ArchiveDetailPage", () => {
     expect(filename.closest("a")).toBeNull();
   });
 
+  it("첨부 다운로드 클릭 → 다운로드 엔드포인트 호출 후 받은 URL로 이동한다", async () => {
+    mockOnce(detail); // 상세 로드
+    const assign = vi.fn();
+    vi.stubGlobal("location", { assign } as unknown as Location);
+    renderDetail();
+    await screen.findByText(/비정상적으로 튀었다는 기록/);
+
+    // 다운로드 엔드포인트 응답.
+    mockOnce({ url: "https://fake-s3.local/x?method=GET", expiresInSeconds: 300 });
+
+    const btn = screen.getByRole("button", { name: /다운로드/ });
+    btn.click();
+
+    await vi.waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/reports/r1/attachments/a1/download");
+      expect(assign).toHaveBeenCalledWith("https://fake-s3.local/x?method=GET");
+    });
+  });
+
   it("미검증/없는 ID(404)는 Not Found 화면을 보이고 본문을 노출하지 않는다", async () => {
     mockOnce({ error: "not_found" }, 404);
     renderDetail();

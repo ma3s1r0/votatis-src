@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Db } from "./db/repository.js";
+import type { StoragePort } from "./storage.js";
 import type { AuthEnv } from "./auth-routes.js";
 import { loadSession, requireReviewer } from "./auth-routes.js";
 import {
@@ -8,6 +9,10 @@ import {
   getReportForReview,
   type EvidenceLink,
 } from "./db/verification.js";
+import { getStoredAttachmentForReview } from "./db/intake.js";
+
+// presigned GET 만료(0008 결정 2: 5분, 공개 다운로드와 동일 보수값).
+const DOWNLOAD_TTL_SECONDS = 5 * 60;
 
 // 관리자 검토 콘솔 API(0004). 모든 라우트는 requireReviewer 로 보호된다.
 // 미인증 401 / 비active(disabled 포함) 403. db 는 0002 패턴으로 주입.
@@ -59,8 +64,8 @@ function adminReport(r: {
   };
 }
 
-export function createAdminApp(opts: { db: Db }) {
-  const { db } = opts;
+export function createAdminApp(opts: { db: Db; storage: StoragePort }) {
+  const { db, storage } = opts;
   const app = new Hono<AuthEnv>();
 
   // db 주입 + 세션 로드 → 모든 라우트 reviewer 보호.
@@ -127,6 +132,22 @@ export function createAdminApp(opts: { db: Db }) {
         snapshot: h.snapshot,
       })),
     });
+  });
+
+  // 관리 첨부 다운로드 — verified 무관, stored ∧ 소속 일치면 presigned GET URL(0008).
+  // requireReviewer(미인증 401 / 비active 403)는 위 use 미들웨어가 강제. 미충족 첨부는 404.
+  app.get("/reports/:id/attachments/:attachmentId/download", async (c) => {
+    const row = await getStoredAttachmentForReview(db, {
+      reportId: c.req.param("id"),
+      attachmentId: c.req.param("attachmentId"),
+    });
+    if (!row) return c.json({ error: "not_found" }, 404);
+
+    const presigned = await storage.presignGet({
+      key: row.storageKey,
+      expiresInSeconds: DOWNLOAD_TTL_SECONDS,
+    });
+    return c.json({ url: presigned.url, expiresInSeconds: presigned.expiresInSeconds });
   });
 
   // 판정 작성·수정. 근거 강제는 서버 권위(method + evidence≥1). 위반 시 422.

@@ -118,6 +118,46 @@ export async function finalizeAttachment(
   return { ok: true, attachment: updated };
 }
 
+// 공개 다운로드용 첨부 조회: report.vVerified=true ∧ attachment.status=stored ∧ 소속 일치.
+// 게이트 미충족(미검증·pending·소속불일치·없음)은 모두 undefined → 라우트에서 404(존재 누설 금지).
+export async function getStoredAttachmentForVerifiedReport(
+  db: Db,
+  args: { reportId: string; attachmentId: string },
+): Promise<{ storageKey: string } | undefined> {
+  const [row] = await db
+    .select({ storageKey: attachment.storageKey })
+    .from(attachment)
+    .innerJoin(report, eq(attachment.reportId, report.id))
+    .where(
+      and(
+        eq(attachment.id, args.attachmentId),
+        eq(attachment.reportId, args.reportId),
+        eq(attachment.status, "stored"),
+        eq(report.vVerified, true),
+      ),
+    );
+  return row;
+}
+
+// 관리 다운로드용 첨부 조회: verified 무관, attachment.status=stored ∧ 소속 일치만.
+// 검토자는 판정 전 첨부를 봐야 하므로 verified 게이트 없음. 미충족은 undefined → 404.
+export async function getStoredAttachmentForReview(
+  db: Db,
+  args: { reportId: string; attachmentId: string },
+): Promise<{ storageKey: string } | undefined> {
+  const [row] = await db
+    .select({ storageKey: attachment.storageKey })
+    .from(attachment)
+    .where(
+      and(
+        eq(attachment.id, args.attachmentId),
+        eq(attachment.reportId, args.reportId),
+        eq(attachment.status, "stored"),
+      ),
+    );
+  return row;
+}
+
 export type ListParams = {
   limit: number;
   offset: number;

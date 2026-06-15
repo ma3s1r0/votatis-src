@@ -22,7 +22,7 @@ export function createApp(opts: {
   app.route("/api/auth", createAuthApp(opts.db, { inviteBaseUrl: opts.inviteBaseUrl }));
   app.route(
     "/api/admin",
-    createAdminApp({ db: opts.db }),
+    createAdminApp({ db: opts.db, storage: opts.storage }),
   );
   app.route(
     "/api",

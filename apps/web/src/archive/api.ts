@@ -95,6 +95,20 @@ export async function fetchArchive(
   return (await res.json()) as ArchiveListResponse;
 }
 
+// 공개 첨부 다운로드(0008): on-demand presigned GET URL 발급 엔드포인트 호출.
+// 서버가 verified ∧ stored ∧ 소속 게이트를 강제(미충족 404). 받은 URL 만 사용한다.
+export async function requestAttachmentDownloadUrl(
+  reportId: string,
+  attachmentId: string,
+): Promise<string> {
+  const res = await fetch(
+    `${base}/${encodeURIComponent(reportId)}/attachments/${encodeURIComponent(attachmentId)}/download`,
+  );
+  if (!res.ok) throw new Error(`attachment_download_failed:${res.status}`);
+  const json = (await res.json()) as { url: string; expiresInSeconds: number };
+  return json.url;
+}
+
 export type FetchArchiveDetailResult =
   | { ok: true; report: ArchiveDetail }
   | { ok: false; error: "not_found" | "unknown" };
