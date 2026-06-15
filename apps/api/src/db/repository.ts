@@ -1,4 +1,4 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, like, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import {
   election,
@@ -37,14 +37,51 @@ export async function createEvent(db: Db, input: EventInsert) {
   return row;
 }
 
+// 발급일 prefix(서버 시각 collected_at 기준). VT-YYYY-MMDD.
+function trackingPrefix(collectedAt: Date): string {
+  const yyyy = collectedAt.getUTCFullYear();
+  const mm = String(collectedAt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(collectedAt.getUTCDate()).padStart(2, "0");
+  return `VT-${yyyy}-${mm}${dd}`;
+}
+
 export async function createReport(db: Db, input: ReportCreate) {
   // 무결성: 수집 시점은 생성 시 항상 기록된다.
   const collectedAt = input.collectedAt ?? new Date();
-  const [row] = await db
-    .insert(report)
-    .values({ ...input, collectedAt })
-    .returning();
-  return row;
+  const prefix = trackingPrefix(collectedAt);
+
+  // 접수번호 발급: 같은 트랜잭션에서 그날 prefix 의 기존 최대 NNNN+1 을 계산해
+  // 충돌 없이 부여. 유니크 제약을 안전망으로 두고, 동시성 충돌 시 재시도.
+  return db.transaction(async (tx) => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const [{ maxSeq }] = await tx
+        .select({
+          // tracking_number 마지막 4자리 최대값(없으면 0).
+          maxSeq: sql<number>`coalesce(max(cast(right(${report.trackingNumber}, 4) as integer)), 0)`,
+        })
+        .from(report)
+        .where(like(report.trackingNumber, `${prefix}-%`));
+      const seq = String(maxSeq + 1).padStart(4, "0");
+      const trackingNumber = `${prefix}-${seq}`;
+      try {
+        const [row] = await tx
+          .insert(report)
+          .values({ ...input, collectedAt, trackingNumber })
+          .returning();
+        return row;
+      } catch (err) {
+        // 유니크 충돌(동시 생성)이면 재계산 후 재시도. 그 외 에러는 전파.
+        if (attempt < 4 && isUniqueViolation(err)) continue;
+        throw err;
+      }
+    }
+    throw new Error("failed to allocate tracking_number");
+  });
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /unique|duplicate/i.test(msg);
 }
 
 export async function createAttachment(db: Db, input: AttachmentInsert) {

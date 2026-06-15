@@ -39,7 +39,7 @@ specs/
 | 0010 | Figma 디자인 반영 (토큰 + 핵심 화면) | completed | 2026-06-15 | completed/0010-figma-design.md |
 | 0011 | UX 풀리뷰 + 라이브 테스트 개선 (P0 인증 버그 포함) | completed | 2026-06-15 | completed/0011-ux-improvements.md |
 | 0012 | 비주얼 디자인 폴리시 (Figma 네이비 모바일 정렬) | completed | 2026-06-15 | completed/0012-visual-polish.md |
-| 0013 | 접수번호 추적 + 공개 상태조회 + 내 제보 | not-started | 2026-06-15 | not-started/0013-tracking-number-status-lookup.md |
+| 0013 | 접수번호 추적 + 공개 상태조회 + 내 제보 | completed | 2026-06-15 | completed/0013-tracking-number-status-lookup.md |
 | 0014 | 도메인 세그먼트 (선거 의혹 / 집회 현장) | not-started | 2026-06-15 | not-started/0014-domain-segment.md |
 | 0015 | 클라이언트 EXIF 검증 + 원본 아님 차단 | not-started | 2026-06-15 | not-started/0015-client-exif-validation.md |
 | 0016 | 모자이크/원본분리 포렌식 (공표 처리) | not-started | 2026-06-15 | not-started/0016-mosaic-public-original-separation.md |

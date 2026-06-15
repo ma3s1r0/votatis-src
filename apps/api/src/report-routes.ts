@@ -14,8 +14,13 @@ import {
   listVerifiedReports,
   getVerifiedReport,
   listElections,
+  getReportByTrackingNumber,
 } from "./db/intake.js";
 import { isReportCategory } from "./categories.js";
+import { currentStage, buildTimeline } from "./tracking.js";
+
+// 접수번호 형식(0013). 무차별 조회 시 형식 불일치는 DB 조회 전 컷.
+const TRACKING_RE = /^VT-\d{4}-\d{4}-\d{4}$/;
 
 // 첨부 허용 정책 (스펙 결정 6).
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
@@ -169,7 +174,38 @@ export function createReportApp(opts: {
       });
     }
 
-    return c.json({ id: created.id, status: created.status }, 201);
+    return c.json(
+      { id: created.id, status: created.status, trackingNumber: created.trackingNumber },
+      201,
+    );
+  });
+
+  // B4. 공개 상태조회(0013) — 인증 없이 접수번호로 단건. 민감정보 0(타임라인만).
+  // 형식 불일치/없는 번호 모두 404(존재 누설 방지). IP rate limit 적용.
+  app.get("/track/:number", async (c) => {
+    const ip = clientIp(c);
+    if (await isIntakeRateLimited(db, ip)) {
+      return c.json({ error: "rate_limited" }, 429);
+    }
+    await recordIntakeAttempt(db, ip);
+
+    const number = c.req.param("number");
+    if (!TRACKING_RE.test(number)) {
+      return c.json({ error: "not_found" }, 404);
+    }
+    const row = await getReportByTrackingNumber(db, number);
+    if (!row) return c.json({ error: "not_found" }, 404);
+
+    const stage = currentStage({ status: row.status, vVerified: row.vVerified });
+    // verified=true(공개)면 0005 공개 상세 경로. 아니면 publicUrl 없음(null).
+    const publicUrl = row.vVerified === true ? `/reports/${row.id}` : null;
+
+    return c.json({
+      trackingNumber: row.trackingNumber,
+      timeline: buildTimeline(stage),
+      currentStage: stage,
+      publicUrl,
+    });
   });
 
   // A2. 첨부 create → presigned PUT URL + attachment(status=pending)

@@ -10,12 +10,14 @@ import ArchiveListPage from "./archive/ArchiveListPage";
 import ArchiveDetailPage from "./archive/ArchiveDetailPage";
 import MapPage from "./MapPage";
 import MyReportsPage from "./MyReportsPage";
+import TrackStatusPage from "./track/TrackStatusPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/report", element: <ReportWizard /> },
   { path: "/map", element: <MapPage /> },
   { path: "/my", element: <MyReportsPage /> },
+  { path: "/track", element: <TrackStatusPage /> },
   { path: "/archive", element: <ArchiveListPage /> },
   { path: "/archive/:id", element: <ArchiveDetailPage /> },
   { path: "/admin/login", element: <LoginPage /> },

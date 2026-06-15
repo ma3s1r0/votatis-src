@@ -582,6 +582,134 @@ textarea.input {
   font-weight: var(--weight-bold);
 }
 
+/* 완료 화면 접수번호 강조(0013, 디자인 04 navy) */
+.done-card__tracking {
+  color: var(--color-navy);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+  letter-spacing: 0.04em;
+  margin: var(--space-1) 0 0;
+}
+
+/* ── 상태조회(0013) ──────────────────────────────────────── */
+.track-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+  margin: var(--space-4) 0;
+}
+.track-form__label {
+  display: grid;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.track-form__input {
+  padding: var(--space-2);
+  font-size: var(--text-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.track-notice {
+  margin: var(--space-4) 0;
+}
+.track-result {
+  margin-top: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
+}
+.track-result__number {
+  color: var(--color-navy);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-4);
+}
+
+/* 상태 타임라인 — 세로 dot + 라벨, 현재 단계 navy 강조 */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.timeline__step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0 var(--space-2) var(--space-1);
+  color: var(--color-text-muted);
+}
+/* dot 사이 연결선 */
+.timeline__step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--space-1) + 5px);
+  top: 50%;
+  width: 2px;
+  height: 100%;
+  background: var(--color-border);
+}
+.timeline__dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-border);
+  flex: 0 0 auto;
+}
+.timeline__label {
+  font-size: var(--text-base);
+}
+.timeline__step--done {
+  color: var(--color-text);
+}
+.timeline__step--done .timeline__dot {
+  background: var(--color-navy);
+}
+.timeline__step--current {
+  color: var(--color-navy);
+  font-weight: var(--weight-bold);
+}
+.timeline__step--current .timeline__dot {
+  background: var(--color-navy);
+  box-shadow: 0 0 0 4px var(--color-navy-soft);
+}
+
+/* ── 내 제보(0013) ───────────────────────────────────────── */
+.my-reports {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.my-reports__link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-decoration: none;
+}
+.my-reports__number {
+  color: var(--color-navy);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.03em;
+}
+.my-reports__action {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
 /* 에러/위험 텍스트 */
 .text-danger {
   color: var(--color-danger);

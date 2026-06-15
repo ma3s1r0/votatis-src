@@ -1,7 +1,7 @@
 ---
 id: 0013
 title: 접수번호 추적 + 공개 상태조회 + 내 제보
-status: not-started
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -104,3 +104,4 @@ dev_order: 13   # 0014~0018 의 선행(추적 인프라). 권장 1순위.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버(backend-dev): report.tracking_number(VT-YYYY-MMDD-NNNN, 트랜잭션 순증·유니크), 생성 응답 trackingNumber, 무인증 `GET /api/track/:number`(타임라인 4단계+publicUrl만, 민감정보 0, 404/429), 마이그레이션 0006. web(frontend-dev): 완료화면 접수번호+복사+localStorage, `/track` 상태조회 타임라인, `/my` 내 제보. QA 조건부 PASS(누설 키 화이트리스트 검증, 복사버튼 보완). 게이트 통과 (api 143 + web 123), 회귀 0. status→completed.

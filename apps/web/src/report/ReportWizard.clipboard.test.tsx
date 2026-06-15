@@ -26,45 +26,24 @@ async function submitOnce() {
   await userEvent.click(screen.getByRole("button", { name: "제출" }));
 }
 
-describe("ReportWizard 완료 화면", () => {
+describe("ReportWizard 완료 화면 접수번호 클립보드 복사(0013)", () => {
+  let writeText: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
+    writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
   });
   afterEach(() => {
     vi.unstubAllGlobals();
     sessionStorage.clear();
   });
 
-  it("완료 화면에 아카이브·홈·추가 제보 링크가 있다", async () => {
-    const fetchMock = fetch as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce(electionsResponse());
-    fetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          id: "rep_42",
-          status: "received",
-          trackingNumber: "VT-2026-0615-0042",
-        }),
-        { status: 201 },
-      ),
-    );
-    renderWizard();
-    await submitOnce();
-
-    await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
-
-    const archive = screen.getByRole("link", { name: /아카이브/ });
-    expect(archive).toHaveAttribute("href", "/archive");
-    const home = screen.getByRole("link", { name: /^홈$/ });
-    expect(home).toHaveAttribute("href", "/");
-    // 추가 제보(새 빈 마법사로 진입)
-    expect(
-      screen.getByRole("button", { name: /새 제보|추가 제보/ }),
-    ).toBeInTheDocument();
-  });
-
-  it("접수번호와 상태조회 안내를 표시한다(0013: 추적 가능)", async () => {
+  it("복사 버튼 클릭 시 접수번호가 클립보드에 기록되고 피드백을 보여준다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockResolvedValueOnce(
@@ -81,15 +60,14 @@ describe("ReportWizard 완료 화면", () => {
     await submitOnce();
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
 
-    expect(screen.getByText("접수번호")).toBeInTheDocument();
-    expect(screen.getByText("VT-2026-0615-0042")).toBeInTheDocument();
-    // 0012 의 "조회 기능 미제공" 문구는 0013 에서 제거된다.
-    expect(
-      screen.queryByText(/조회하는 기능은 제공되지 않습니다/),
-    ).not.toBeInTheDocument();
+    const copyBtn = screen.getByRole("button", { name: "복사" });
+    await userEvent.click(copyBtn);
+
+    expect(writeText).toHaveBeenCalledWith("VT-2026-0615-0042");
+    expect(await screen.findByText("복사됨")).toBeInTheDocument();
   });
 
-  it("추가 제보 클릭 시 새 빈 마법사로 진입한다", async () => {
+  it("접수번호가 없으면 복사 버튼을 표시하지 않는다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockResolvedValueOnce(
@@ -101,11 +79,6 @@ describe("ReportWizard 완료 화면", () => {
     await submitOnce();
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /새 제보|추가 제보/ }),
-    );
-
-    expect(screen.getByLabelText("제목")).toHaveValue("");
-    expect(screen.getByRole("heading", { name: "제보하기" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "복사" })).not.toBeInTheDocument();
   });
 });

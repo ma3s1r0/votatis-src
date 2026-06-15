@@ -20,7 +20,7 @@ export type ReportInput = {
 export type FieldError = { field: string; reason: string };
 
 export type CreateReportResult =
-  | { ok: true; id: string; status: string }
+  | { ok: true; id: string; status: string; trackingNumber?: string }
   | { ok: false; error: "validation_error"; fields: FieldError[] }
   | { ok: false; error: "rate_limited" }
   | { ok: false; error: "unknown" };
@@ -34,8 +34,17 @@ export async function createReport(
     body: JSON.stringify(input),
   });
   if (res.status === 201) {
-    const data = (await res.json()) as { id: string; status: string };
-    return { ok: true, id: data.id, status: data.status };
+    const data = (await res.json()) as {
+      id: string;
+      status: string;
+      trackingNumber?: string;
+    };
+    return {
+      ok: true,
+      id: data.id,
+      status: data.status,
+      trackingNumber: data.trackingNumber,
+    };
   }
   if (res.status === 400) {
     const data = (await res.json()) as {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createReport,
   uploadAttachment,
@@ -14,6 +15,7 @@ import { REPORT_CATEGORIES } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import Header from "../Header";
 import TabBar from "../TabBar";
+import { addMyReport } from "../track/storage";
 
 // 분류(category)는 서버 enum(스펙 0007)과 동일 출처. value=label(한글 enum 값 그대로 전송).
 const categories = REPORT_CATEGORIES;
@@ -76,8 +78,10 @@ export default function ReportWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [copied, setCopied] = useState(false);
   const [done, setDone] = useState<{
     id: string;
+    trackingNumber?: string;
     attachment?: { fileName: string; ok: boolean };
   } | null>(null);
 
@@ -203,7 +207,19 @@ export default function ReportWizard() {
 
     setSubmitting(false);
     sessionStorage.removeItem(DRAFT_KEY);
-    setDone({ id: result.id, attachment });
+    // 접수번호를 "내 제보"(localStorage)에 누적 — 익명 추적용(0013 결정 5).
+    if (result.trackingNumber) addMyReport(result.trackingNumber);
+    setDone({
+      id: result.id,
+      trackingNumber: result.trackingNumber,
+      attachment,
+    });
+  }
+
+  async function copyTracking(trackingNumber: string) {
+    await navigator.clipboard.writeText(trackingNumber);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   function startNewReport() {
@@ -222,13 +238,37 @@ export default function ReportWizard() {
       <main style={pageStyle}>
         <div className="done-card">
           <h1>제보가 접수되었습니다</h1>
-          <p>
-            접수 식별자: <span className="done-card__id">{done.id}</span>
-          </p>
+          {done.trackingNumber ? (
+            <>
+              <p>접수번호</p>
+              <div style={trackingRowStyle}>
+                <p className="done-card__tracking">{done.trackingNumber}</p>
+                <button
+                  type="button"
+                  onClick={() => copyTracking(done.trackingNumber!)}
+                  style={copyBtnStyle}
+                >
+                  복사
+                </button>
+                {copied && (
+                  <span role="status" aria-live="polite" style={copiedStyle}>
+                    복사됨
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <p>
+              접수 식별자: <span className="done-card__id">{done.id}</span>
+            </p>
+          )}
         </div>
-        <p style={hintStyle}>
-          현재 이 번호로 진행 상황을 조회하는 기능은 제공되지 않습니다.
-        </p>
+        {done.trackingNumber && (
+          <p style={hintStyle}>
+            이 접수번호로 진행 상태를 조회할 수 있습니다. 번호는 "내 제보"에
+            저장됩니다.
+          </p>
+        )}
         {done.attachment && (
           <p style={done.attachment.ok ? progressStyle : errorStyle}>
             {done.attachment.ok
@@ -241,6 +281,14 @@ export default function ReportWizard() {
           따라 공개되지 않을 수 있습니다.
         </p>
         <nav className="btn-row">
+          {done.trackingNumber && (
+            <Link
+              to={`/track?number=${encodeURIComponent(done.trackingNumber)}`}
+              className="btn btn-primary"
+            >
+              내 제보 상태 조회하기
+            </Link>
+          )}
           <a href="/archive" className="btn btn-secondary">
             공개 아카이브 보기
           </a>
@@ -606,6 +654,25 @@ const progressStyle: React.CSSProperties = {
   color: "var(--color-text)",
   margin: 0,
   fontSize: "var(--text-sm)",
+};
+const trackingRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  flexWrap: "wrap",
+};
+const copyBtnStyle: React.CSSProperties = {
+  padding: "var(--space-1) var(--space-2)",
+  fontSize: "var(--text-sm)",
+  color: "var(--color-text)",
+  background: "var(--color-surface)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer",
+};
+const copiedStyle: React.CSSProperties = {
+  fontSize: "var(--text-sm)",
+  color: "var(--color-text-muted)",
 };
 const dtStyle: React.CSSProperties = {
   fontWeight: "var(--weight-medium)",

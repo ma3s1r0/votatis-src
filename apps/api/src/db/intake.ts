@@ -158,6 +158,25 @@ export async function getStoredAttachmentForReview(
   return row;
 }
 
+// 공개 상태조회(0013): 접수번호로 단건. 민감정보 비노출을 위해 status·verified·id 만 선택.
+// 없으면 undefined → 라우트에서 404(존재 누설 방지).
+export async function getReportByTrackingNumber(
+  db: Db,
+  trackingNumber: string,
+): Promise<{ id: string; trackingNumber: string; status: string; vVerified: boolean | null } | undefined> {
+  const [row] = await db
+    .select({
+      id: report.id,
+      trackingNumber: report.trackingNumber,
+      status: report.status,
+      vVerified: report.vVerified,
+    })
+    .from(report)
+    .where(eq(report.trackingNumber, trackingNumber));
+  if (!row || row.trackingNumber == null) return undefined;
+  return { ...row, trackingNumber: row.trackingNumber };
+}
+
 export type ListParams = {
   limit: number;
   offset: number;

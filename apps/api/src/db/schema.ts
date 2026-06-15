@@ -39,6 +39,8 @@ export const report = pgTable("report", {
   sido: text("sido"),
   sigungu: text("sigungu"),
   eupMyeonDong: text("eup_myeon_dong"),
+  // 공개 접수번호(0013). VT-YYYY-MMDD-NNNN. 발급 후 불변. 유니크.
+  trackingNumber: text("tracking_number").unique(),
   title: text("title").notNull(),
   body: text("body"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }),
