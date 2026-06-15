@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
+import ReportWizard from "./report/ReportWizard";
 import LoginPage from "./auth/LoginPage";
 import InvitePage from "./auth/InvitePage";
 import QueuePage from "./auth/QueuePage";
@@ -8,6 +9,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
+  { path: "/report", element: <ReportWizard /> },
   { path: "/admin/login", element: <LoginPage /> },
   { path: "/admin/invite/:token", element: <InvitePage /> },
   {

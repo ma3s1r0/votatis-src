@@ -1,7 +1,7 @@
 ---
 id: 0003
 title: 제보 입력 플로우 (단계별 마법사, web)
-status: not-started
+status: completed
 owner: web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -69,3 +69,5 @@ dev_order: 4   # 0002 API 이후.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: web 구현 (frontend-dev). 5단계 마법사(상황→분류→지역 종속 드롭다운→출처·첨부→검토·제출), 단계 필수 게이트, consent 게이트, 0002 연동(제출 시 report 생성 후 첨부 create→PUT→finalize, 미완성 누적 방지), sessionStorage 복원. /report 라우트.
+- 2026-06-15: QA 조건부 PASS → 첨부 업로드 진행/완료 상태 표시 UI 추가(접수중→업로드중→완료/실패). api 84 + web 37 통과. status→completed.
