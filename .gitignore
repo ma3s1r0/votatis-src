@@ -6,3 +6,7 @@ dist/
 *.log
 .DS_Store
 coverage/
+
+# 개인 Claude Code 설정 (텔레그램 토큰 등) — 레포에 올리지 않음
+.claude/settings.json
+.claude/settings.local.json
