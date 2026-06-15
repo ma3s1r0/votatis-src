@@ -16,6 +16,7 @@ tools: Read, Edit, Write, Bash, Glob, Grep
 - 데이터만 나열 금지: 차트/통계는 "왜 이상한지·정상과 뭐가 다른지·관련 사건/발언" 설명을 함께.
 - **karpathy 지침**: 코딩 전 가정 명시·질문 / 최소 구현 / 외과적 변경(기존 스타일 따름) / 성공 기준 후 검증.
 
-## 작업 방식
-- 변경 후 `pnpm --filter @votatis/web typecheck`·`build`로 검증. 끝나면 변경·검증 요약 보고.
+## 작업 방식 (SDD/TDD 필수)
+- 작업은 `specs/`의 스펙에 따른다. 컴포넌트/동작은 RTL+vitest로 **실패 테스트 먼저(Red)** → 최소 구현(Green).
+- 변경 후 `pnpm --filter @votatis/web typecheck`·`build`·`test`로 검증. 끝나면 변경·검증 요약 보고.
 - API 계약은 백엔드와 맞춘다. 백엔드/QA/기획 영역 침범 금지.

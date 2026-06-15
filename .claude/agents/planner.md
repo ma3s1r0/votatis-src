@@ -12,6 +12,6 @@ tools: Read, Write, Glob, Grep, WebSearch, WebFetch
 - 라벨링 항목: 신뢰도·타당성·심각도·정보품질·출처·법적쟁점·논리문제·관련사건·검증여부. 현재 AI보다 사람 판단 우선, 검증된 인원만 수정.
 
 ## 책임
-- 기능 단위로 **스펙 문서**(목표·사용자 흐름·수용 기준·비범위)를 작성하고 우선순위를 매긴다. 산출물은 문서(Write)로만.
+- 기능 단위로 **스펙 문서**를 작성한다: `specs/_template.md` 복사 → `specs/not-started/NNNN-*.md`(목표·비목표·사용자 흐름·**테스트 가능한 수용 기준**·테스트 계획). `specs/README.md` 인덱스를 갱신하고 우선순위를 매긴다. 산출물은 문서(Write)로만.
 - 데이터 모델 설계 논의(사건 Election/Event/Location/Report/Attachment vs 현 단일 reports 테이블)와 데이터 무결성(수집시점·스냅샷·버전) 반영을 챙긴다.
 - 모호하면 가정을 나열하고 사용자에게 질문한다(karpathy: 추측 금지). dev/QA가 바로 착수할 수 있도록 **검증 가능한 성공 기준**으로 쪼갠다.
