@@ -1,7 +1,7 @@
 ---
 id: 0015
 title: 클라이언트 EXIF 검증 + 원본 아님 차단
-status: not-started
+status: completed
 owner: web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -66,3 +66,4 @@ dev_order: 15   # 0014 다음. 거의 web 전용.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 구현(frontend-dev, web 전용·의존성 추가 없음): 경량 JPEG APP1 EXIF 파서+MIME 매직넘버 이중검증, 비원본(EXIF 없는 이미지)·MIME 불일치 시 "원본 사진이 아닙니다" 차단 화면(화면 11)+첨부 차단+create 미호출, PDF 제외, PNG/WebP fail-open(warn). 서버는 0002 finalize가 최종 게이트(무변경). QA PASS(실파서·warn 결선 회귀 보강). 게이트 (api 158 + web 158), 회귀 0. status→completed.

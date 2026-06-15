@@ -11,6 +11,7 @@ import {
   sigunguList,
   eupMyeonDongList,
 } from "./regions";
+import { inspectAttachment, type BlockReason } from "./exif";
 import { categoriesForDomain, type ReportDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import Header from "../Header";
@@ -73,6 +74,9 @@ export default function ReportWizard() {
   const [elections, setElections] = useState<Election[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  // 비원본/위장 파일 차단 화면(0015 화면 11). 통과 시 null.
+  const [block, setBlock] = useState<BlockReason | null>(null);
+  const [fileWarn, setFileWarn] = useState<string | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -150,8 +154,10 @@ export default function ReportWizard() {
     setDraft((d) => ({ ...d, step: Math.max(d.step - 1, 1) }));
   }
 
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFileError(null);
+    setBlock(null);
+    setFileWarn(null);
     const f = e.target.files?.[0] ?? null;
     if (!f) {
       setFile(null);
@@ -163,6 +169,19 @@ export default function ReportWizard() {
       setFile(null);
       e.target.value = "";
       return;
+    }
+    // 0015: EXIF 1차 검증 + MIME 이중검증. 비원본/위장은 첨부 차단.
+    const verdict = await inspectAttachment(f);
+    if (verdict.kind === "blocked") {
+      setBlock(verdict.reason);
+      setFile(null);
+      e.target.value = "";
+      return;
+    }
+    if (verdict.kind === "warn") {
+      setFileWarn(
+        "사진의 촬영 정보를 확인하지 못했습니다. 직접 촬영한 원본인지 확인해 주세요.",
+      );
     }
     setFile(f);
   }
@@ -234,6 +253,8 @@ export default function ReportWizard() {
   function startNewReport() {
     setFile(null);
     setFileError(null);
+    setBlock(null);
+    setFileWarn(null);
     setStepError(null);
     setFieldErrors([]);
     setSubmitError(null);
@@ -488,6 +509,7 @@ export default function ReportWizard() {
           <label style={labelStyle}>
             사진/PDF 첨부
             <input
+              id="report-file-input"
               type="file"
               accept="image/jpeg,image/png,image/webp,application/pdf"
               onChange={onFileChange}
@@ -495,10 +517,53 @@ export default function ReportWizard() {
             />
           </label>
           {file && <p>선택된 파일: {file.name}</p>}
+          {fileWarn && (
+            <p role="status" style={hintStyle}>
+              {fileWarn}
+            </p>
+          )}
           {fileError && (
             <p role="alert" style={errorStyle}>
               {fileError}
             </p>
+          )}
+          {block && (
+            <div role="alert" style={blockCardStyle}>
+              {block === "not_original" ? (
+                <>
+                  <h3 style={blockTitleStyle}>원본 사진이 아닙니다</h3>
+                  <p style={hintStyle}>
+                    이 사진에는 카메라가 기록하는 촬영 정보(EXIF)가 없습니다.
+                    EXIF 는 촬영 시각·기기 같은 메타데이터로, 직접 찍은 사진에는
+                    보통 담겨 있습니다. 스크린샷·캡처본이나 메신저로 전달받은
+                    사진은 이 정보가 사라집니다.
+                  </p>
+                  <p style={hintStyle}>
+                    직접 촬영한 원본 사진만 인정됩니다. 캡처본·전달본이 아닌
+                    원본 파일을 다시 선택해 주세요.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 style={blockTitleStyle}>
+                    파일 형식이 확장자와 일치하지 않습니다
+                  </h3>
+                  <p style={hintStyle}>
+                    선택한 파일의 실제 형식이 확장자와 달라 첨부할 수 없습니다.
+                    원본 파일을 다시 선택해 주세요.
+                  </p>
+                </>
+              )}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() =>
+                  document.getElementById("report-file-input")?.click()
+                }
+              >
+                다른 파일 선택
+              </button>
+            </div>
           )}
         </section>
       )}
@@ -659,6 +724,19 @@ const hintStyle: React.CSSProperties = {
 const errorStyle: React.CSSProperties = {
   color: "var(--color-danger)",
   margin: 0,
+};
+const blockCardStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "var(--space-2)",
+  background: "var(--color-surface)",
+  border: "1px solid var(--color-danger)",
+  borderRadius: "var(--radius-md)",
+  padding: "var(--space-4)",
+};
+const blockTitleStyle: React.CSSProperties = {
+  margin: 0,
+  color: "var(--color-danger)",
+  fontSize: "var(--text-base)",
 };
 const progressStyle: React.CSSProperties = {
   color: "var(--color-text)",
