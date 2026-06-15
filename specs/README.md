@@ -32,7 +32,7 @@ specs/
 | 0003 | 제보 입력 플로우 (단계별 마법사, web) | not-started | 2026-06-15 | not-started/0003-report-intake-flow.md |
 | 0004 | 라벨링·검증 콘솔 (검토 큐/판정/근거 강제) | not-started | 2026-06-15 | not-started/0004-labeling-console.md |
 | 0005 | 공개 아카이브 출력 (리스트/검색/필터/상세) | not-started | 2026-06-15 | not-started/0005-public-archive.md |
-| 0006 | 인증·권한 (로그인/초대 발급/수정 게이트) | not-started | 2026-06-15 | not-started/0006-auth.md |
+| 0006 | 인증·권한 (로그인/초대 발급/수정 게이트) | completed | 2026-06-15 | completed/0006-auth.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 

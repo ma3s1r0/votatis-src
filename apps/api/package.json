@@ -12,15 +12,16 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
     "drizzle-orm": "^0.36.4",
     "hono": "^4.6.13"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.13",
     "@hono/node-server": "^1.13.7",
-    "drizzle-kit": "^0.28.1",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^22.10.2",
+    "drizzle-kit": "^0.28.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.0"

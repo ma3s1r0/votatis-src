@@ -87,6 +87,48 @@ export const attachment = pgTable("attachment", {
   exif: jsonb("exif"),
 });
 
+// admin_user — 관리자 계정. role ∈ {root, reviewer}, status ∈ {invited, active, disabled}
+export const adminUser = pgTable("admin_user", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull(), // root | reviewer
+  status: text("status").notNull().default("invited"), // invited | active | disabled
+  // 비밀번호는 해시로만 저장(평문 금지). accept 전에는 null.
+  passwordHash: text("password_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// admin_invite — 일회용 초대 토큰. 원문은 URL 에만, DB 에는 해시 저장. 만료·소비 기록.
+export const adminInvite = pgTable("admin_invite", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adminUserId: uuid("admin_user_id")
+    .notNull()
+    .references(() => adminUser.id),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// admin_session — 서버 세션. 세션 ID 는 해시로 저장(쿠키엔 원문). 만료·폐기 기록.
+export const adminSession = pgTable("admin_session", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adminUserId: uuid("admin_user_id")
+    .notNull()
+    .references(() => adminUser.id),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// login_attempt — 로그인 rate limit (DB 기반). IP+email 키 윈도 카운팅.
+export const loginAttempt = pgTable("login_attempt", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull(), // ip|email
+  attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // source — 출처/근거. captured_at + content_hash 필수 (무결성)
 export const source = pgTable("source", {
   id: uuid("id").primaryKey().defaultRandom(),
