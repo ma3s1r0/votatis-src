@@ -9,15 +9,13 @@ export default function App() {
       <Header />
       <main className="container">
         <section className="hero">
-          <h1 className="hero__title">Votatis</h1>
-          <p className="hero__lead">
-            선거 무결성 관련 제보를 수집·검증해 출처와 검토 범위를 함께 공개하는
-            데이터 아카이브입니다.
-          </p>
+          <h1 className="hero__title">
+            민주주의의 꽃 선거,
+            <br />
+            기술과 팩트로 지킵니다
+          </h1>
           <p className="hero__sub">
-            단정이 아니라 확인된 범위와 한계를 그대로 보여줍니다. 모든 기록은
-            원본 출처·수집 시점과 함께 보존되며, 사람 검토를 거친 항목만
-            공개됩니다.
+            현장에서 발견된 선거·집회 현장 증거를 안전하게 기록하고 검증합니다.
           </p>
           <nav aria-label="주요 행동" className="hero__cta">
             <Link to="/report" className="btn btn-primary">

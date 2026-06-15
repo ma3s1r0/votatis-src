@@ -304,6 +304,7 @@ textarea.input {
   z-index: 10;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-4);
   height: 52px;
   max-width: var(--container-max);
@@ -318,21 +319,6 @@ textarea.input {
   color: var(--color-navy);
   text-decoration: none;
   letter-spacing: -0.01em;
-}
-.app-header__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex: 1;
-}
-.app-header__link {
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-.app-header__link:hover {
-  color: var(--color-navy);
 }
 
 /* ── 하단 고정 탭바 ───────────────────────────────────────── */
@@ -362,8 +348,8 @@ textarea.input {
   font-weight: var(--weight-medium);
 }
 .tab-bar__icon {
-  font-size: 1.125rem;
-  line-height: 1;
+  display: inline-flex;
+  line-height: 0;
 }
 .tab-bar__item--active {
   color: var(--color-navy);

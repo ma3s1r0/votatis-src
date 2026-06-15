@@ -12,17 +12,16 @@ function renderHeader(props?: Parameters<typeof Header>[0]) {
 }
 
 describe("Header (공통 네비)", () => {
-  it("로고(홈 링크)와 공개 아카이브·제보 링크를 제공한다", () => {
+  it("공개 헤더는 로고만 노출한다(주 내비는 하단 탭바)", () => {
     renderHeader();
     // 로고 = 홈 링크
     const home = screen.getByRole("link", { name: /Votatis/ });
     expect(home).toHaveAttribute("href", "/");
-    // 아카이브
-    const archive = screen.getByRole("link", { name: /공개 아카이브/ });
-    expect(archive).toHaveAttribute("href", "/archive");
-    // 제보
-    const report = screen.getByRole("link", { name: /제보/ });
-    expect(report).toHaveAttribute("href", "/report");
+    // 공개 모드에선 헤더에 추가 내비 링크가 없다.
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    expect(
+      screen.queryByRole("link", { name: /공개 아카이브/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("admin 모드에서는 로그아웃 동작을 노출한다", () => {
