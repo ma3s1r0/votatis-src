@@ -11,6 +11,9 @@ export const ROOT_EMAIL = "root@votatis.test";
 export const ROOT_PASSWORD = "root-password-123";
 export const REVIEWER_EMAIL = "rev@votatis.test";
 export const REVIEWER_PASSWORD = "reviewer-password-123";
+// 0017 교차검증: 서로 다른 2인 동의를 시험하기 위한 2번째 active reviewer.
+export const REVIEWER2_EMAIL = "rev2@votatis.test";
+export const REVIEWER2_PASSWORD = "reviewer2-password-123";
 
 export async function setup() {
   const db = await makeTestDb();
@@ -24,8 +27,12 @@ export async function setup() {
   const { token } = await createInvite(db, REVIEWER_EMAIL, "reviewer");
   const reviewer = await acceptInvite(db, token, REVIEWER_PASSWORD);
 
+  // 2번째 active reviewer(0017 교차검증).
+  const { token: token2 } = await createInvite(db, REVIEWER2_EMAIL, "reviewer");
+  const reviewer2 = await acceptInvite(db, token2, REVIEWER2_PASSWORD);
+
   const app = createApp({ db, storage, inviteBaseUrl: "https://test/invite" });
-  return { db, storage, root, reviewer, app };
+  return { db, storage, root, reviewer, reviewer2, app };
 }
 
 // 로그인 후 세션 쿠키(name=value) 반환.
@@ -74,6 +81,30 @@ export function validVerificationBody(overrides: Record<string, unknown> = {}) {
     ],
     ...overrides,
   };
+}
+
+// 0017: 서로 다른 reviewer 2인 동의로 verified=true 를 확정시키는 헬퍼.
+// 첫 reviewer 가 근거 포함 판정(동의 1/2), 두번째 reviewer 가 동의(2/2 → verified 확정).
+// overrides 는 판정 바디(validity/severity 등)에 적용된다.
+export async function approveByTwo(
+  app: ReturnType<typeof createApp>,
+  reportId: string,
+  overrides: Record<string, unknown> = {},
+) {
+  const c1 = (await loginCookie(app, REVIEWER_EMAIL, REVIEWER_PASSWORD))!;
+  const c2 = (await loginCookie(app, REVIEWER2_EMAIL, REVIEWER2_PASSWORD))!;
+  const body = JSON.stringify(validVerificationBody({ verified: true, ...overrides }));
+  const first = await app.request(`/api/admin/reports/${reportId}/verification`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: c1 },
+    body,
+  });
+  const second = await app.request(`/api/admin/reports/${reportId}/verification`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: c2 },
+    body,
+  });
+  return { first, second };
 }
 
 export type { Db };

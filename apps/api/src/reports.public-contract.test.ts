@@ -6,6 +6,8 @@ import {
   validVerificationBody,
   REVIEWER_EMAIL,
   REVIEWER_PASSWORD,
+  REVIEWER2_EMAIL,
+  REVIEWER2_PASSWORD,
 } from "./admin.test-helpers.js";
 
 // 0005 공개 아카이브 계약: 공개 상세에 verification 요약 + attachment filename 노출.
@@ -19,13 +21,23 @@ beforeEach(async () => {
   cookie = (await loginCookie(ctx.app, REVIEWER_EMAIL, REVIEWER_PASSWORD))!;
 });
 
+// 0017: verified=true 확정에는 서로 다른 reviewer 2인 동의가 필요 →
+// reviewer1 동의(1/2) 후 reviewer2 동의(2/2)로 공개 노출까지 보강.
 async function verify(reportId: string, overrides: Record<string, unknown> = {}) {
-  const res = await ctx.app.request(`/api/admin/reports/${reportId}/verification`, {
+  const body = JSON.stringify(validVerificationBody({ verified: true, ...overrides }));
+  const r1 = await ctx.app.request(`/api/admin/reports/${reportId}/verification`, {
     method: "POST",
     headers: { "content-type": "application/json", cookie },
-    body: JSON.stringify(validVerificationBody({ verified: true, ...overrides })),
+    body,
   });
-  expect(res.status).toBe(201);
+  expect(r1.status).toBe(201);
+  const cookie2 = (await loginCookie(ctx.app, REVIEWER2_EMAIL, REVIEWER2_PASSWORD))!;
+  const r2 = await ctx.app.request(`/api/admin/reports/${reportId}/verification`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: cookie2 },
+    body,
+  });
+  expect(r2.status).toBe(201);
 }
 
 describe("0005 공개 상세 계약 — verification 요약", () => {

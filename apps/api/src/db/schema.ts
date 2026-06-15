@@ -7,6 +7,7 @@ import {
   jsonb,
   boolean,
   real,
+  unique,
 } from "drizzle-orm/pg-core";
 
 // election — 선거
@@ -203,6 +204,32 @@ export const verification = pgTable("verification", {
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
   version: integer("version").notNull().default(1),
 });
+
+// verification_approval — 교차검증 동의(0017). 서로 다른 reviewer 2인 동의로
+// verified=true 확정. 한 verification 당 reviewer 1회(unique 로 중복 동의 구조적 차단).
+// append-only(누가·언제 동의했는지 무결성 기록).
+export const verificationApproval = pgTable(
+  "verification_approval",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    verificationId: uuid("verification_id")
+      .notNull()
+      .references(() => verification.id),
+    reportId: uuid("report_id")
+      .notNull()
+      .references(() => report.id),
+    reviewerId: uuid("reviewer_id")
+      .notNull()
+      .references(() => adminUser.id),
+    approvedAt: timestamp("approved_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqReviewer: unique("verification_approval_verification_reviewer_uniq").on(
+      t.verificationId,
+      t.reviewerId,
+    ),
+  }),
+);
 
 // verification_history — 판정 변경 이력(0001 패턴). 직전 상태 스냅샷 보존.
 export const verificationHistory = pgTable("verification_history", {

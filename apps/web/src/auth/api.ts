@@ -123,11 +123,19 @@ export type VerificationHistoryEntry = {
   snapshot: Record<string, unknown>;
 };
 
+// 0017 2인 교차검증 진행도. 서버 상세 응답 최상위에 포함.
+export type CrossVerification = {
+  approvals: number;
+  required: number;
+  approvers: string[];
+};
+
 export type AdminReportDetail = AdminReport & {
   attachments: Attachment[];
   sources: Source[];
   verification: Verification | null;
   verificationHistory: VerificationHistoryEntry[];
+  crossVerification?: CrossVerification;
 };
 
 export async function fetchReports(
@@ -174,7 +182,9 @@ export type VerificationInput = {
 export type FieldError = { field: string; reason: string };
 
 export type SubmitVerificationResult =
-  | { ok: true }
+  // 0017: 동의 성공 시 갱신된 진행도(approvals/required)를 함께 반환.
+  | { ok: true; approvals?: number; required?: number }
+  | { ok: false; error: "already_approved" }
   | { ok: false; error: "validation_error"; fields: FieldError[] }
   | { ok: false; error: "not_found" }
   | { ok: false; error: "unknown" };
@@ -192,7 +202,15 @@ export async function submitVerification(
       body: JSON.stringify(input),
     },
   );
-  if (res.ok) return { ok: true };
+  if (res.ok) {
+    const data = (await res.json().catch(() => ({}))) as {
+      approvals?: number;
+      required?: number;
+    };
+    return { ok: true, approvals: data.approvals, required: data.required };
+  }
+  // 0017: 동일 reviewer 재동의 → 409 already_approved.
+  if (res.status === 409) return { ok: false, error: "already_approved" };
   if (res.status === 422) {
     const data = (await res.json()) as {
       error: string;

@@ -29,8 +29,16 @@ async function submit(reportId: string, body: unknown) {
 describe("0004 판정 수정 이력 보존", () => {
   it("수정 시 직전 판정이 이력에 보존되고 최신만 활성", async () => {
     const r = await makeReport(ctx.db);
-    await submit(r.id, validVerificationBody({ confidence: 50, validity: "unclear" }));
-    await submit(r.id, validVerificationBody({ confidence: 90, validity: "valid" }));
+    // 0017: 동일 reviewer 의 판정 내용 수정(동의 아님 → verified=false)으로 이력 보존을 검증.
+    // (verified=true 재제출은 중복 동의 409 이므로 내용 수정엔 verified=false 사용.)
+    await submit(
+      r.id,
+      validVerificationBody({ confidence: 50, validity: "unclear", verified: false }),
+    );
+    await submit(
+      r.id,
+      validVerificationBody({ confidence: 90, validity: "valid", verified: false }),
+    );
 
     // 활성 판정은 1행, 최신값.
     const rows = await ctx.db

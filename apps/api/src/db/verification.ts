@@ -5,8 +5,12 @@ import {
   attachment,
   source,
   verification,
+  verificationApproval,
   verificationHistory,
 } from "./schema.js";
+
+// 0017 교차검증: verified=true 확정에 필요한 서로 다른 reviewer 동의 수(고정 2, 결정 1).
+export const REQUIRED_APPROVALS = 2;
 
 // 허용값(결정 6, 스펙 64행 기본안). 서버 권위 — 클라이언트 검증과 독립적으로 재검증.
 export const VALIDITY_VALUES = ["valid", "partly", "invalid", "unclear"] as const;
@@ -76,14 +80,24 @@ export function validateVerification(input: VerificationInput): VerificationErro
 }
 
 export type SubmitResult =
-  | { ok: true; verification: typeof verification.$inferSelect }
+  | {
+      ok: true;
+      verification: typeof verification.$inferSelect;
+      approvals: number;
+      required: number;
+    }
   | { ok: false; errors: VerificationError[] }
-  | { ok: false; reason: "report_not_found" };
+  | { ok: false; reason: "report_not_found" }
+  | { ok: false; reason: "already_approved" };
 
 // 판정 제출(생성·수정 공용). 근거/범위 검증 → report 존재 확인 → 트랜잭션:
 //  - 기존 판정 있으면 직전 상태를 verification_history 에 append 후 갱신(파괴 금지).
 //  - evidence 는 source(kind=url, captured_at·content_hash) 로 무결성 보관, verification 연결.
-//  - report.v_* 미러링 + verified 반영.
+//  - report.v_* 내용 미러링.
+//  - 0017 교차검증: input.verified=true 는 "이 reviewer 의 동의". 동의 행을 누적하고,
+//    서로 다른 reviewer 가 REQUIRED_APPROVALS 명 충족할 때만 verified=true 확정(+공개).
+//    동일 reviewer 의 중복 동의는 reason: "already_approved"(라우트 409). verified=false 는
+//    동의 아님(판정 내용만, 동의 미기록).
 export async function submitVerification(
   db: Db,
   args: { reportId: string; reviewerId: string; input: VerificationInput },
@@ -95,11 +109,26 @@ export async function submitVerification(
   if (!rep) return { ok: false, reason: "report_not_found" };
 
   const input = args.input;
+  const approving = input.verified === true;
   return db.transaction(async (tx) => {
     const [existing] = await tx
       .select()
       .from(verification)
       .where(eq(verification.reportId, args.reportId));
+
+    // 동의 시도 시: 동일 reviewer 가 이미 이 verification 에 동의했는지 선검사(중복 거부).
+    if (approving && existing) {
+      const [dup] = await tx
+        .select()
+        .from(verificationApproval)
+        .where(
+          and(
+            eq(verificationApproval.verificationId, existing.id),
+            eq(verificationApproval.reviewerId, args.reviewerId),
+          ),
+        );
+      if (dup) return { ok: false, reason: "already_approved" as const };
+    }
 
     let row: typeof verification.$inferSelect;
     if (existing) {
@@ -117,7 +146,8 @@ export async function submitVerification(
           validity: input.validity ?? null,
           severity: input.severity ?? null,
           legalIssue: input.legalIssue ?? null,
-          verified: input.verified,
+          // verified 는 직접 셋하지 않음 — 동의 누적이 2/2 충족 시에만 확정(아래).
+          // 기존 확정값은 보존(하향 금지: 재판정으로 verified 가 풀리지 않음).
           method: input.method!,
           notes: input.notes ?? null,
           unverifiedClaims: input.unverifiedClaims ?? null,
@@ -136,7 +166,8 @@ export async function submitVerification(
           validity: input.validity ?? null,
           severity: input.severity ?? null,
           legalIssue: input.legalIssue ?? null,
-          verified: input.verified,
+          // verified 기본 false. 2/2 충족 시에만 아래에서 true.
+          verified: false,
           method: input.method!,
           notes: input.notes ?? null,
           unverifiedClaims: input.unverifiedClaims ?? null,
@@ -159,7 +190,32 @@ export async function submitVerification(
       });
     }
 
-    // 0001 report.v_* 미러링(공개 조회 0002/0005 가 참조).
+    // 0017 동의 기록(append-only). verified=true 제출일 때만 동의로 카운트.
+    if (approving) {
+      await tx.insert(verificationApproval).values({
+        verificationId: row.id,
+        reportId: args.reportId,
+        reviewerId: args.reviewerId,
+      });
+    }
+
+    // 서로 다른 reviewer 동의 수 집계 → REQUIRED_APPROVALS 충족 시 verified 확정.
+    const approvalRows = await tx
+      .select()
+      .from(verificationApproval)
+      .where(eq(verificationApproval.verificationId, row.id));
+    const approvals = approvalRows.length;
+    const confirmed = approvals >= REQUIRED_APPROVALS || row.verified;
+
+    if (confirmed && !row.verified) {
+      [row] = await tx
+        .update(verification)
+        .set({ verified: true })
+        .where(eq(verification.id, row.id))
+        .returning();
+    }
+
+    // 0001 report.v_* 미러링(공개 조회 0002/0005 가 참조). vVerified 는 확정 게이트.
     await tx
       .update(report)
       .set({
@@ -167,11 +223,11 @@ export async function submitVerification(
         vValidity: input.validity ?? null,
         vSeverity: input.severity ?? null,
         vLegalIssue: input.legalIssue ?? null,
-        vVerified: input.verified,
+        vVerified: confirmed ? true : (rep.vVerified ?? false),
       })
       .where(eq(report.id, args.reportId));
 
-    return { ok: true, verification: row };
+    return { ok: true, verification: row, approvals, required: REQUIRED_APPROVALS };
   });
 }
 
@@ -226,5 +282,22 @@ export async function getReportForReview(db: Db, reportId: string) {
         .orderBy(asc(verificationHistory.version))
     : [];
 
-  return { report: rep, attachments, sources, verification: current, evidence, history };
+  // 0017 교차검증 진행도(동의자·동의 수).
+  const approvals = current
+    ? await db
+        .select()
+        .from(verificationApproval)
+        .where(eq(verificationApproval.verificationId, current.id))
+        .orderBy(asc(verificationApproval.approvedAt))
+    : [];
+
+  return {
+    report: rep,
+    attachments,
+    sources,
+    verification: current,
+    evidence,
+    history,
+    approvals,
+  };
 }

@@ -4,6 +4,7 @@ import {
   loginCookie,
   makeReport,
   validVerificationBody,
+  approveByTwo,
   REVIEWER_EMAIL,
   REVIEWER_PASSWORD,
 } from "./admin.test-helpers.js";
@@ -29,8 +30,10 @@ async function submit(reportId: string, body: unknown) {
 describe("0004 정상 판정", () => {
   it("유효 판정 → verification 필드·reviewer·reviewed_at 기록", async () => {
     const r = await makeReport(ctx.db);
-    const res = await submit(r.id, validVerificationBody());
-    expect(res.status).toBe(201);
+    // 0017: verified=true 확정은 서로 다른 2인 동의로(헬퍼). reviewerId 는 최근 판정자.
+    const { first, second } = await approveByTwo(ctx.app, r.id);
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
 
     const [v] = await ctx.db
       .select()
@@ -41,13 +44,14 @@ describe("0004 정상 판정", () => {
     expect(v.severity).toBe("3");
     expect(v.verified).toBe(true);
     expect(v.method).toBeTruthy();
-    expect(v.reviewerId).toBe(ctx.reviewer.id);
+    expect([ctx.reviewer.id, ctx.reviewer2.id]).toContain(v.reviewerId);
     expect(v.reviewedAt).toBeInstanceOf(Date);
   });
 
   it("report.v_* 미러링 + v_verified 반영", async () => {
     const r = await makeReport(ctx.db);
-    await submit(r.id, validVerificationBody());
+    // 0017: 2인 동의로 verified 확정 후 미러링 단언.
+    await approveByTwo(ctx.app, r.id);
     const [rep] = await ctx.db.select().from(report).where(eq(report.id, r.id));
     expect(rep.vVerified).toBe(true);
     expect(rep.vValidity).toBe("valid");

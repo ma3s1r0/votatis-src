@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   fetchReport,
+  fetchMe,
   submitVerification,
   type AdminReportDetail,
   type EvidenceLink,
@@ -49,13 +50,24 @@ export default function ReportDetailPage() {
 
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+
+  // 0017 교차검증 진행도(상세 응답 → 동의 제출 응답으로 갱신).
+  const [approvals, setApprovals] = useState(0);
+  const [required, setRequired] = useState(2);
+  const [myId, setMyId] = useState<string | null>(null);
+  // 본인이 이미 동의했는지: 상세 approvers 포함 또는 409/방금 동의.
+  const [alreadyApproved, setAlreadyApproved] = useState(false);
 
   useEffect(() => {
     let alive = true;
     fetchReport(id)
       .then((report) => {
-        if (alive) setLoad({ status: "ready", report });
+        if (!alive) return;
+        setLoad({ status: "ready", report });
+        if (report.crossVerification) {
+          setApprovals(report.crossVerification.approvals);
+          setRequired(report.crossVerification.required);
+        }
       })
       .catch(() => {
         if (alive) setLoad({ status: "error" });
@@ -64,6 +76,28 @@ export default function ReportDetailPage() {
       alive = false;
     };
   }, [id]);
+
+  // 본인 reviewerId 조회(이미 동의자인지 판별용). 실패해도 화면은 동작.
+  useEffect(() => {
+    let alive = true;
+    fetchMe()
+      .then((m) => {
+        if (alive && m) setMyId(m.id);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 상세 approvers 에 본인이 있으면 이미 동의한 상태.
+  useEffect(() => {
+    if (load.status !== "ready" || !myId) return;
+    const approvers = load.report.crossVerification?.approvers ?? [];
+    if (approvers.includes(myId)) setAlreadyApproved(true);
+  }, [load, myId]);
+
+  const completed = approvals >= required;
 
   // 클라이언트 검증: method 비었거나 채워진 근거(URL) 0개면 제출 불가.
   // 근거 블록은 기본 1개 펼쳐두지만, 빈 블록은 근거로 치지 않는다.
@@ -90,9 +124,10 @@ export default function ReportDetailPage() {
       ...(ev.archiveUrl ? { archiveUrl: ev.archiveUrl } : {}),
     }));
 
+    // 0017: 판정 제출 = 이 reviewer 의 검증 동의(verified:true).
     const result = await submitVerification(id, {
       method: method.trim(),
-      verified,
+      verified: true,
       evidenceLinks,
       ...(confidence ? { confidence: Number(confidence) } : {}),
       ...(validity ? { validity } : {}),
@@ -102,7 +137,13 @@ export default function ReportDetailPage() {
     });
 
     if (result.ok) {
-      setSubmitted(true);
+      if (typeof result.approvals === "number") setApprovals(result.approvals);
+      if (typeof result.required === "number") setRequired(result.required);
+      setAlreadyApproved(true);
+      return;
+    }
+    if (result.error === "already_approved") {
+      setAlreadyApproved(true);
       return;
     }
     if (result.error === "validation_error") {
@@ -133,23 +174,6 @@ export default function ReportDetailPage() {
 
   const r = load.report;
 
-  if (submitted) {
-    return (
-      <>
-        <Header admin />
-        <main className="container container--narrow">
-          <div className="done-card">
-            <h1>판정 완료</h1>
-            <p>판정이 저장되었습니다.</p>
-          </div>
-          <a href="/admin/queue" className="btn btn-secondary">
-            검토 큐로 돌아가기
-          </a>
-        </main>
-      </>
-    );
-  }
-
   return (
     <>
     <Header admin />
@@ -161,6 +185,23 @@ export default function ReportDetailPage() {
         {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
       </div>
       <p className="detail-body">{r.body}</p>
+
+      <section className="section-card" aria-label="교차검증 진행도">
+        <h2>교차검증</h2>
+        <p>
+          <strong>
+            {approvals} / {required}
+          </strong>{" "}
+          동의
+        </p>
+        {completed ? (
+          <p role="status" className="cross-verify-done">
+            검증 완료 (공개됨)
+          </p>
+        ) : (
+          <p>서로 다른 검토자 {required}인의 동의가 모이면 공개됩니다.</p>
+        )}
+      </section>
 
       {r.verificationHistory.length > 0 && (
         <section className="section-card">
@@ -413,8 +454,18 @@ export default function ReportDetailPage() {
             </p>
           )}
 
-          <button type="submit" className="btn btn-approve" disabled={!canSubmit}>
-            판정 제출
+          {alreadyApproved && !completed && (
+            <p role="status" className="text-muted">
+              이미 동의하셨습니다.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="btn btn-approve"
+            disabled={!canSubmit || alreadyApproved || completed}
+          >
+            검증 승인(동의)
           </button>
         </form>
       </section>

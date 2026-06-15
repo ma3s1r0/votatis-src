@@ -1,7 +1,7 @@
 ---
 id: 0017
 title: 2인 교차검증 (서로 다른 reviewer 2인 동의로 verified 확정)
-status: not-started
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
 updated: 2026-06-15
@@ -69,3 +69,4 @@ dev_order: 17   # 0016 다음. 0004 검증 모델 위에.
 
 ## Changelog
 - 2026-06-15: 초안 작성 (planner). status=not-started.
+- 2026-06-15: 서버(backend-dev): verification_approval 테이블(unique reviewer_id)·마이그레이션 0009, 2인 동의 시에만 verified 확정(원자적), 중복 동의 409, 근거 강제 유지, 0016 공표 2/2 연계, crossVerification(approvals/required/approvers) 노출. web(frontend-dev): 교차검증 N/2 표시·동의 버튼·409 안내·본인 재동의 비활성·2/2 완료. QA PASS(2인·중복·원자성·하향금지·공표연계 + invariants 회귀). 게이트 (api 187 + web 165), 회귀 0. status→completed.

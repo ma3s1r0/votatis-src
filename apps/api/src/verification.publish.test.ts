@@ -3,7 +3,7 @@ import {
   setup,
   loginCookie,
   makeReport,
-  validVerificationBody,
+  approveByTwo,
   REVIEWER_EMAIL,
   REVIEWER_PASSWORD,
 } from "./admin.test-helpers.js";
@@ -24,13 +24,10 @@ describe("0004 → 0002 공개 노출 연동", () => {
     const before = await ctx.app.request(`/api/reports/${r.id}`);
     expect(before.status).toBe(404);
 
-    // verified=true 판정.
-    const post = await ctx.app.request(`/api/admin/reports/${r.id}/verification`, {
-      method: "POST",
-      headers: { "content-type": "application/json", cookie },
-      body: JSON.stringify(validVerificationBody({ verified: true })),
-    });
-    expect(post.status).toBe(201);
+    // 0017: 서로 다른 2인 동의로 verified 확정(공개 노출).
+    const { first, second } = await approveByTwo(ctx.app, r.id);
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
 
     // 판정 후: 공개 상세 200, 공개 목록에 포함.
     const after = await ctx.app.request(`/api/reports/${r.id}`);

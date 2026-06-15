@@ -124,7 +124,9 @@ describe("ReportDetailPage", () => {
     renderDetail();
     await screen.findByText(/비정상적으로 튀었다/);
 
-    const submit = await screen.findByRole("button", { name: "판정 제출" });
+    const submit = await screen.findByRole("button", {
+      name: /검증 승인\(동의\)/,
+    });
     expect(submit).toBeDisabled();
 
     // method만 채워도 근거 URL 미입력이면 여전히 차단
@@ -159,9 +161,11 @@ describe("ReportDetailPage", () => {
     );
     await userEvent.type(within(links).getByLabelText("콘텐츠 해시"), "hash1");
 
-    mockOnce({ id: "v1" }, 201);
-    await userEvent.click(screen.getByRole("button", { name: "판정 제출" }));
-    await screen.findByText(/판정이 저장되었습니다/);
+    mockOnce({ approvals: 1, required: 2 }, 201);
+    await userEvent.click(
+      screen.getByRole("button", { name: /검증 승인\(동의\)/ }),
+    );
+    await screen.findByText(/이미 동의하셨습니다/);
 
     const post = fetchMock.mock.calls.find(
       (c) => c[1]?.method === "POST",
@@ -202,7 +206,9 @@ describe("ReportDetailPage", () => {
       },
       422,
     );
-    await userEvent.click(screen.getByRole("button", { name: "판정 제출" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /검증 승인\(동의\)/ }),
+    );
 
     expect(await screen.findByText(/method/)).toBeInTheDocument();
     expect(screen.getByText(/required/)).toBeInTheDocument();
@@ -231,11 +237,13 @@ describe("ReportDetailPage", () => {
       "hash1",
     );
 
-    mockOnce({ id: "v1" }, 201);
-    await userEvent.click(screen.getByRole("button", { name: "판정 제출" }));
+    mockOnce({ approvals: 1, required: 2 }, 201);
+    await userEvent.click(
+      screen.getByRole("button", { name: /검증 승인\(동의\)/ }),
+    );
 
     expect(
-      await screen.findByText(/판정이 저장되었습니다/),
+      await screen.findByText(/이미 동의하셨습니다/),
     ).toBeInTheDocument();
   });
 });

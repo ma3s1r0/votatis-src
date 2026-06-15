@@ -7,6 +7,7 @@ import {
   submitVerification,
   listPendingReports,
   getReportForReview,
+  REQUIRED_APPROVALS,
   type EvidenceLink,
 } from "./db/verification.js";
 import { getStoredAttachmentForReview } from "./db/intake.js";
@@ -136,6 +137,12 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
         archivedAt: h.archivedAt,
         snapshot: h.snapshot,
       })),
+      // 0017 교차검증 진행도. UI 가 "N/2" 와 동의자(내부 reviewerId)를 렌더.
+      crossVerification: {
+        approvals: graph.approvals.length,
+        required: REQUIRED_APPROVALS,
+        approvers: graph.approvals.map((a) => a.reviewerId),
+      },
     });
   });
 
@@ -198,7 +205,13 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
     });
 
     if (!result.ok) {
-      if ("reason" in result) return c.json({ error: "not_found" }, 404);
+      if ("reason" in result) {
+        // 0017: 동일 reviewer 의 중복 동의는 409(진행도 불변).
+        if (result.reason === "already_approved") {
+          return c.json({ error: "already_approved" }, 409);
+        }
+        return c.json({ error: "not_found" }, 404);
+      }
       return c.json({ error: "validation_error", fields: result.errors }, 422);
     }
 
@@ -222,6 +235,9 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
         reviewerId: v.reviewerId,
         reviewedAt: v.reviewedAt,
         version: v.version,
+        // 0017 교차검증 진행도(N/2). verified 는 2/2 충족 시에만 true.
+        approvals: result.approvals,
+        required: result.required,
       },
       201,
     );
