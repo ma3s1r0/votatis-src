@@ -8,7 +8,6 @@ import {
 import { categoriesForDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import { formatDateTime } from "../format";
-import Header from "../Header";
 import TabBar from "../TabBar";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
 
@@ -55,13 +54,14 @@ function queryFromParams(params: URLSearchParams): ArchiveListQuery {
     sido: params.get("sido") || undefined,
     category: params.get("category") || undefined,
     electionId: params.get("electionId") || undefined,
-    domain: params.get("domain") || undefined,
+    // Figma 06: "전체" 탭 없음 — 기본 도메인은 선거 의혹(election).
+    domain: params.get("domain") || "election",
   };
 }
 
 function domainOf(params: URLSearchParams): DomainOption {
   const d = params.get("domain");
-  return d === "election" || d === "assembly" ? d : null;
+  return d === "assembly" ? "assembly" : "election";
 }
 
 export default function ArchiveListPage() {
@@ -169,22 +169,19 @@ export default function ArchiveListPage() {
 
   return (
     <>
-    <Header />
     <main className="container">
-      <h1>공개 아카이브</h1>
-      <p className="page-intro">
-        검증을 거친 기록만 공개합니다. 각 기록은 출처와 검토 범위를 함께
-        제공합니다.
-      </p>
+      <h1>검증 아카이브</h1>
 
       <DomainSegment
         value={selectedDomain}
         onChange={onDomain}
-        includeAll
         assemblyLabel="집회 신고"
+        variant="tabs"
       />
 
-      <form onSubmit={onSearch} className="filter-bar">
+      <details className="filter-panel">
+        <summary className="filter-panel__summary">검색 · 필터</summary>
+        <form onSubmit={onSearch} className="filter-bar">
         <label className="field" htmlFor="archive-search">
           검색
           <input
@@ -254,7 +251,8 @@ export default function ArchiveListPage() {
           ))}
         </select>
         </label>
-      </form>
+        </form>
+      </details>
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && (
@@ -272,16 +270,16 @@ export default function ArchiveListPage() {
             {state.items.map((r) => (
               <li key={r.id} className="archive-item">
                 <div className="archive-item__thumb" aria-hidden="true" />
-                <Link to={`/archive/${r.id}`} className="archive-item__title">
-                  {r.title}
-                </Link>
-                <div className="archive-item__meta">
-                  <span className="badge badge-verified">✓ 검증됨</span>
-                  {r.category && (
-                    <span className="badge badge-accent">{r.category}</span>
-                  )}
-                  <span>{regionLabel(r)}</span>
-                  {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
+                <div className="archive-item__body">
+                  <Link to={`/archive/${r.id}`} className="archive-item__title">
+                    {r.title}
+                  </Link>
+                  <p className="archive-item__verified">✓ 검증됨</p>
+                  <div className="archive-item__meta">
+                    <span>{regionLabel(r)}</span>
+                    {r.category && <span> · {r.category}</span>}
+                    {r.collectedAt && <span> · {formatDateTime(r.collectedAt)}</span>}
+                  </div>
                 </div>
               </li>
             ))}
