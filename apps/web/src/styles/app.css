@@ -571,14 +571,12 @@ textarea.input {
   display: flex;
   gap: var(--space-5);
   margin: var(--space-4) 0;
-  border-bottom: 1px solid var(--color-border);
 }
 .tabs__btn {
   appearance: none;
   border: none;
   background: transparent;
   padding: var(--space-2) 0;
-  margin-bottom: -1px;
   font-size: var(--text-sm); /* Figma 14px */
   font-weight: var(--weight-normal);
   color: #8792a2;
@@ -759,36 +757,37 @@ textarea.input {
 .detail-image {
   height: 200px;
   border-radius: var(--radius-md);
-  background: var(--color-surface-strong);
+  background: #eef1f5;
   margin: 0 0 var(--space-3);
 }
-/* 상세 배지 행(Figma 07): 이미지 아래 초록 "✓ 검증됨" */
+/* 상세 배지 행(Figma 07): 이미지 아래 초록 배지 12px #0f6e56 */
 .detail-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-4);
   margin-bottom: var(--space-2);
-  font-size: var(--text-sm);
+  font-size: 0.75rem; /* Figma 12px */
   font-weight: var(--weight-medium);
 }
 .detail-badge {
   color: var(--color-text-muted);
 }
 .detail-badge--ok {
-  color: var(--color-state-verified);
+  color: #0f6e56;
 }
-/* 검증 이력 플로우(Figma 07): 제출 → 포렌식 검증 → 공개 */
+/* 검증 이력 플로우(Figma 07): 제출 → 포렌식 통과 → 공개 */
 .history-flow {
   margin: var(--space-4) 0;
 }
 .history-flow__title {
-  font-size: var(--text-base);
+  font-size: 0.8125rem; /* Figma 13px */
   margin: 0 0 var(--space-2);
 }
 .history-flow__steps {
   margin: 0;
-  color: var(--color-text);
-  font-weight: var(--weight-medium);
+  font-size: 0.75rem; /* Figma 12px */
+  color: #334052;
+  font-weight: var(--weight-normal);
 }
 /* 근거 데이터(첨부·출처·검토요약) 접이식 — Figma 07은 미니멀, 데이터는 보존 */
 .more-data {
@@ -821,8 +820,8 @@ textarea.input {
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: 0.75rem; /* Figma 12px */
+  color: #8792a2;
   margin-bottom: var(--space-4);
 }
 

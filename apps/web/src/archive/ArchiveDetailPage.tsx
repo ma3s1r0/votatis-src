@@ -106,7 +106,7 @@ export default function ArchiveDetailPage() {
       {v?.verified && (
         <section className="history-flow">
           <h2 className="history-flow__title">검증 이력</h2>
-          <p className="history-flow__steps">제출 → 포렌식 검증 → 공개</p>
+          <p className="history-flow__steps">제출 → 포렌식 통과 → 공개</p>
         </section>
       )}
 

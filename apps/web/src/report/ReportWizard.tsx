@@ -355,7 +355,7 @@ export default function ReportWizard() {
                     </div>
                   ))}
                   <span className="upload-limit">
-                    최대 {MAX_FILES}개 · 파일당 50MB
+                    {files.length}/{MAX_FILES}장 · 파일당 50MB
                   </span>
                 </div>
               </>
