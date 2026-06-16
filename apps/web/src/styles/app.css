@@ -19,7 +19,7 @@ h3 {
   line-height: 1.25;
 }
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.125rem; /* Figma 화면 제목 18px */
   font-weight: var(--weight-bold);
   letter-spacing: -0.01em;
   margin: 0 0 var(--space-3);
@@ -44,7 +44,7 @@ p {
   max-width: var(--container-max);
   min-height: 100vh;
   margin: 0 auto;
-  padding: var(--space-5) var(--space-4)
+  padding: var(--space-5) var(--space-5)
     calc(var(--tab-bar-height) + var(--space-6));
   background: var(--color-bg);
   box-sizing: border-box;
@@ -63,6 +63,7 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   gap: var(--space-2);
   font-family: inherit;
   font-size: var(--text-base);
@@ -108,10 +109,11 @@ p {
   color: var(--color-navy);
 }
 
-/* 풀폭 버튼(모바일 CTA) */
+/* 풀폭 버튼(모바일 CTA) — Figma 주 CTA 높이 48px */
 .btn-block {
   display: flex;
   width: 100%;
+  min-height: 48px;
 }
 
 /* 관리 액션색 변형 */
@@ -124,6 +126,24 @@ p {
   background: var(--color-approve-hover);
   border-color: var(--color-approve-hover);
   color: #ffffff;
+}
+
+/* 공표/검수 액션색(퍼플) — Figma 08 "검수" 버튼 */
+.btn-publish {
+  background: var(--color-publish);
+  border-color: var(--color-publish);
+  color: #ffffff;
+}
+.btn-publish:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-publish-hover);
+  border-color: var(--color-publish-hover);
+  color: #ffffff;
+}
+
+/* 작은 버튼 변형 */
+.btn-sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
 }
 
 /* ── 폼 ───────────────────────────────────────────────────── */
@@ -298,13 +318,23 @@ textarea.input {
 }
 
 /* ── 지도 뷰(0018) — 시도 정적 좌표 SVG 분포 ─────────────────── */
+/* 지도 서브/힌트(Figma 10) */
+.map-sub {
+  font-size: 0.75rem; /* 12px */
+  color: #8792a2;
+  margin: 0 0 var(--space-4);
+}
+.map-hint {
+  font-size: 0.6875rem; /* 11px */
+  color: #667080;
+  margin: var(--space-2) 0;
+}
 .map-view {
-  margin-top: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-strong);
-  border-radius: var(--radius-lg);
+  margin-top: var(--space-2);
+  background: #edf1f5;
+  border-radius: 12px;
   padding: var(--space-3);
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 342 / 476;
 }
 .map-view__svg {
   width: 100%;
@@ -323,29 +353,50 @@ textarea.input {
   pointer-events: none;
 }
 .map-pin--verified circle {
-  fill: var(--color-state-verified);
+  fill: #1a7f5a;
 }
 .map-pin--verifying circle {
-  fill: var(--color-state-verifying);
+  fill: #9a6700;
 }
 .map-pin--unverified circle {
-  fill: var(--color-state-unverified);
+  fill: #b3261e;
 }
 
+/* 범례 카드(Figma 10): 세로 — 제목 + 색 dot 3행 */
 .map-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
   margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--color-navy-soft);
+  padding: var(--space-4);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
 }
-.map-legend__total {
-  margin-left: auto;
-  font-weight: var(--weight-medium);
+.map-legend__title {
+  font-size: 0.75rem; /* 12px */
+  font-weight: var(--weight-bold);
   color: var(--color-navy);
+  margin: 0 0 var(--space-2);
+}
+.map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.75rem; /* 12px */
+  color: #425266;
+  margin: var(--space-1) 0;
+}
+.map-legend__dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+.map-legend__dot--verified {
+  background: #1a7f5a;
+}
+.map-legend__dot--verifying {
+  background: #9a6700;
+}
+.map-legend__dot--unverified {
+  background: #b3261e;
 }
 .map-unmapped {
   margin-top: var(--space-3);
@@ -366,6 +417,7 @@ textarea.input {
   padding: 0 var(--space-4);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
 }
 .app-header__logo {
   font-weight: var(--weight-bold);
@@ -373,6 +425,27 @@ textarea.input {
   color: var(--color-navy);
   text-decoration: none;
   letter-spacing: -0.01em;
+}
+
+/* ── 서브페이지 헤더(Figma): 뒤로가기(←) + 제목 ─────────────── */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.page-back {
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--color-navy);
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+.page-head__title {
+  font-size: 1.125rem; /* Figma 18px */
+  font-weight: var(--weight-bold);
+  margin: 0;
+  min-width: 0;
 }
 
 /* ── 하단 고정 탭바 ───────────────────────────────────────── */
@@ -410,12 +483,25 @@ textarea.input {
   font-weight: var(--weight-bold);
 }
 
-/* ── 홈 히어로 ─────────────────────────────────────────────── */
+/* ── 홈 히어로(Figma 01) — 상단 풀블리드 라이트 배경 블록 ────────── */
 .hero {
-  margin: var(--space-5) 0 var(--space-6);
+  /* 컨테이너 좌우/상단 패딩을 상쇄해 화면 끝까지 채우는 배경 블록 */
+  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) var(--space-6);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.hero__logo {
+  display: inline-block;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lg);
+  color: var(--color-navy);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-5);
 }
 .hero__title {
-  font-size: 1.75rem;
+  font-size: 1.625rem; /* Figma 26px */
   font-weight: var(--weight-bold);
   line-height: 1.25;
   letter-spacing: -0.02em;
@@ -429,7 +515,7 @@ textarea.input {
 }
 .hero__sub {
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs); /* Figma 13px */
   margin: 0 0 var(--space-5);
 }
 .hero__cta {
@@ -440,26 +526,49 @@ textarea.input {
 .hero__cta .btn {
   width: 100%;
 }
+/* 접수번호로 상태 조회 — 버튼이 아니라 텍스트 링크(Figma: 일반 굵기 13px) */
+.hero__track-link {
+  align-self: flex-start;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-normal);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.hero__track-link:hover {
+  text-decoration: underline;
+}
+
+/* 섹션 라벨(예: "지금 무엇이 문제인가") — Figma 12px medium */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3);
+}
 .principles {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-3);
-  margin-top: var(--space-6);
 }
+/* Figma 01: 비강조 카드 #d9d9d9, 첫 카드만 흰색 */
 .principle {
-  background: var(--color-surface);
+  background: #d9d9d9;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-4);
 }
+.principle--featured {
+  background: var(--color-bg);
+}
 .principle__title {
-  font-weight: var(--weight-bold);
-  color: var(--color-text);
+  font-size: var(--text-sm); /* Figma 14px medium */
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
   margin: 0 0 var(--space-2);
 }
 .principle__body {
+  font-size: 0.6875rem; /* Figma 11px */
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
   margin: 0;
 }
 
@@ -468,7 +577,7 @@ textarea.input {
 .segment {
   display: inline-flex;
   gap: 0;
-  margin: var(--space-4) 0 0;
+  margin: var(--space-4) 0;
   padding: 2px;
   background: var(--color-navy-soft);
   border-radius: var(--radius-md);
@@ -487,6 +596,58 @@ textarea.input {
 .segment__btn--active {
   background: var(--color-navy);
   color: #fff;
+}
+
+/* 밑줄 탭(공개 게시판, Figma 06): 선택=navy 텍스트+굵게+하단 navy 라인. */
+.tabs {
+  display: flex;
+  gap: var(--space-5);
+  margin: var(--space-4) 0;
+}
+.tabs__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm); /* Figma 14px */
+  font-weight: var(--weight-normal);
+  color: #8792a2;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+.tabs__btn--active {
+  color: #635bff; /* Figma 활성 탭/언더라인 색 */
+  font-weight: var(--weight-bold);
+  border-bottom-color: #635bff;
+}
+
+/* 검색·필터 접이식 패널(Figma 06은 기본 노출 안 함 → 접어서 깔끔하게, 기능은 유지) */
+.filter-panel {
+  margin: var(--space-4) 0;
+}
+.filter-panel__summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  padding: var(--space-2) 0;
+}
+.filter-panel__summary::-webkit-details-marker {
+  display: none;
+}
+.filter-panel__summary::after {
+  content: "▾";
+  font-size: 0.75em;
+}
+.filter-panel[open] .filter-panel__summary::after {
+  content: "▴";
+}
+.filter-panel .filter-bar {
+  margin: var(--space-2) 0 0;
 }
 
 .filter-bar {
@@ -509,26 +670,95 @@ textarea.input {
   padding: 0;
   margin: 0;
 }
+
+/* ── 검수큐(08) — 제목행/통계/KPI ──────────────────────────── */
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.list-head > h1 {
+  margin: 0;
+}
+.queue-stat {
+  margin: var(--space-2) 0 0;
+  color: #8792a2;
+  font-size: 0.75rem; /* Figma 12px */
+}
+.kpi-row {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.kpi-card {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3);
+  background: #d9d9d9; /* Figma KPI 카드 */
+  border-radius: var(--radius-md);
+}
+.kpi-card__num {
+  font-size: 1.375rem; /* Figma 22px */
+  font-weight: var(--weight-bold);
+  color: #000;
+}
+.kpi-card__label {
+  font-size: 0.6875rem; /* Figma 11px */
+  font-weight: var(--weight-medium);
+  color: #000;
+}
+/* 검수큐 카드 EXIF 요약 줄 */
+.archive-item__exif {
+  font-size: 0.6875rem; /* 11px */
+  color: var(--color-state-verified);
+}
+.archive-item__exif--warn {
+  color: var(--color-state-verifying);
+}
 .archive-item {
+  display: flex;
+  gap: var(--space-3);
   padding: var(--space-4);
   margin-bottom: var(--space-3);
-  background: var(--color-surface-strong);
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+/* 공개 게시판(06) 카드 — Figma는 #d9d9d9 회색(검수큐는 흰색 유지) */
+.archive-item--post {
+  background: #d9d9d9;
 }
 .archive-item:hover {
   border-color: var(--color-accent-border);
   box-shadow: var(--shadow-sm);
 }
+/* 가로 카드(Figma 06/08): 썸네일 좌측 고정, 본문 우측. */
 .archive-item__thumb {
-  height: 96px;
+  flex: 0 0 90px;
+  width: 90px;
+  height: 98px;
   border-radius: var(--radius-md);
-  background: var(--color-border);
-  margin-bottom: var(--space-3);
+  background: #eef1f5;
+}
+.archive-item__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.archive-item .status {
+  margin: var(--space-1) 0;
+}
+.archive-item__action {
+  align-self: center;
+  flex: 0 0 auto;
 }
 .archive-item__title {
-  font-size: var(--text-base);
+  display: block;
+  font-size: var(--text-sm); /* Figma 14px */
   font-weight: var(--weight-bold);
   color: var(--color-text);
   text-decoration: none;
@@ -536,14 +766,21 @@ textarea.input {
 .archive-item__title:hover {
   color: var(--color-navy);
 }
+/* Figma 06: "✓ 검증됨"은 알약 배지가 아니라 초록 텍스트 한 줄 */
+.archive-item__verified {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: 0.6875rem; /* Figma 11px */
+  font-weight: var(--weight-medium);
+  color: #0f6e56; /* Figma 검증됨 초록 */
+}
 .archive-item__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: 0.6875rem; /* Figma 11px */
+  color: #8792a2;
 }
 .pagination {
   display: flex;
@@ -558,18 +795,73 @@ textarea.input {
   line-height: 1.7;
 }
 .detail-image {
-  height: 180px;
+  height: 200px;
   border-radius: var(--radius-md);
-  background: var(--color-border);
-  margin: var(--space-3) 0 var(--space-4);
+  background: #eef1f5;
+  margin: 0 0 var(--space-3);
+}
+/* 상세 배지 행(Figma 07): 이미지 아래 초록 배지 12px #0f6e56 */
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+  font-size: 0.75rem; /* Figma 12px */
+  font-weight: var(--weight-medium);
+}
+.detail-badge {
+  color: var(--color-text-muted);
+}
+.detail-badge--ok {
+  color: #0f6e56;
+}
+/* 검증 이력 플로우(Figma 07): 제출 → 포렌식 통과 → 공개 */
+.history-flow {
+  margin: var(--space-4) 0;
+}
+.history-flow__title {
+  font-size: 0.8125rem; /* Figma 13px */
+  margin: 0 0 var(--space-2);
+}
+.history-flow__steps {
+  margin: 0;
+  font-size: 0.75rem; /* Figma 12px */
+  color: #334052;
+  font-weight: var(--weight-normal);
+}
+/* 근거 데이터(첨부·출처·검토요약) 접이식 — Figma 07은 미니멀, 데이터는 보존 */
+.more-data {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+.more-data__summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+}
+.more-data__summary::-webkit-details-marker {
+  display: none;
+}
+.more-data__summary::after {
+  content: "▾";
+  font-size: 0.75em;
+}
+.more-data[open] .more-data__summary::after {
+  content: "▴";
 }
 .meta-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: 0.75rem; /* Figma 12px */
+  color: #8792a2;
   margin-bottom: var(--space-4);
 }
 
@@ -623,6 +915,263 @@ textarea.input {
   margin-top: var(--space-5);
 }
 
+/* 제보폼 단일 페이지(0019) — 첨부 차단 카드·동의행·접수번호행 */
+.consent-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.report-upload__hint {
+  margin: 0;
+}
+.block-card {
+  display: grid;
+  gap: var(--space-2);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.block-card__title {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--text-base);
+}
+
+/* EXIF 차단 전용 화면(Figma 11) */
+.exif-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.exif-block__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-top: var(--space-6);
+  border-radius: var(--radius-md);
+  background: #feeded;
+  font-size: 40px;
+  line-height: 1;
+}
+.exif-block__title {
+  font-size: 1.25rem; /* Figma 20px */
+  font-weight: var(--weight-bold);
+  color: var(--color-navy);
+  margin: var(--space-3) 0 0;
+}
+.exif-block__desc {
+  font-size: var(--text-sm); /* 14px */
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+.exif-reason {
+  align-self: stretch;
+  text-align: left;
+  background: #f6f8fc;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+}
+.exif-reason__title {
+  font-size: 0.75rem; /* 12px */
+  font-weight: var(--weight-bold);
+  color: var(--color-navy);
+  margin: 0 0 var(--space-2);
+}
+.exif-reason__body {
+  font-size: 0.75rem; /* 12px */
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.exif-block .btn {
+  align-self: stretch;
+}
+.tracking-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* 큰 도메인 토글(제보폼 02): 반반 2버튼, 선택=navy 채움 */
+.seg-solid {
+  display: flex;
+  gap: var(--space-3);
+}
+.seg-solid__btn {
+  flex: 1 1 0;
+  padding: var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.seg-solid__btn--active {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #fff;
+}
+
+/* 사진 업로드 드롭존(제보폼 02) */
+.upload-zone {
+  display: grid;
+  gap: var(--space-3);
+}
+.upload-zone__drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-accent-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.upload-zone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.upload-zone__title {
+  font-weight: var(--weight-bold);
+  color: var(--color-navy);
+}
+.upload-zone__hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.upload-zone__hint--strong {
+  color: var(--color-publish); /* Figma 첫 줄 강조색 */
+  font-weight: var(--weight-medium);
+}
+.upload-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.upload-preview__thumb {
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
+.upload-preview__info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.upload-preview__name {
+  font-size: var(--text-sm);
+}
+.upload-preview__exif {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-state-verified);
+}
+.upload-preview__limit {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.field__label {
+  font-weight: var(--weight-medium);
+}
+
+/* 첨부 미리보기 그리드(Figma 02): 썸네일 + ×삭제 + ✓EXIF + 한도 캡션 */
+.upload-caption {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.upload-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.upload-thumb {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 64px;
+}
+.upload-thumb__img {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
+.upload-thumb__x {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.upload-thumb__name {
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.upload-thumb__exif {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-state-verified);
+}
+.upload-thumb__exif--warn {
+  color: var(--color-warning);
+}
+.upload-limit {
+  margin-left: auto;
+  align-self: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 /* 완료/성공 톤 — 04 디자인: 가운데 초록 체크 */
 .done-card {
   text-align: center;
@@ -635,16 +1184,11 @@ textarea.input {
 }
 .done-card::before {
   content: "✓";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin: 0 auto var(--space-4);
-  border-radius: 50%;
-  background: var(--color-success-soft);
-  color: var(--color-success);
-  font-size: 1.75rem;
+  display: block;
+  margin: 0 auto var(--space-3);
+  color: var(--color-state-verified); /* Figma 큰 초록 체크 #1a7f5a */
+  font-size: 56px;
+  line-height: 1;
   font-weight: var(--weight-bold);
 }
 .done-card > h1 {
@@ -661,13 +1205,13 @@ textarea.input {
   font-weight: var(--weight-bold);
 }
 
-/* 완료 화면 접수번호 강조(0013, 디자인 04 navy) */
+/* 완료 화면 접수번호(Figma 04: 퍼플 14px medium) */
 .done-card__tracking {
-  color: var(--color-navy);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-xl);
-  letter-spacing: 0.04em;
-  margin: var(--space-1) 0 0;
+  color: var(--color-publish);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  letter-spacing: 0.03em;
+  margin: 0;
 }
 
 /* ── 상태조회(0013) ──────────────────────────────────────── */
@@ -778,6 +1322,20 @@ textarea.input {
   border-radius: var(--radius-md);
   padding: var(--space-4);
   text-decoration: none;
+}
+.my-reports__body {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.my-reports__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+.my-reports__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 .my-reports__number {
   color: var(--color-navy);

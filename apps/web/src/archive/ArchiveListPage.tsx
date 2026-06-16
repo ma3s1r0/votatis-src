@@ -7,8 +7,7 @@ import {
 } from "./api";
 import { categoriesForDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
-import { formatDateTime } from "../format";
-import Header from "../Header";
+import { shortDate, formatCount } from "../format";
 import TabBar from "../TabBar";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
 
@@ -40,8 +39,13 @@ const SIDO_OPTIONS = [
   "제주특별자치도",
 ];
 
+// 시도 접미사 축약(Figma 06: "서울 강서구", "경기 부천").
+function shortSido(s: string | null): string {
+  if (!s) return "";
+  return s.replace(/(특별자치시|특별자치도|특별시|광역시|도)$/, "");
+}
 function regionLabel(r: ArchiveItem): string {
-  return [r.sido, r.sigungu].filter(Boolean).join(" ") || "지역 미상";
+  return [shortSido(r.sido), r.sigungu].filter(Boolean).join(" ") || "지역 미상";
 }
 
 // 쿼리스트링(useSearchParams)을 검색·필터·페이지의 단일 소스로 사용한다.
@@ -55,13 +59,14 @@ function queryFromParams(params: URLSearchParams): ArchiveListQuery {
     sido: params.get("sido") || undefined,
     category: params.get("category") || undefined,
     electionId: params.get("electionId") || undefined,
-    domain: params.get("domain") || undefined,
+    // Figma 06: "전체" 탭 없음 — 기본 도메인은 선거 의혹(election).
+    domain: params.get("domain") || "election",
   };
 }
 
 function domainOf(params: URLSearchParams): DomainOption {
   const d = params.get("domain");
-  return d === "election" || d === "assembly" ? d : null;
+  return d === "assembly" ? "assembly" : "election";
 }
 
 export default function ArchiveListPage() {
@@ -169,22 +174,19 @@ export default function ArchiveListPage() {
 
   return (
     <>
-    <Header />
     <main className="container">
-      <h1>공개 아카이브</h1>
-      <p className="page-intro">
-        검증을 거친 기록만 공개합니다. 각 기록은 출처와 검토 범위를 함께
-        제공합니다.
-      </p>
+      <h1>검증 아카이브</h1>
 
       <DomainSegment
         value={selectedDomain}
         onChange={onDomain}
-        includeAll
         assemblyLabel="집회 신고"
+        variant="tabs"
       />
 
-      <form onSubmit={onSearch} className="filter-bar">
+      <details className="filter-panel">
+        <summary className="filter-panel__summary">검색 · 필터</summary>
+        <form onSubmit={onSearch} className="filter-bar">
         <label className="field" htmlFor="archive-search">
           검색
           <input
@@ -254,7 +256,8 @@ export default function ArchiveListPage() {
           ))}
         </select>
         </label>
-      </form>
+        </form>
+      </details>
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && (
@@ -270,18 +273,20 @@ export default function ArchiveListPage() {
           </p>
           <ul className="list-reset">
             {state.items.map((r) => (
-              <li key={r.id} className="archive-item">
+              <li key={r.id} className="archive-item archive-item--post">
                 <div className="archive-item__thumb" aria-hidden="true" />
-                <Link to={`/archive/${r.id}`} className="archive-item__title">
-                  {r.title}
-                </Link>
-                <div className="archive-item__meta">
-                  <span className="badge badge-verified">✓ 검증됨</span>
-                  {r.category && (
-                    <span className="badge badge-accent">{r.category}</span>
-                  )}
-                  <span>{regionLabel(r)}</span>
-                  {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
+                <div className="archive-item__body">
+                  <Link to={`/archive/${r.id}`} className="archive-item__title">
+                    {r.title}
+                  </Link>
+                  <p className="archive-item__verified">✓ 검증됨</p>
+                  <div className="archive-item__meta">
+                    <span>{regionLabel(r)}</span>
+                    {r.collectedAt && <span> · {shortDate(r.collectedAt)}</span>}
+                    {typeof r.viewCount === "number" && (
+                      <span> · 조회 {formatCount(r.viewCount)}</span>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}

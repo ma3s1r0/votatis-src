@@ -45,6 +45,7 @@ function publicReport(r: {
   domain: string;
   occurredAt: Date | null;
   collectedAt: Date;
+  viewCount: number;
 }) {
   return {
     id: r.id,
@@ -58,6 +59,7 @@ function publicReport(r: {
     domain: r.domain,
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
+    viewCount: r.viewCount,
   };
 }
 

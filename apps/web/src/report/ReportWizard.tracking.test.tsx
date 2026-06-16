@@ -25,16 +25,12 @@ function createResponse(trackingNumber: string) {
 }
 
 async function submitOnce() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
+  await userEvent.type(screen.getByLabelText("상세 설명"), "관찰 정황");
   await userEvent.click(screen.getByLabelText(/동의/));
-  await userEvent.click(screen.getByRole("button", { name: "제출" }));
+  await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 }
 
-describe("ReportWizard 접수번호 추적(0013)", () => {
+describe("ReportForm 접수번호 추적(0013)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
@@ -65,7 +61,7 @@ describe("ReportWizard 접수번호 추적(0013)", () => {
     await submitOnce();
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
-    expect(getMyReports()).toContain("VT-2026-0615-0042");
+    expect(getMyReports().map((r) => r.number)).toContain("VT-2026-0615-0042");
   });
 
   it("상태 조회 링크가 /track 으로 연결된다", async () => {

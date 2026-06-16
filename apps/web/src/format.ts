@@ -21,6 +21,21 @@ export function formatDateTime(iso: string | null | undefined): string {
   return dateFormatter.format(d).replace(/‎/g, "");
 }
 
+// ISO → "6.3" 류 짧은 날짜(월.일, UTC). 목록 카드용(Figma 06).
+export function shortDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${d.getUTCMonth() + 1}.${d.getUTCDate()}`;
+}
+
+// 조회수 축약: 1,200 → "1.2천", 880 → "880" (Figma 06 "조회 1.2천").
+export function formatCount(n: number): string {
+  if (n >= 10000) return `${Math.round(n / 1000)}천`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}천`;
+  return String(n);
+}
+
 // 콘텐츠 해시 축약: 앞 10자 + 줄임표. 10자 이하·빈 값은 그대로.
 export function shortHash(hash: string | null | undefined): string {
   if (!hash) return "";

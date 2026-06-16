@@ -84,13 +84,14 @@ describe("ArchiveListPage 도메인 세그먼트(0014)", () => {
     expect(values).not.toContain("투개표");
   });
 
-  it("전체 세그먼트 선택 시 domain 쿼리를 보내지 않는다", async () => {
-    renderList("/archive?domain=assembly");
+  it("기본 진입 시 선거 의혹(election)으로 요청하고 전체 탭은 없다(Figma 06)", async () => {
+    renderList();
     await screen.findByText("이상 득표율 기록");
 
-    await userEvent.click(screen.getByRole("button", { name: "전체" }));
-
-    const last = reportsCalls()[reportsCalls().length - 1];
-    expect(last).not.toContain("domain=");
+    expect(
+      screen.queryByRole("button", { name: "전체" }),
+    ).not.toBeInTheDocument();
+    const first = reportsCalls()[0];
+    expect(first).toContain("domain=election");
   });
 });

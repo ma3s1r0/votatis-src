@@ -12,19 +12,14 @@ function renderWizard() {
   );
 }
 
-// Step3(지역)까지 진입하는 헬퍼
-async function gotoRegionStep() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  // Step2 분류
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  // Step3 지역
+function electionsResponse() {
+  return new Response(JSON.stringify({ items: [] }), { status: 200 });
 }
 
-describe("ReportWizard 지역 종속 드롭다운", () => {
+// Figma 02 위치: 단일 입력칸. 제출 시 앞부분에서 시도를 파싱해 구조화 보존.
+describe("ReportForm 위치 입력(단일 입력칸)", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
   });
   afterEach(() => {
@@ -32,39 +27,44 @@ describe("ReportWizard 지역 종속 드롭다운", () => {
     sessionStorage.clear();
   });
 
-  it("시도 선택 전에는 시군구/읍면동이 비활성", async () => {
+  it("위치 입력칸 하나가 한 화면에 있다", () => {
     renderWizard();
-    await gotoRegionStep();
-    expect(screen.getByText(/3\s*\/\s*5/)).toBeInTheDocument();
-    expect(screen.getByLabelText("시군구")).toBeDisabled();
-    expect(screen.getByLabelText("읍면동")).toBeDisabled();
+    expect(screen.getByLabelText("위치")).toBeInTheDocument();
   });
 
-  it("시도 선택 후 시군구 활성, 시군구 선택 후 읍면동 활성", async () => {
+  it("입력한 위치 값이 반영된다", async () => {
     renderWizard();
-    await gotoRegionStep();
-
-    await userEvent.selectOptions(screen.getByLabelText("시도"), "서울특별시");
-    const sigungu = screen.getByLabelText("시군구");
-    expect(sigungu).not.toBeDisabled();
-    expect(screen.getByLabelText("읍면동")).toBeDisabled();
-
-    await userEvent.selectOptions(sigungu, "강남구");
-    const dong = screen.getByLabelText("읍면동");
-    expect(dong).not.toBeDisabled();
-    // 종속 옵션이 반영됨
-    await userEvent.selectOptions(dong, "신사동");
-    expect((dong as HTMLSelectElement).value).toBe("신사동");
+    await userEvent.type(
+      screen.getByLabelText("위치"),
+      "서울특별시 강남구 제3투표소",
+    );
+    expect(screen.getByLabelText("위치")).toHaveValue("서울특별시 강남구 제3투표소");
   });
 
-  it("시도를 바꾸면 하위 선택이 초기화된다", async () => {
+  it("제출 시 시도(파싱)와 위치 전문(sigungu)을 본문에 전송한다", async () => {
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(electionsResponse());
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: "rep_r", status: "received" }), {
+        status: 201,
+      }),
+    );
     renderWizard();
-    await gotoRegionStep();
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
+    await userEvent.type(
+      screen.getByLabelText("위치"),
+      "서울특별시 강남구 제3투표소",
+    );
+    await userEvent.click(screen.getByLabelText(/동의/));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 
-    await userEvent.selectOptions(screen.getByLabelText("시도"), "서울특별시");
-    await userEvent.selectOptions(screen.getByLabelText("시군구"), "강남구");
-    await userEvent.selectOptions(screen.getByLabelText("시도"), "부산광역시");
-    expect((screen.getByLabelText("시군구") as HTMLSelectElement).value).toBe("");
-    expect(screen.getByLabelText("읍면동")).toBeDisabled();
+    await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
+    const postCall = fetchMock.mock.calls.find(
+      (c) => c[0] === "/api/reports" && c[1]?.method === "POST",
+    );
+    const body = JSON.parse(postCall![1].body);
+    // 앞부분이 알려진 시도면 sido 로 구조화(지도/지역 필터 보존)
+    expect(body.sido).toBe("서울특별시");
+    expect(body.sigungu).toBe("서울특별시 강남구 제3투표소");
   });
 });

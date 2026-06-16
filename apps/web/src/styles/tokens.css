@@ -38,16 +38,16 @@
   /* 관리 액션색 */
   --color-approve: #2e7d57;
   --color-approve-hover: #266a49;
-  --color-publish: #6c5ce7;
-  --color-publish-hover: #5a4bd4;
+  --color-publish: #635bff; /* Figma 검수/공표 퍼플 */
+  --color-publish-hover: #5048e5;
   --color-publish-soft: #eeebfb;
 
-  /* 검증 상태(dot/배지) */
-  --color-state-verified: #1f9d57;
+  /* 검증 상태(dot/배지) — Figma 정본 색 */
+  --color-state-verified: #1a7f5a;
   --color-state-verified-soft: #e6f6ec;
-  --color-state-verifying: #c98a17;
+  --color-state-verifying: #9a6700;
   --color-state-verifying-soft: #fdf3e2;
-  --color-state-unverified: #c0392b;
+  --color-state-unverified: #b3261e;
   --color-state-unverified-soft: #fbeaea;
 
   /* 심각도(1~5): 낮음=중립, 높을수록 강조. 빨강은 최상위(위험)만. */
@@ -83,16 +83,16 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  /* 반경 · 그림자 (카드 14 / 버튼 10 / pill 999) */
+  /* 반경 · 그림자 (Figma 정본: 카드·버튼·입력 모두 8px / pill 999) */
   --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
   --radius-pill: 999px;
   --shadow-sm: 0 1px 2px rgba(27, 42, 74, 0.05), 0 1px 3px rgba(27, 42, 74, 0.08);
   --shadow-md: 0 2px 4px rgba(27, 42, 74, 0.05),
     0 8px 24px rgba(27, 42, 74, 0.08);
 
-  /* 컨테이너 — 모바일 우선(앱 프레임) */
-  --container-max: 480px;
-  --tab-bar-height: 60px;
+  /* 컨테이너 — 모바일 우선(앱 프레임, Figma 정본 390px) */
+  --container-max: 390px;
+  --tab-bar-height: 58px;
 }

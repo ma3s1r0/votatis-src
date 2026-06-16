@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchReports, logout, type AdminReport } from "./api";
 import { formatDateTime } from "../format";
-import Header from "../Header";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
 
 type State =
@@ -12,6 +11,18 @@ type State =
 
 function regionLabel(r: AdminReport): string {
   return [r.sido, r.sigungu, r.eupMyeonDong].filter(Boolean).join(" ") || "지역 미상";
+}
+
+function domainLabel(r: AdminReport): string {
+  return r.domain === "assembly" ? "집회" : "선거";
+}
+
+// 항목 검증 상태 → 상태 dot/라벨(공용 .status 클래스 재사용).
+function itemStatus(r: AdminReport): { cls: string; label: string } {
+  if (r.verified) return { cls: "status--verified", label: "검증됨" };
+  if (r.status === "submitted" || r.status === "pending_review")
+    return { cls: "status--verifying", label: "검증중" };
+  return { cls: "status--unverified", label: "미검증" };
 }
 
 export default function QueuePage() {
@@ -39,11 +50,42 @@ export default function QueuePage() {
     navigate("/admin/login");
   }
 
+  // KPI는 현재 로드된 목록에서 파생(별도 집계 엔드포인트 없음).
+  const items = state.status === "ready" ? state.items : [];
+  const kpiDone = items.filter((i) => i.verified).length;
+  const kpiPending = items.filter(
+    (i) => !i.verified && (i.status === "submitted" || i.status === "pending_review"),
+  ).length;
+  const kpiReviewing = items.length - kpiDone - kpiPending;
+
   return (
     <>
-    <Header admin onLogout={onLogout} />
     <main className="container">
-      <h1>검토 큐</h1>
+      <div className="list-head">
+        <h1>검수 큐</h1>
+        <button type="button" onClick={onLogout} className="btn btn-secondary btn-sm">
+          로그아웃
+        </button>
+      </div>
+      <p className="queue-stat">
+        대기 {kpiPending} · 검증중 {kpiReviewing} · 처리 {kpiDone}
+      </p>
+
+      <div className="kpi-row">
+        <div className="kpi-card">
+          <span className="kpi-card__num">{kpiPending}</span>
+          <span className="kpi-card__label">대기</span>
+        </div>
+        <div className="kpi-card">
+          <span className="kpi-card__num">{kpiReviewing}</span>
+          <span className="kpi-card__label">검증중</span>
+        </div>
+        <div className="kpi-card">
+          <span className="kpi-card__num">{kpiDone}</span>
+          <span className="kpi-card__label">처리</span>
+        </div>
+      </div>
+
       <DomainSegment value={domain} onChange={setDomain} includeAll />
 
       {state.status === "loading" && <p>불러오는 중…</p>}
@@ -53,19 +95,42 @@ export default function QueuePage() {
       )}
       {state.status === "ready" && state.items.length > 0 && (
         <ul className="list-reset">
-          {state.items.map((r) => (
-            <li key={r.id} className="archive-item">
-              <Link to={`/admin/reports/${r.id}`} className="archive-item__title">
-                {r.title}
-              </Link>
-              <div className="archive-item__meta">
-                <span>{regionLabel(r)}</span>
-                {r.collectedAt && (
-                  <span> · 수집 {formatDateTime(r.collectedAt)}</span>
-                )}
-              </div>
-            </li>
-          ))}
+          {state.items.map((r) => {
+            const s = itemStatus(r);
+            return (
+              <li key={r.id} className="archive-item">
+                <div className="archive-item__thumb" aria-hidden="true" />
+                <div className="archive-item__body">
+                  <Link to={`/admin/reports/${r.id}`} className="archive-item__title">
+                    {r.title}
+                  </Link>
+                  <span className={`status ${s.cls}`}>
+                    <span className="status__dot" /> {s.label}
+                  </span>
+                  <div className="archive-item__meta">
+                    <span>
+                      {domainLabel(r)} · {regionLabel(r)}
+                    </span>
+                    {r.collectedAt && <span> · {formatDateTime(r.collectedAt)}</span>}
+                  </div>
+                  <p
+                    className={
+                      "archive-item__exif" +
+                      (r.verified ? "" : " archive-item__exif--warn")
+                    }
+                  >
+                    {r.verified ? "EXIF ✓ 원본 확인" : "EXIF ⚠ 확인 필요"}
+                  </p>
+                </div>
+                <Link
+                  to={`/admin/reports/${r.id}`}
+                  className="btn btn-publish btn-sm archive-item__action"
+                >
+                  검수
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>

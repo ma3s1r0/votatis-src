@@ -12,16 +12,15 @@ function renderWizard() {
   );
 }
 
-// 첨부 단계(Step4)까지 진입
-async function gotoAttachStep() {
-  await userEvent.type(screen.getByLabelText("제목"), "관찰한 정황");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.selectOptions(screen.getByLabelText("분류"), "투개표");
-  await userEvent.click(screen.getByRole("button", { name: "다음" }));
-  await userEvent.click(screen.getByRole("button", { name: "다음" })); // 지역 skip
+// 단일 페이지: 제목 입력 + (선택) 첨부.
+async function fillTitle() {
+  await userEvent.type(screen.getByLabelText("상세 설명"), "관찰한 정황");
+}
+async function submit() {
+  await userEvent.click(screen.getByLabelText(/동의/));
+  await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
 }
 
-// 외부에서 resolve 를 제어할 수 있는 deferred Promise.
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((res) => {
@@ -30,12 +29,11 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-// 마운트 시 GET /api/elections(0007) 1회 호출. 기본 응답은 빈 선거 목록.
 function electionsResponse() {
   return new Response(JSON.stringify({ items: [] }), { status: 200 });
 }
 
-describe("ReportWizard 진행 상태 표시", () => {
+describe("ReportForm 진행 상태 표시", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(electionsResponse()));
     sessionStorage.clear();
@@ -53,35 +51,29 @@ describe("ReportWizard 진행 상태 표시", () => {
     const put = deferred<Response>();
     const finalize = deferred<Response>();
     fetchMock
-      .mockResolvedValueOnce(electionsResponse()) // 마운트: GET /api/elections
-      .mockReturnValueOnce(create.promise) // POST /api/reports
-      .mockReturnValueOnce(attachCreate.promise) // attachments/create
-      .mockReturnValueOnce(put.promise) // PUT uploadUrl
-      .mockReturnValueOnce(finalize.promise); // finalize
+      .mockResolvedValueOnce(electionsResponse())
+      .mockReturnValueOnce(create.promise)
+      .mockReturnValueOnce(attachCreate.promise)
+      .mockReturnValueOnce(put.promise)
+      .mockReturnValueOnce(finalize.promise);
 
     renderWizard();
-    await gotoAttachStep();
+    await fillTitle();
     const good = new File(["imgdata"], "photo.png", { type: "image/png" });
     await userEvent.upload(screen.getByLabelText("사진/PDF 첨부"), good);
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await submit();
 
-    // 1) report 생성 대기 중 — 접수 중 표시 + 제출 버튼 비활성(중복 클릭 방지)
     expect(await screen.findByText(/제보 접수 중/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "제출" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "제보 제출" })).toBeDisabled();
 
-    // report 생성 완료 → 업로드 단계 진입
     create.resolve(
       new Response(JSON.stringify({ id: "rep_1", status: "received" }), {
         status: 201,
       }),
     );
 
-    // 2) 업로드 중 표시
     expect(await screen.findByText(/업로드 중/)).toBeInTheDocument();
 
-    // 첨부 단계 진행
     attachCreate.resolve(
       new Response(
         JSON.stringify({
@@ -99,7 +91,6 @@ describe("ReportWizard 진행 상태 표시", () => {
       new Response(JSON.stringify({ status: "stored" }), { status: 200 }),
     );
 
-    // 3) 첨부 완료 표시 → 최종 완료 화면
     expect(
       await screen.findByText(/photo\.png.*완료|완료.*photo\.png|업로드 완료/),
     ).toBeInTheDocument();
@@ -110,27 +101,21 @@ describe("ReportWizard 진행 상태 표시", () => {
 
   it("첨부 업로드 실패 시 해당 파일을 실패로 표시하되 제보는 접수 완료로 처리한다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
-    // report 생성 성공
+    fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "rep_2", status: "received" }), {
         status: 201,
       }),
     );
-    // attachments/create 실패(500)
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }));
 
     renderWizard();
-    await gotoAttachStep();
+    await fillTitle();
     const good = new File(["imgdata"], "photo.png", { type: "image/png" });
     await userEvent.upload(screen.getByLabelText("사진/PDF 첨부"), good);
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await submit();
 
-    // 실패 표시
     expect(await screen.findByText(/첨부.*실패|실패/)).toBeInTheDocument();
-    // 그래도 접수는 완료
     expect(
       await screen.findByRole("heading", { name: "제보가 접수되었습니다" }),
     ).toBeInTheDocument();
@@ -139,18 +124,15 @@ describe("ReportWizard 진행 상태 표시", () => {
   it("첨부가 없으면 '접수 중'만 거쳐 완료 화면으로 간다", async () => {
     const fetchMock = fetch as ReturnType<typeof vi.fn>;
     const create = deferred<Response>();
-    fetchMock.mockResolvedValueOnce(electionsResponse()); // 마운트: GET /api/elections
+    fetchMock.mockResolvedValueOnce(electionsResponse());
     fetchMock.mockReturnValueOnce(create.promise);
 
     renderWizard();
-    await gotoAttachStep();
-    // 첨부 없이 다음
-    await userEvent.click(screen.getByRole("button", { name: "다음" }));
-    await userEvent.click(screen.getByLabelText(/동의/));
-    await userEvent.click(screen.getByRole("button", { name: "제출" }));
+    await fillTitle();
+    await submit();
 
     expect(await screen.findByText(/제보 접수 중/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "제출" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "제보 제출" })).toBeDisabled();
 
     create.resolve(
       new Response(JSON.stringify({ id: "rep_3", status: "received" }), {

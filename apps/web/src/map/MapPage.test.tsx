@@ -50,12 +50,13 @@ describe("MapPage", () => {
     expect(await screen.findByRole("link", { name: /서울특별시/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /부산광역시/ })).toBeInTheDocument();
 
-    // 범례: 상태별 라벨 + 총건수(전체 합계 = 5+2+3 = 10)
+    // 범례 카드: 상태별 라벨 + 건수(검증됨 5 / 검증중 2 / 미검증 3)
     const legend = screen.getByRole("group", { name: /범례/ });
-    expect(within(legend).getByText(/검증됨/)).toBeInTheDocument();
-    expect(within(legend).getByText(/검증중/)).toBeInTheDocument();
-    expect(within(legend).getByText(/미검증/)).toBeInTheDocument();
-    expect(within(legend).getByText(/10/)).toBeInTheDocument();
+    expect(within(legend).getByText(/검증됨 · 5건/)).toBeInTheDocument();
+    expect(within(legend).getByText(/검증중 · 2건/)).toBeInTheDocument();
+    expect(within(legend).getByText(/미검증 · 3건/)).toBeInTheDocument();
+    // 총건수(5+2+3=10)는 상단 서브에 "총 10건"으로 표기
+    expect(screen.getByText(/총 10건/)).toBeInTheDocument();
 
     // 호출 URL 확인(기본 도메인 없음 또는 전체)
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/map-stats"));

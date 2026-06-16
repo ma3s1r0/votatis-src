@@ -11,7 +11,6 @@ import {
   validityLabel,
   severityLabel,
 } from "../format";
-import Header from "../Header";
 import TabBar from "../TabBar";
 
 type State =
@@ -50,22 +49,19 @@ export default function ArchiveDetailPage() {
 
   if (state.status === "loading")
     return (
-      <>
-        <Header />
+      <main className="container">
         <p>불러오는 중…</p>
-      </>
+      </main>
     );
   if (state.status === "error")
     return (
-      <>
-        <Header />
+      <main className="container">
         <p role="alert">기록을 불러오지 못했습니다.</p>
-      </>
+      </main>
     );
   if (state.status === "not_found") {
     return (
       <>
-      <Header />
       <main className="container">
         <h1>기록을 찾을 수 없습니다.</h1>
         <p>요청한 기록이 없거나 아직 공개되지 않았습니다.</p>
@@ -81,12 +77,23 @@ export default function ArchiveDetailPage() {
 
   return (
     <>
-    <Header />
     <main className="container">
-      <p>
-        <Link to="/archive">← 아카이브</Link>
-      </p>
-      <h1>{r.title}</h1>
+      <div className="page-head">
+        <Link to="/archive" className="page-back" aria-label="아카이브로 돌아가기">
+          ←
+        </Link>
+        <h1 className="page-head__title">{r.title}</h1>
+      </div>
+      <div className="detail-image" aria-hidden="true" />
+
+      {v?.verified && (
+        <div className="detail-badges">
+          <span className="detail-badge detail-badge--ok">✓ 검증됨</span>
+          <span className="detail-badge detail-badge--ok">EXIF 정상</span>
+          <span className="detail-badge detail-badge--ok">위변조 없음</span>
+        </div>
+      )}
+
       <div className="meta-row">
         <span>{regionLabel(r)}</span>
         {r.category && <span> · 분류 {r.category}</span>}
@@ -96,9 +103,19 @@ export default function ArchiveDetailPage() {
         <span> · 조회 {r.viewCount.toLocaleString()}</span>
       </div>
 
-      <div className="detail-image" aria-hidden="true" />
+      {v?.verified && (
+        <section className="history-flow">
+          <h2 className="history-flow__title">검증 이력</h2>
+          <p className="history-flow__steps">제출 → 포렌식 통과 → 공개</p>
+        </section>
+      )}
 
       {r.body && <p className="detail-body">{r.body}</p>}
+
+      <details className="more-data">
+        <summary className="more-data__summary">
+          근거 데이터 · 첨부 / 출처 / 검토 요약
+        </summary>
 
       <section className="section-card">
         <h2>첨부</h2>
@@ -233,6 +250,7 @@ export default function ArchiveDetailPage() {
           </>
         )}
       </section>
+      </details>
     </main>
     <TabBar />
     </>

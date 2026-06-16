@@ -11,7 +11,7 @@ function renderWizard() {
   );
 }
 
-describe("ReportWizard 안내 카피 (관찰·기록 톤)", () => {
+describe("ReportForm 안내 카피 (객관적 톤)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     sessionStorage.clear();
@@ -21,10 +21,10 @@ describe("ReportWizard 안내 카피 (관찰·기록 톤)", () => {
     sessionStorage.clear();
   });
 
-  it("Step1 에 단정이 아닌 관찰·기록을 유도하는 안내가 있다", () => {
+  it("상단에 검수·책임을 알리는 객관적 안내 문구가 있다(Figma 02)", () => {
     renderWizard();
     expect(
-      screen.getByText(/관찰한 사실을 그대로 기록/),
+      screen.getByText(/제보는 관리자 검수 후 처리됩니다/),
     ).toBeInTheDocument();
   });
 });

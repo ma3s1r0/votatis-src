@@ -16,6 +16,7 @@ export type ArchiveItem = {
   category: string | null;
   electionId: string | null;
   domain?: string;
+  viewCount: number;
 };
 
 export type ArchiveListResponse = {

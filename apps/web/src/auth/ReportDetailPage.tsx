@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   fetchReport,
   fetchMe,
@@ -9,7 +9,6 @@ import {
   type FieldError,
 } from "./api";
 import { formatDateTime, shortHash, validityLabel } from "../format";
-import Header from "../Header";
 
 function regionLabel(r: AdminReportDetail): string {
   return (
@@ -159,26 +158,28 @@ export default function ReportDetailPage() {
 
   if (load.status === "loading")
     return (
-      <>
-        <Header admin />
+      <main className="container container--narrow">
         <p>불러오는 중…</p>
-      </>
+      </main>
     );
   if (load.status === "error")
     return (
-      <>
-        <Header admin />
+      <main className="container container--narrow">
         <p role="alert">제보를 불러오지 못했습니다.</p>
-      </>
+      </main>
     );
 
   const r = load.report;
 
   return (
     <>
-    <Header admin />
     <main className="container container--narrow">
-      <h1>{r.title}</h1>
+      <div className="page-head">
+        <Link to="/admin/queue" className="page-back" aria-label="검수 큐로">
+          ←
+        </Link>
+        <h1 className="page-head__title">{r.title}</h1>
+      </div>
       <div className="meta-row">
         <span>{regionLabel(r)}</span>
         {r.occurredAt && <span> · 발생 {formatDateTime(r.occurredAt)}</span>}

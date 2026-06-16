@@ -116,8 +116,9 @@ describe("ArchiveListPage", () => {
     await screen.findByText("이상 득표율 기록");
 
     expect(screen.queryByText(/부정선거/)).not.toBeInTheDocument();
+    // 단정 대신 "검증"을 앞세운 제목으로 객관적 톤 유지(Figma 06).
     expect(
-      screen.getByText(/검증을 거친 기록만 공개합니다/),
+      screen.getByRole("heading", { name: "검증 아카이브" }),
     ).toBeInTheDocument();
   });
 });
