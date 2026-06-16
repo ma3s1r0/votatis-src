@@ -56,11 +56,10 @@ describe("ReportForm 단일 페이지 입력 유지", () => {
     ).toBeInTheDocument();
   });
 
-  it("동의 미체크 시 제출 비활성 + 동의 필요 안내가 보인다", async () => {
+  it("동의 미체크 시 제출 버튼이 비활성이다", async () => {
     renderWizard();
     await screen.findByLabelText("상세 설명");
 
     expect(screen.getByRole("button", { name: "제보 제출" })).toBeDisabled();
-    expect(screen.getByText(/동의가 필요합니다/)).toBeInTheDocument();
   });
 });

@@ -109,10 +109,11 @@ p {
   color: var(--color-navy);
 }
 
-/* 풀폭 버튼(모바일 CTA) */
+/* 풀폭 버튼(모바일 CTA) — Figma 주 CTA 높이 48px */
 .btn-block {
   display: flex;
   width: 100%;
+  min-height: 48px;
 }
 
 /* 관리 액션색 변형 */
@@ -1057,6 +1058,10 @@ textarea.input {
 .upload-zone__hint {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+}
+.upload-zone__hint--strong {
+  color: var(--color-publish); /* Figma 첫 줄 강조색 */
+  font-weight: var(--weight-medium);
 }
 .upload-preview {
   display: flex;

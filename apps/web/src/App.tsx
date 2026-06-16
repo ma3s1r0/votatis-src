@@ -37,19 +37,19 @@ export default function App() {
           <div className="principle principle--featured">
             <p className="principle__title">증거가 휘발된다</p>
             <p className="principle__body">
-              커뮤니티에 흩어진 물증이 시간이 지나면 사라진다.
+              커뮤니티에 흩어진 물증이 시간이 지나면 사라진다
             </p>
           </div>
           <div className="principle">
             <p className="principle__title">진위가 불분명하다</p>
             <p className="principle__body">
-              메타데이터 검증 없이는 신뢰를 얻기 어렵다.
+              메타데이터 검증 없이는 신뢰를 얻기 어렵다
             </p>
           </div>
           <div className="principle">
             <p className="principle__title">기록이 체계가 없다</p>
             <p className="principle__body">
-              분산된 제보를 한곳에 정형화해 보존해야 한다.
+              분산된 제보를 한곳에 정형화해 보존해야 한다
             </p>
           </div>
         </div>

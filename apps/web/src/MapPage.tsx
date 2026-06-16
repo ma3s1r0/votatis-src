@@ -123,8 +123,7 @@ export default function MapPage() {
               >
                 {pins.map(({ it, coord }) => {
                   const s = dominantStatus(it);
-                  // 건수에 따라 핀 크기 가변(분포 강조). 3~7 반경.
-                  const r = Math.min(7, 3 + Math.log2(it.total + 1));
+                  // Figma 10: 균일 크기 단색 원형 핀(숫자 없음). 건수는 aria-label에.
                   return (
                     <Link
                       key={it.sido}
@@ -132,15 +131,7 @@ export default function MapPage() {
                       aria-label={`${it.sido} ${it.total}건`}
                       className={`map-pin map-pin--${STATUS_CLASS[s]}`}
                     >
-                      <circle cx={coord.x} cy={coord.y} r={r} />
-                      <text
-                        x={coord.x}
-                        y={coord.y + 1.4}
-                        textAnchor="middle"
-                        className="map-pin__count"
-                      >
-                        {it.total}
-                      </text>
+                      <circle cx={coord.x} cy={coord.y} r={3.2} />
                     </Link>
                   );
                 })}

@@ -390,7 +390,7 @@ export default function ReportWizard() {
                 onChange={onFileChange}
               />
               <span className="upload-zone__title">📷 사진 촬영 / 갤러리</span>
-              <span className="upload-zone__hint">
+              <span className="upload-zone__hint upload-zone__hint--strong">
                 직접 촬영한 원본 사진만 가능합니다
               </span>
               <span className="upload-zone__hint">
@@ -398,11 +398,12 @@ export default function ReportWizard() {
               </span>
             </label>
 
+            <p className="upload-caption">
+              📷 원본 사진·영상만 가능 · EXIF 메타데이터 필요
+            </p>
+
             {files.length > 0 && (
               <>
-                <p className="upload-caption">
-                  📷 원본 사진·영상만 가능 · EXIF 메타데이터 필요
-                </p>
                 <div className="upload-grid">
                   {files.map((p, i) => (
                     <div key={`${p.file.name}-${i}`} className="upload-thumb">
@@ -454,9 +455,12 @@ export default function ReportWizard() {
 
           {/* 의혹 유형(분류) */}
           <label className="field">
-            <span className="field__label">의혹 유형</span>
+            <span className="field__label">
+              의혹 유형 <span aria-hidden="true">*</span>
+            </span>
             <select
               className="input"
+              aria-label="의혹 유형"
               value={draft.category}
               onChange={(e) => set("category", e.target.value)}
             >
@@ -480,10 +484,6 @@ export default function ReportWizard() {
               placeholder="발견 상황을 구체적으로 적어주세요"
             />
           </label>
-          <p className="page-intro">
-            관찰한 사실을 그대로 기록해 주세요. 단정적인 주장보다, 무엇을 언제
-            어디서 보았는지 검증 가능한 형태로 적어 주시면 도움이 됩니다.
-          </p>
 
           {/* 추가 정보(선택) — Figma 02엔 없는 보강 필드는 접어둔다 */}
           <details className="more-data">
@@ -534,9 +534,6 @@ export default function ReportWizard() {
             />
             제보 내용이 사실임을 확인하며, 위치·기기 정보 수집에 동의합니다
           </label>
-          {!draft.consent && (
-            <p className="page-intro">제출하려면 동의가 필요합니다.</p>
-          )}
 
           {progress && (
             <p role="status" aria-live="polite" className="page-intro">
