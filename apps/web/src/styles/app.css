@@ -1123,16 +1123,11 @@ textarea.input {
 }
 .done-card::before {
   content: "✓";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin: 0 auto var(--space-4);
-  border-radius: 50%;
-  background: var(--color-success-soft);
-  color: var(--color-success);
-  font-size: 1.75rem;
+  display: block;
+  margin: 0 auto var(--space-3);
+  color: var(--color-state-verified); /* Figma 큰 초록 체크 #1a7f5a */
+  font-size: 56px;
+  line-height: 1;
   font-weight: var(--weight-bold);
 }
 .done-card > h1 {
@@ -1149,13 +1144,13 @@ textarea.input {
   font-weight: var(--weight-bold);
 }
 
-/* 완료 화면 접수번호 강조(0013, 디자인 04 navy) */
+/* 완료 화면 접수번호(Figma 04: 퍼플 14px medium) */
 .done-card__tracking {
-  color: var(--color-navy);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-xl);
-  letter-spacing: 0.04em;
-  margin: var(--space-1) 0 0;
+  color: var(--color-publish);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  letter-spacing: 0.03em;
+  margin: 0;
 }
 
 /* ── 상태조회(0013) ──────────────────────────────────────── */
