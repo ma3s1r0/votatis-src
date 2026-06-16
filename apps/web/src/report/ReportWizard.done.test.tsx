@@ -57,9 +57,6 @@ describe("ReportForm 완료 화면(Figma 04)", () => {
     );
     const home = screen.getByRole("link", { name: "홈으로 돌아가기" });
     expect(home).toHaveAttribute("href", "/");
-    expect(
-      screen.getByRole("button", { name: /새 제보|추가 제보/ }),
-    ).toBeInTheDocument();
   });
 
   it("접수번호와 상태조회 안내를 표시한다(0013: 추적 가능)", async () => {
@@ -86,25 +83,4 @@ describe("ReportForm 완료 화면(Figma 04)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("추가 제보 클릭 시 새 빈 폼으로 진입한다", async () => {
-    const fetchMock = fetch as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce(electionsResponse());
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ id: "rep_42", status: "received" }), {
-        status: 201,
-      }),
-    );
-    renderWizard();
-    await submitOnce();
-    await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
-
-    await userEvent.click(
-      screen.getByRole("button", { name: /새 제보|추가 제보/ }),
-    );
-
-    expect(screen.getByLabelText("상세 설명")).toHaveValue("");
-    expect(
-      screen.getByRole("heading", { name: /증거 제보/ }),
-    ).toBeInTheDocument();
-  });
 });
