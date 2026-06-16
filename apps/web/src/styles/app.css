@@ -682,8 +682,8 @@ textarea.input {
 }
 .queue-stat {
   margin: var(--space-2) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
+  color: #8792a2;
+  font-size: 0.75rem; /* Figma 12px */
 }
 .kpi-row {
   display: flex;
@@ -697,18 +697,26 @@ textarea.input {
   align-items: center;
   gap: 2px;
   padding: var(--space-3);
-  background: var(--color-surface-strong);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: #d9d9d9; /* Figma KPI 카드 */
+  border-radius: var(--radius-md);
 }
 .kpi-card__num {
-  font-size: var(--text-xl);
+  font-size: 1.375rem; /* Figma 22px */
   font-weight: var(--weight-bold);
-  color: var(--color-navy);
+  color: #000;
 }
 .kpi-card__label {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  font-size: 0.6875rem; /* Figma 11px */
+  font-weight: var(--weight-medium);
+  color: #000;
+}
+/* 검수큐 카드 EXIF 요약 줄 */
+.archive-item__exif {
+  font-size: 0.6875rem; /* 11px */
+  color: var(--color-state-verified);
+}
+.archive-item__exif--warn {
+  color: var(--color-state-verifying);
 }
 .archive-item {
   display: flex;

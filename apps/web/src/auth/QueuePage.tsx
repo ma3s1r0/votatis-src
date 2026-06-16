@@ -113,6 +113,14 @@ export default function QueuePage() {
                     </span>
                     {r.collectedAt && <span> · {formatDateTime(r.collectedAt)}</span>}
                   </div>
+                  <p
+                    className={
+                      "archive-item__exif" +
+                      (r.verified ? "" : " archive-item__exif--warn")
+                    }
+                  >
+                    {r.verified ? "EXIF ✓ 원본 확인" : "EXIF ⚠ 확인 필요"}
+                  </p>
                 </div>
                 <Link
                   to={`/admin/reports/${r.id}`}
