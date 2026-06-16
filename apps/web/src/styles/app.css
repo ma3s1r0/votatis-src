@@ -1323,6 +1323,11 @@ textarea.input {
   padding: var(--space-4);
   text-decoration: none;
 }
+.my-reports__body {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
 .my-reports__number {
   color: var(--color-navy);
   font-weight: var(--weight-bold);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import TabBar from "../TabBar";
-import { fetchTrackingStatus, type TrackingStatus } from "./api";
+import { fetchTrackingStatus, type TrackingStatus, type TrackingStage } from "./api";
+import { getMyReports } from "./storage";
 
 type State =
   | { status: "idle" }
@@ -17,10 +18,27 @@ function archiveHref(publicUrl: string): string {
   return `/archive/${id}`;
 }
 
+const STAGE_LABEL: Record<TrackingStage, string> = {
+  received: "접수됨",
+  reviewing: "검수 중",
+  verified: "검증 완료",
+  published: "공개",
+};
+// 단계 → 상태 dot(공용 .status). 진행 전반=검수중(주황), 완료/공개=검증됨(초록).
+function stageStatusClass(stage: TrackingStage): string {
+  return stage === "verified" || stage === "published"
+    ? "status--verified"
+    : "status--verifying";
+}
+
+// 내 제보 카드: 접수번호 + 현재 단계(익명 설계 — 제목/도메인 미보관).
+type MyItem = { number: string; stage: TrackingStage | null };
+
 export default function TrackStatusPage() {
   const [params, setParams] = useSearchParams();
   const [input, setInput] = useState(params.get("number") ?? "");
   const [state, setState] = useState<State>({ status: "idle" });
+  const [myList, setMyList] = useState<MyItem[]>([]);
 
   async function lookup(number: string) {
     const trimmed = number.trim();
@@ -38,11 +56,31 @@ export default function TrackStatusPage() {
     }
   }
 
-  // URL ?number= 로 진입하면 자동 조회(완료 화면·내 제보에서 딥링크).
   useEffect(() => {
     const fromUrl = params.get("number");
     if (fromUrl) void lookup(fromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 내 제보 목록(localStorage 접수번호) — 각 번호의 현재 단계를 병렬 조회.
+  useEffect(() => {
+    let alive = true;
+    const nums = getMyReports();
+    if (nums.length === 0) return;
+    Promise.all(
+      nums.map(async (number) => {
+        const res = await fetchTrackingStatus(number);
+        return {
+          number,
+          stage: res.ok ? res.status.currentStage : null,
+        } as MyItem;
+      }),
+    ).then((items) => {
+      if (alive) setMyList(items);
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   function onSubmit(e: React.FormEvent) {
@@ -60,10 +98,6 @@ export default function TrackStatusPage() {
           </Link>
           <h1 className="page-head__title">제보 상태 조회</h1>
         </div>
-        <p className="page-intro">
-          접수번호로 제보의 진행 상태를 확인할 수 있습니다. 본문·첨부 등 내용은
-          공개되지 않으며 단계만 표시됩니다.
-        </p>
 
         <form onSubmit={onSubmit} className="track-form">
           <label className="track-form__label">
@@ -122,6 +156,36 @@ export default function TrackStatusPage() {
                 공개 보기
               </Link>
             )}
+          </section>
+        )}
+
+        {myList.length > 0 && (
+          <section aria-label="내 제보 목록">
+            <h2>내 제보 목록</h2>
+            <ul className="my-reports">
+              {myList.map((m) => (
+                <li key={m.number}>
+                  <Link
+                    to={`/track?number=${encodeURIComponent(m.number)}`}
+                    className="my-reports__link"
+                    onClick={() => {
+                      setInput(m.number);
+                      void lookup(m.number);
+                    }}
+                  >
+                    <span className="my-reports__body">
+                      <span className="my-reports__number">{m.number}</span>
+                      {m.stage && (
+                        <span className={`status ${stageStatusClass(m.stage)}`}>
+                          <span className="status__dot" /> {STAGE_LABEL[m.stage]}
+                        </span>
+                      )}
+                    </span>
+                    <span className="my-reports__action">상태 조회 →</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
       </main>
