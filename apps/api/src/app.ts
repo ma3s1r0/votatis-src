@@ -5,6 +5,8 @@ import type { StoragePort } from "./storage.js";
 import { createAuthApp } from "./auth-routes.js";
 import { createReportApp } from "./report-routes.js";
 import { createAdminApp } from "./admin-routes.js";
+import { createGeocodeApp } from "./geocode-routes.js";
+import { loadRegionPolygons } from "./geocode/dataset.js";
 import { FakeMosaic, type MosaicPort } from "./mosaic.js";
 
 // 메인 앱 팩토리. db·storage 를 주입(0002 패턴)하고 하위 앱을 마운트한다.
@@ -44,6 +46,8 @@ export function createApp(opts: {
       submitterSalt: opts.submitterSalt,
     }),
   );
+  // 0021 역지오코딩(EXIF GPS → 시군구). 데이터 미탑재 시 region=null(graceful).
+  app.route("/api/geocode", createGeocodeApp(loadRegionPolygons()));
 
   return app;
 }

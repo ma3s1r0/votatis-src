@@ -1452,3 +1452,10 @@ textarea.input {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border, #d9d9d9);
 }
+
+/* 0021 위치 자동입력 안내 */
+.field__hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted, #6b7280);
+}

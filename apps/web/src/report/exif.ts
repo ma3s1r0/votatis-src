@@ -6,6 +6,8 @@ export type ExifMeta = {
   dateTimeOriginal?: string;
   make?: string;
   model?: string;
+  // 0021: GPS IFD 가 있으면 십진 좌표(위도/경도).
+  gps?: { lat: number; lng: number };
 };
 
 export type BlockReason = "not_original" | "mime_mismatch";
@@ -118,7 +120,7 @@ async function extractJpegExif(file: File): Promise<ExifMeta | null> {
         view.getUint8(app1Start + 2) === 0x69 &&
         view.getUint8(app1Start + 3) === 0x66
       ) {
-        return parseTiff(view, app1Start + 6);
+        return parseExifTiff(view, app1Start + 6);
       }
     }
     offset += 2 + size;
@@ -127,8 +129,9 @@ async function extractJpegExif(file: File): Promise<ExifMeta | null> {
   return {};
 }
 
-// TIFF 헤더(바이트오더 + IFD0) 에서 Make/Model/ExifIFD→DateTimeOriginal 추출.
-function parseTiff(view: DataView, tiffStart: number): ExifMeta {
+// TIFF 헤더(바이트오더 + IFD0) 에서 Make/Model/ExifIFD→DateTimeOriginal + GPS IFD 추출.
+// 0021 테스트를 위해 export(순수 함수 — DataView + tiffStart 만으로 검증 가능).
+export function parseExifTiff(view: DataView, tiffStart: number): ExifMeta {
   try {
     const le = view.getUint16(tiffStart) === 0x4949; // II=little, MM=big
     const u16 = (o: number) => view.getUint16(o, le);
@@ -149,7 +152,44 @@ function parseTiff(view: DataView, tiffStart: number): ExifMeta {
       return s;
     };
 
-    const scanIfd = (ifdStart: number, onExifPointer?: (p: number) => void) => {
+    // GPS 좌표(도/분/초 RATIONAL ×3) → 십진. count 3 이면 값은 항상 오프셋 참조.
+    const readGpsDms = (entry: number): number => {
+      const off = tiffStart + u32(entry + 8);
+      const rat = (o: number) => {
+        const num = u32(o);
+        const den = u32(o + 4) || 1;
+        return num / den;
+      };
+      return rat(off) + rat(off + 8) / 60 + rat(off + 16) / 3600;
+    };
+
+    const scanGps = (gpsStart: number) => {
+      const n = u16(gpsStart);
+      let latRef = "N";
+      let lngRef = "E";
+      let lat: number | undefined;
+      let lng: number | undefined;
+      for (let i = 0; i < n; i++) {
+        const entry = gpsStart + 2 + i * 12;
+        const tag = u16(entry);
+        if (tag === 0x0001) latRef = readAscii(entry).trim() || "N";
+        else if (tag === 0x0002) lat = readGpsDms(entry);
+        else if (tag === 0x0003) lngRef = readAscii(entry).trim() || "E";
+        else if (tag === 0x0004) lng = readGpsDms(entry);
+      }
+      if (lat !== undefined && lng !== undefined) {
+        meta.gps = {
+          lat: latRef === "S" ? -lat : lat,
+          lng: lngRef === "W" ? -lng : lng,
+        };
+      }
+    };
+
+    const scanIfd = (
+      ifdStart: number,
+      onExifPointer?: (p: number) => void,
+      onGpsPointer?: (p: number) => void,
+    ) => {
       const n = u16(ifdStart);
       for (let i = 0; i < n; i++) {
         const entry = ifdStart + 2 + i * 12;
@@ -158,15 +198,34 @@ function parseTiff(view: DataView, tiffStart: number): ExifMeta {
         else if (tag === 0x0110) meta.model = readAscii(entry).trim() || undefined;
         else if (tag === 0x8769 && onExifPointer)
           onExifPointer(tiffStart + u32(entry + 8));
+        else if (tag === 0x8825 && onGpsPointer)
+          onGpsPointer(tiffStart + u32(entry + 8));
         else if (tag === 0x9003)
           meta.dateTimeOriginal = readAscii(entry).trim() || undefined;
       }
     };
 
-    scanIfd(ifd0, (exifIfd) => scanIfd(exifIfd));
+    scanIfd(
+      ifd0,
+      (exifIfd) => scanIfd(exifIfd),
+      (gpsIfd) => scanGps(gpsIfd),
+    );
     return meta;
   } catch {
     return {};
+  }
+}
+
+// 0021: 첨부(JPEG)에서 GPS 좌표만 추출. 없으면 null. 위저드가 시군구 자동입력에 사용.
+export async function extractGps(
+  file: File,
+): Promise<{ lat: number; lng: number } | null> {
+  try {
+    if (file.type !== "image/jpeg") return null; // 현 파서 JPEG 한정
+    const meta = await extractJpegExif(file);
+    return meta?.gps ?? null;
+  } catch {
+    return null;
   }
 }
 

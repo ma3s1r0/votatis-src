@@ -1,7 +1,7 @@
 ---
 id: 0021
 title: EXIF GPS → 시군구 자동 입력 (오프라인 폴리곤 역지오코딩)
-status: not-started
+status: in-progress
 owner: backend-dev + frontend-dev
 created: 2026-06-16
 updated: 2026-06-16
@@ -27,16 +27,19 @@ depends_on: [0015, 0019]
 4. 제출 시 자동입력 여부를 출처로 기록(무결성).
 
 ## 수용 기준 (Acceptance criteria — 테스트 가능하게)
-- [ ] `extractGps(jpegBytes)` — GPS IFD(0x8825)의 위도/경도(+Ref N/S/E/W)를 십진 좌표로 반환.
-      GPS 없으면 `null`. (단위 테스트: GPS 포함/미포함 JPEG 바이트 픽스처)
-- [ ] `reverseRegion(lat,lng)` — 번들된 시군구 폴리곤에 point-in-polygon → `{sido,sigungu}`.
-      경계 밖(바다/국외)·미매칭 → `null`. (픽스처 폴리곤으로 내부/외부/경계 케이스)
-- [ ] `POST /api/geocode/reverse {lat,lng}` → 200 `{sido,sigungu}` 또는 204/`{region:null}`.
-      입력 검증: lat∈[-90,90], lng∈[-180,180] 아니면 400.
-- [ ] 클라: GPS 있는 사진 첨부 시 빈 시도/시군구를 자동 채움. 이미 값 있으면 유지(덮지 않음).
-- [ ] 클라: GPS 없거나 역지오코딩 실패 시 자동입력 없이 조용히 진행(에러 노출 안 함).
-- [ ] 무결성: 자동입력된 위치는 `locationSource: "exif-gps"` 로 기록(수동 입력과 구분).
-- [ ] 회귀: 자동입력은 0015 EXIF 차단 판정과 독립(차단된 파일은 GPS도 안 씀).
+- [x] `parseExifTiff`/`extractGps` — GPS IFD(0x8825)의 위도/경도(+Ref N/S/E/W)를 십진 좌표로 반환.
+      GPS 없으면 `null`. → `apps/web/src/report/exif.gps.test.ts`
+- [x] `reverseRegion(lat,lng,dataset)` — point-in-polygon(구멍 제외) → `{sido,sigungu}`,
+      미매칭/빈 데이터셋 → `null`. → `apps/api/src/geocode/reverse.test.ts`
+- [x] `POST /api/geocode/reverse {lat,lng}` → 200 `{region}`(미매칭 null), 범위초과 400.
+      → `apps/api/src/geocode-routes.test.ts`
+- [x] 클라: GPS 있는 사진 첨부 시 빈 위치를 시군구로 자동 채움, 기존 입력은 유지(덮지 않음).
+      → `apps/web/src/report/ReportWizard.geofill.test.tsx`
+- [x] 클라: GPS 없거나 역지오코딩 실패 시 자동입력 없이 조용히 진행(에러 노출 안 함).
+- [ ] **데이터셋(잔여 핵심)**: 전국 시군구 경계를 `RegionPolygon[]` 로 탑재해야 실제 동작.
+      현재 `loadRegionPolygons()`=`[]` → endpoint 항상 null(graceful). 소스/라이선스/용량 확정 필요.
+- [ ] 무결성: 자동입력 위치 `locationSource: "exif-gps"` 기록(수동과 구분) — 데이터 탑재 시 함께.
+- [x] 회귀: 자동입력은 0015 EXIF 차단 판정과 독립(차단 파일은 추가 안 되므로 GPS 미사용).
 
 ## 테스트 계획 (TDD — Red 먼저)
 - `apps/web/src/report/exif.gps.test.ts` — extractGps: GPS IFD 파싱(위도/경도/Ref, 분·초 RATIONAL), 미포함→null.

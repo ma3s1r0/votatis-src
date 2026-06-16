@@ -70,6 +70,28 @@ function normalizeFields(
   return Object.entries(fields).map(([field, reason]) => ({ field, reason }));
 }
 
+// ── 역지오코딩 (0021: EXIF GPS → 시군구) ─────────────────────────────────
+// 좌표만 전송, 시군구만 수신. 실패/미매칭/데이터미탑재는 모두 null(조용히 폴백).
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<{ sido: string; sigungu: string } | null> {
+  try {
+    const res = await fetch(`${base}/geocode/reverse`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat, lng }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      region: { sido: string; sigungu: string } | null;
+    };
+    return data.region;
+  } catch {
+    return null;
+  }
+}
+
 // ── 첨부 (0002 2단계 presigned) ─────────────────────────────────────────
 
 export const ALLOWED_MIME = [

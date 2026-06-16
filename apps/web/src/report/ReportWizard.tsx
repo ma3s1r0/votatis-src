@@ -4,10 +4,11 @@ import {
   createReport,
   uploadAttachment,
   validateFile,
+  reverseGeocode,
   type FieldError,
 } from "./api";
 import { sidoList } from "./regions";
-import { inspectAttachment, type BlockReason } from "./exif";
+import { inspectAttachment, extractGps, type BlockReason } from "./exif";
 import { categoriesForDomain, type ReportDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
 import TabBar from "../TabBar";
@@ -105,6 +106,8 @@ export default function ReportWizard() {
   );
   const [fileError, setFileError] = useState<string | null>(null);
   const [block, setBlock] = useState<BlockReason | null>(null);
+  // 0021: 사진 EXIF GPS 로 위치를 자동 채웠는지(안내 표시용).
+  const [geoFilled, setGeoFilled] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -168,6 +171,21 @@ export default function ReportWizard() {
       });
     }
     if (added.length > 0) setFiles((prev) => [...prev, ...added].slice(0, MAX_FILES));
+
+    // 0021: 사용자가 위치를 아직 안 적었으면, 첨부 사진의 EXIF GPS 로 시군구 자동 입력.
+    // GPS 없거나 역지오코딩 미매칭이면 조용히 넘어간다(수동 입력 우선, 덮어쓰지 않음).
+    if (!draft.location.trim()) {
+      for (const p of added) {
+        const gps = await extractGps(p.file);
+        if (!gps) continue;
+        const region = await reverseGeocode(gps.lat, gps.lng);
+        if (region) {
+          set("location", `${region.sido} ${region.sigungu}`);
+          setGeoFilled(true);
+        }
+        break;
+      }
+    }
   }
 
   function removeFile(index: number) {
@@ -467,7 +485,7 @@ export default function ReportWizard() {
             )}
           </div>
 
-          {/* 위치: 단일 입력칸(Figma 02) */}
+          {/* 위치: 단일 입력칸(Figma 02). 0021: 사진 GPS 로 자동 채워질 수 있음(수정 가능). */}
           <label className="field">
             <span className="field__label">위치 *</span>
             <input
@@ -475,9 +493,15 @@ export default function ReportWizard() {
               type="text"
               aria-label="위치"
               value={draft.location}
-              onChange={(e) => set("location", e.target.value)}
+              onChange={(e) => {
+                set("location", e.target.value);
+                if (geoFilled) setGeoFilled(false);
+              }}
               placeholder="📍 시/도 · 구/군 · 투표소명 (GPS 자동)"
             />
+            {geoFilled && (
+              <p className="field__hint">📍 사진 위치에서 자동 입력됨 · 수정 가능</p>
+            )}
           </label>
 
           {/* 의혹 유형(분류) */}
