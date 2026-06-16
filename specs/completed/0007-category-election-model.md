@@ -1,10 +1,10 @@
 ---
 id: 0007
 title: 분류·선거 모델 확장 + 공개 필터 복원
-status: in-progress
+status: completed
 owner: backend-dev + web-dev
 created: 2026-06-15
-updated: 2026-06-15
+updated: 2026-06-16
 depends_on: [0001, 0002, 0003, 0005]
 blocks: []
 dev_order: 7   # 0008과 독립이라 병렬 가능.

@@ -46,6 +46,7 @@ specs/
 | 0017 | 2인 교차검증 (서로 다른 reviewer 2인 동의) | completed | 2026-06-15 | completed/0017-dual-reviewer-verification.md |
 | 0018 | 지도 뷰 (시도 분포) + 공개 상세 조회수 | completed | 2026-06-15 | completed/0018-map-view-and-view-counts.md |
 | 0019 | 제보폼 단일 페이지화 (Figma 02 정렬) | completed | 2026-06-16 | completed/0019-single-page-report-form.md |
+| 0020 | AWS 최소·저비용 테스트 배포 (구성 A — 서버리스/프리티어) | completed | 2026-06-16 | completed/0020-aws-test-deploy.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 

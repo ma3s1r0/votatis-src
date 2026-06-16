@@ -72,7 +72,7 @@ export class VotatisStack extends Stack {
     // ── 보안 그룹 ──────────────────────────────────────────────────
     const lambdaSg = new ec2.SecurityGroup(this, "LambdaSg", { vpc });
     const rdsSg = new ec2.SecurityGroup(this, "RdsSg", { vpc });
-    rdsSg.addIngressRule(lambdaSg, ec2.Port.tcp(5432), "Lambda→Postgres");
+    rdsSg.addIngressRule(lambdaSg, ec2.Port.tcp(5432), "Lambda to Postgres");
 
     // ── RDS Postgres (단일 AZ, 프라이빗) ───────────────────────────
     const db = new rds.DatabaseInstance(this, "Db", {
@@ -108,7 +108,8 @@ export class VotatisStack extends Stack {
       db.dbInstanceEndpointAddress,
       ":",
       db.dbInstanceEndpointPort,
-      "/votatis",
+      // RDS Postgres 는 SSL 연결 요구(pg_hba). no-verify = SSL 사용 + 인증서 검증 생략(테스트).
+      "/votatis?sslmode=no-verify",
     ]);
 
     // ── 시크릿(앱 솔트 / 부트스트랩 비밀번호) ──────────────────────
