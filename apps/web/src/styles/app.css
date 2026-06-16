@@ -329,37 +329,34 @@ textarea.input {
   color: #667080;
   margin: var(--space-2) 0;
 }
+/* Leaflet 지도 컨테이너(Figma 캔버스 비율·radius 유지) */
 .map-view {
   margin-top: var(--space-2);
   background: #edf1f5;
   border-radius: 12px;
-  padding: var(--space-3);
   aspect-ratio: 342 / 476;
+  overflow: hidden;
+  position: relative;
+  z-index: 0; /* leaflet 내부 z-index 가 고정 탭바(z-index 20) 위로 새지 않도록 */
 }
-.map-view__svg {
+.map-view .leaflet-container {
   width: 100%;
   height: 100%;
-  display: block;
+  font: inherit;
+  background: #edf1f5;
 }
-.map-pin circle {
-  stroke: #fff;
-  stroke-width: 0.6;
-  cursor: pointer;
-}
-.map-pin__count {
-  font-size: 3px;
-  font-weight: var(--weight-medium);
-  fill: #fff;
-  pointer-events: none;
-}
-.map-pin--verified circle {
-  fill: #1a7f5a;
-}
-.map-pin--verifying circle {
-  fill: #9a6700;
-}
-.map-pin--unverified circle {
-  fill: #b3261e;
+
+/* 스크린리더 전용(시각적으로 숨김, 접근성 트리엔 노출) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* 범례 카드(Figma 10): 세로 — 제목 + 색 dot 3행 */
