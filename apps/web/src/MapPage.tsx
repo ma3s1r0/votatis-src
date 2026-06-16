@@ -95,9 +95,8 @@ export default function MapPage() {
     <>
       <main className="container">
         <h1>지도 뷰</h1>
-        <p className="page-intro">
-          검증을 거친 기록을 시도별로 집계한 분포입니다. 핀을 누르면 해당 지역
-          기록 목록으로 이동합니다.
+        <p className="map-sub">
+          전국 제보 분포 · 총 {totals.total.toLocaleString()}건
         </p>
 
         <DomainSegment
@@ -148,17 +147,22 @@ export default function MapPage() {
               </svg>
             </div>
 
+            <p className="map-hint">핀을 탭하면 해당 지역 제보 목록으로 이동</p>
+
             <div className="map-legend" role="group" aria-label="범례">
-              <span className="status status--verified">
-                <span className="status__dot" /> 검증됨 {totals.verified}
-              </span>
-              <span className="status status--verifying">
-                <span className="status__dot" /> 검증중 {totals.reviewing}
-              </span>
-              <span className="status status--unverified">
-                <span className="status__dot" /> 미검증 {totals.unverified}
-              </span>
-              <span className="map-legend__total">총 {totals.total}건</span>
+              <p className="map-legend__title">범례</p>
+              <div className="map-legend__row">
+                <span className="map-legend__dot map-legend__dot--verified" />
+                ✓ 검증됨 · {totals.verified}건
+              </div>
+              <div className="map-legend__row">
+                <span className="map-legend__dot map-legend__dot--verifying" />●
+                검증중 · {totals.reviewing}건
+              </div>
+              <div className="map-legend__row">
+                <span className="map-legend__dot map-legend__dot--unverified" />●
+                미검증 · {totals.unverified}건
+              </div>
             </div>
 
             {unmappedTotal > 0 && (

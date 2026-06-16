@@ -317,13 +317,23 @@ textarea.input {
 }
 
 /* ── 지도 뷰(0018) — 시도 정적 좌표 SVG 분포 ─────────────────── */
+/* 지도 서브/힌트(Figma 10) */
+.map-sub {
+  font-size: 0.75rem; /* 12px */
+  color: #8792a2;
+  margin: 0 0 var(--space-4);
+}
+.map-hint {
+  font-size: 0.6875rem; /* 11px */
+  color: #667080;
+  margin: var(--space-2) 0;
+}
 .map-view {
-  margin-top: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-strong);
-  border-radius: var(--radius-lg);
+  margin-top: var(--space-2);
+  background: #edf1f5;
+  border-radius: 12px;
   padding: var(--space-3);
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 342 / 476;
 }
 .map-view__svg {
   width: 100%;
@@ -342,29 +352,50 @@ textarea.input {
   pointer-events: none;
 }
 .map-pin--verified circle {
-  fill: var(--color-state-verified);
+  fill: #1a7f5a;
 }
 .map-pin--verifying circle {
-  fill: var(--color-state-verifying);
+  fill: #9a6700;
 }
 .map-pin--unverified circle {
-  fill: var(--color-state-unverified);
+  fill: #b3261e;
 }
 
+/* 범례 카드(Figma 10): 세로 — 제목 + 색 dot 3행 */
 .map-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
   margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--color-navy-soft);
+  padding: var(--space-4);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
 }
-.map-legend__total {
-  margin-left: auto;
-  font-weight: var(--weight-medium);
+.map-legend__title {
+  font-size: 0.75rem; /* 12px */
+  font-weight: var(--weight-bold);
   color: var(--color-navy);
+  margin: 0 0 var(--space-2);
+}
+.map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.75rem; /* 12px */
+  color: #425266;
+  margin: var(--space-1) 0;
+}
+.map-legend__dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+.map-legend__dot--verified {
+  background: #1a7f5a;
+}
+.map-legend__dot--verifying {
+  background: #9a6700;
+}
+.map-legend__dot--unverified {
+  background: #b3261e;
 }
 .map-unmapped {
   margin-top: var(--space-3);
