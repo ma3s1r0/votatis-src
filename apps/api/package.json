@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "build:lambda": "node scripts/build-lambda.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
@@ -25,6 +26,7 @@
     "@types/node": "^22.10.2",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.28.1",
+    "esbuild": "^0.25.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.0"

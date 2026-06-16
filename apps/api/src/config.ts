@@ -8,6 +8,7 @@ export type Config = {
     bucket: string;
     accessKeyId: string;
     secretAccessKey: string;
+    sessionToken?: string;
     endpoint?: string;
   };
   submitterSalt: string;
@@ -53,6 +54,9 @@ export function loadConfig(env: EnvSource): Config {
       bucket: require(env, "S3_BUCKET"),
       accessKeyId: require(env, "AWS_ACCESS_KEY_ID"),
       secretAccessKey: require(env, "AWS_SECRET_ACCESS_KEY"),
+      // Lambda 실행 역할은 임시 자격증명 + AWS_SESSION_TOKEN 을 자동 주입한다.
+      // 정적 IAM 유저 키로 돌릴 땐 미설정 → undefined.
+      sessionToken: env.AWS_SESSION_TOKEN || undefined,
       endpoint: env.S3_ENDPOINT || undefined,
     },
     submitterSalt: require(env, "SUBMITTER_SALT"),

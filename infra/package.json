@@ -1,0 +1,26 @@
+{
+  "name": "votatis-infra",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Votatis 최소·저비용 테스트 배포(A) — AWS CDK. S3+CloudFront(web) · API Gateway+Lambda(api) · 단일 AZ RDS(no NAT).",
+  "bin": {
+    "votatis": "bin/votatis.js"
+  },
+  "scripts": {
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "aws-cdk": "^2.170.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.2"
+  }
+}
