@@ -9,5 +9,12 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
+  },
+  "pnpm": {
+    "comment-supportedArchitectures": "Lambda(Linux x64) 배포 아티팩트용 네이티브 바이너리(@node-rs/argon2-linux-x64-gnu)를 darwin 호스트에서도 함께 받게 한다. apps/api build:lambda 가 동봉.",
+    "supportedArchitectures": {
+      "os": ["current", "linux"],
+      "cpu": ["current", "x64"]
+    }
   }
 }

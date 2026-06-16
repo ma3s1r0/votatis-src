@@ -41,6 +41,38 @@ describe("S3Storage.presignPut", () => {
   });
 });
 
+describe("S3Storage 세션 토큰(Lambda 실행 역할 임시 자격증명)", () => {
+  // Lambda 실행 역할은 임시 자격증명(AccessKey+Secret+SessionToken)을 주입한다.
+  // SessionToken 없이 SigV4 서명하면 S3 가 403(InvalidToken) → presigned URL 에
+  // X-Amz-Security-Token 이 반영되는지 확인(회귀: "키만 넣으면" Lambda S3 실패).
+  it("sessionToken 주입 시 presigned URL 에 X-Amz-Security-Token 포함", async () => {
+    const temp = new S3Storage({
+      region: "ap-northeast-2",
+      bucket: "votatis-attachments",
+      accessKeyId: "ASIATEMPKEY",
+      secretAccessKey: "tempsecret",
+      sessionToken: "FwoTESTsessiontoken==",
+    });
+    const { url } = await temp.presignPut({
+      key: "reports/r1/att1.bin",
+      contentType: "image/png",
+      contentLength: 10,
+      expiresInSeconds: 600,
+    });
+    expect(url).toContain("X-Amz-Security-Token=");
+  });
+
+  it("sessionToken 미지정 시 X-Amz-Security-Token 없음(정적 키 호환)", async () => {
+    const { url } = await storage.presignPut({
+      key: "k",
+      contentType: "image/png",
+      contentLength: 10,
+      expiresInSeconds: 600,
+    });
+    expect(url).not.toContain("X-Amz-Security-Token");
+  });
+});
+
 describe("S3Storage.presignGet", () => {
   it("GET presigned URL 에 버킷·키·서명 포함", async () => {
     const { url, expiresInSeconds } = await storage.presignGet({

@@ -66,6 +66,10 @@ export type S3StorageConfig = {
   bucket: string;
   accessKeyId: string;
   secretAccessKey: string;
+  // 선택: Lambda 실행 역할 등 임시 자격증명의 STS 세션 토큰. 지정 시 SigV4 서명에
+  // X-Amz-Security-Token 으로 반영(미지정이면 정적 키 — IAM 유저 등). 누락 시 임시
+  // 자격증명으로는 S3 가 403(InvalidToken).
+  sessionToken?: string;
   // 선택: S3 호환 스토리지(로컬/온프레)용 엔드포인트 오버라이드. 미지정 시 AWS S3.
   endpoint?: string;
 };
@@ -82,6 +86,7 @@ export class S3Storage implements StoragePort {
     this.client = new AwsClient({
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
+      sessionToken: config.sessionToken,
       service: "s3",
       region: config.region,
     });
