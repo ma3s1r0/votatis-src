@@ -6,6 +6,7 @@ import { loadSession, requireReviewer } from "./auth-routes.js";
 import {
   submitVerification,
   listPendingReports,
+  countReportsByStage,
   getReportForReview,
   REQUIRED_APPROVALS,
   type EvidenceLink,
@@ -66,6 +67,8 @@ function adminReport(r: {
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
     verified: r.vVerified ?? false,
+    // 검수 단계: null=대기(0동의) / false=검증중(1/2) / true=처리(2/2).
+    stage: r.vVerified === true ? "done" : r.vVerified === false ? "reviewing" : "pending",
   };
 }
 
@@ -87,7 +90,9 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
     const offset = Math.max(Number(c.req.query("offset") ?? 0) || 0, 0);
     const domain = c.req.query("domain") || undefined;
     const rows = await listPendingReports(db, { limit, offset, domain });
-    return c.json({ items: rows.map(adminReport), limit, offset });
+    // 단계별 집계(대기/검증중/처리) — 큐는 처리(verified)를 제외하므로 KPI는 별도 집계로 계산.
+    const stats = await countReportsByStage(db, { domain });
+    return c.json({ items: rows.map(adminReport), stats, limit, offset });
   });
 
   // 검토 상세: verified 무관 전체 + 첨부·출처·현재 판정·판정 이력.

@@ -252,6 +252,24 @@ export async function listPendingReports(
   return rows;
 }
 
+// 검수 단계별 집계: vVerified null=대기(0동의) / false=검증중(1/2) / true=처리(2/2).
+// 검수큐 KPI·통계줄용. domain 지정 시 해당 도메인만.
+export async function countReportsByStage(
+  db: Db,
+  params: { domain?: string } = {},
+): Promise<{ pending: number; reviewing: number; done: number }> {
+  const where = params.domain ? eq(report.domain, params.domain) : undefined;
+  const [r] = await db
+    .select({
+      pending: sql<number>`count(*) filter (where ${report.vVerified} is null)::int`,
+      reviewing: sql<number>`count(*) filter (where ${report.vVerified} = false)::int`,
+      done: sql<number>`count(*) filter (where ${report.vVerified} = true)::int`,
+    })
+    .from(report)
+    .where(where);
+  return { pending: r.pending, reviewing: r.reviewing, done: r.done };
+}
+
 // 관리자 상세: verified 무관 전체 + 첨부·출처·현재 판정·판정 이력.
 export async function getReportForReview(db: Db, reportId: string) {
   const [rep] = await db.select().from(report).where(eq(report.id, reportId));

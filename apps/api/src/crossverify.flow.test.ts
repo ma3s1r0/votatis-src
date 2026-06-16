@@ -119,4 +119,27 @@ describe("0017 교차검증 플로우 — 서로 다른 2인 동의로 verified 
     const body = (await after.json()) as { items: { id: string }[] };
     expect(body.items.some((i) => i.id === r.id)).toBe(false);
   });
+
+  // 검수 KPI 집계: 동의 수에 따라 대기(0)→검증중(1/2)→처리(2/2) 카운트가 이동한다.
+  it("stats: 동의 수에 따라 대기/검증중/처리 집계가 갱신된다", async () => {
+    const stats = async () =>
+      (
+        (await (
+          await ctx.app.request("/api/admin/reports", { headers: { cookie: cookie1 } })
+        ).json()) as { stats: { pending: number; reviewing: number; done: number } }
+      ).stats;
+
+    const r = await makeReport(ctx.db, "집계 대상");
+    const s0 = await stats(); // 대기(0동의)
+
+    await approve(r.id, cookie1); // 1/2 → 검증중
+    const s1 = await stats();
+    expect(s1.pending).toBe(s0.pending - 1);
+    expect(s1.reviewing).toBe(s0.reviewing + 1);
+
+    await approve(r.id, cookie2); // 2/2 → 처리
+    const s2 = await stats();
+    expect(s2.reviewing).toBe(s1.reviewing - 1);
+    expect(s2.done).toBe(s1.done + 1);
+  });
 });

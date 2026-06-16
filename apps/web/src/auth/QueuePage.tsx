@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchReports, logout, type AdminReport } from "./api";
+import {
+  fetchReports,
+  logout,
+  type AdminReport,
+  type QueueStats,
+} from "./api";
 import { formatDateTime } from "../format";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
+
+const ZERO_STATS: QueueStats = { pending: 0, reviewing: 0, done: 0 };
 
 type State =
   | { status: "loading" }
   | { status: "error" }
-  | { status: "ready"; items: AdminReport[] };
+  | { status: "ready"; items: AdminReport[]; stats: QueueStats };
 
 function regionLabel(r: AdminReport): string {
   return [r.sido, r.sigungu, r.eupMyeonDong].filter(Boolean).join(" ") || "지역 미상";
@@ -17,12 +24,13 @@ function domainLabel(r: AdminReport): string {
   return r.domain === "assembly" ? "집회" : "선거";
 }
 
-// 항목 검증 상태 → 상태 dot/라벨(공용 .status 클래스 재사용).
+// 항목 단계 → 상태 dot/라벨. pending=대기(0동의) / reviewing=검증중(1/2) / done=처리(2/2).
 function itemStatus(r: AdminReport): { cls: string; label: string } {
-  if (r.verified) return { cls: "status--verified", label: "검증됨" };
-  if (r.status === "submitted" || r.status === "pending_review")
+  if (r.stage === "done" || r.verified)
+    return { cls: "status--verified", label: "처리" };
+  if (r.stage === "reviewing")
     return { cls: "status--verifying", label: "검증중" };
-  return { cls: "status--unverified", label: "미검증" };
+  return { cls: "status--unverified", label: "대기" };
 }
 
 export default function QueuePage() {
@@ -35,7 +43,12 @@ export default function QueuePage() {
     setState({ status: "loading" });
     fetchReports(20, 0, domain ?? undefined)
       .then((res) => {
-        if (alive) setState({ status: "ready", items: res.items });
+        if (alive)
+          setState({
+            status: "ready",
+            items: res.items,
+            stats: res.stats ?? ZERO_STATS,
+          });
       })
       .catch(() => {
         if (alive) setState({ status: "error" });
@@ -50,13 +63,11 @@ export default function QueuePage() {
     navigate("/admin/login");
   }
 
-  // KPI는 현재 로드된 목록에서 파생(별도 집계 엔드포인트 없음).
-  const items = state.status === "ready" ? state.items : [];
-  const kpiDone = items.filter((i) => i.verified).length;
-  const kpiPending = items.filter(
-    (i) => !i.verified && (i.status === "submitted" || i.status === "pending_review"),
-  ).length;
-  const kpiReviewing = items.length - kpiDone - kpiPending;
+  // KPI/통계는 서버 단계별 집계(stats) 사용 — 큐 목록은 처리(verified)를 제외하므로 목록 파생 불가.
+  const stats = state.status === "ready" ? state.stats : ZERO_STATS;
+  const kpiPending = stats.pending;
+  const kpiReviewing = stats.reviewing;
+  const kpiDone = stats.done;
 
   return (
     <>

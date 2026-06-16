@@ -80,7 +80,11 @@ export type AdminReport = {
   collectedAt: string | null;
   verified: boolean;
   domain?: string;
+  // 검수 단계: pending=대기(0동의) / reviewing=검증중(1/2) / done=처리(2/2).
+  stage?: "pending" | "reviewing" | "done";
 };
+
+export type QueueStats = { pending: number; reviewing: number; done: number };
 
 export type Attachment = {
   id: string;
@@ -142,7 +146,12 @@ export async function fetchReports(
   limit = 20,
   offset = 0,
   domain?: string,
-): Promise<{ items: AdminReport[]; limit: number; offset: number }> {
+): Promise<{
+  items: AdminReport[];
+  stats?: QueueStats;
+  limit: number;
+  offset: number;
+}> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
@@ -154,6 +163,7 @@ export async function fetchReports(
   if (!res.ok) throw new Error(`reports_fetch_failed:${res.status}`);
   return (await res.json()) as {
     items: AdminReport[];
+    stats?: QueueStats;
     limit: number;
     offset: number;
   };
