@@ -93,4 +93,30 @@ describe("0017 교차검증 플로우 — 서로 다른 2인 동의로 verified 
     expect(json.crossVerification.approvers).toContain(ctx.reviewer.id);
     expect(json.verified).toBe(false);
   });
+
+  // 회귀: 1인 동의(1/2, vVerified=false)한 제보가 검수 큐에서 사라지면 안 된다.
+  // (큐 필터가 isNull(vVerified) 였을 때 1명 승인 후 큐에서 누락되던 버그)
+  it("1인 동의(1/2)한 제보도 검수 큐에 계속 보인다", async () => {
+    const r = await makeReport(ctx.db, "1/2 진행 중 제보");
+    await approve(r.id, cookie1); // 1/2 (verified=false)
+
+    const after = await ctx.app.request("/api/admin/reports", {
+      headers: { cookie: cookie1 },
+    });
+    const body = (await after.json()) as { items: { id: string }[] };
+    expect(body.items.some((i) => i.id === r.id)).toBe(true);
+  });
+
+  // 보강: 2/2 확정된 제보는 검수 큐에서 빠진다(공개로 이동).
+  it("2/2 확정된 제보는 검수 큐에서 빠진다", async () => {
+    const r = await makeReport(ctx.db, "2/2 확정 제보");
+    await approve(r.id, cookie1);
+    await approve(r.id, cookie2);
+
+    const after = await ctx.app.request("/api/admin/reports", {
+      headers: { cookie: cookie1 },
+    });
+    const body = (await after.json()) as { items: { id: string }[] };
+    expect(body.items.some((i) => i.id === r.id)).toBe(false);
+  });
 });

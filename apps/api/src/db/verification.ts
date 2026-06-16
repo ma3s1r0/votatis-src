@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, asc } from "drizzle-orm";
+import { and, desc, eq, isNull, asc, sql } from "drizzle-orm";
 import type { Db } from "./repository.js";
 import {
   report,
@@ -237,7 +237,9 @@ export async function listPendingReports(
   db: Db,
   params: { limit: number; offset: number; domain?: string },
 ) {
-  const conds = [isNull(report.vVerified)];
+  // 미검증(verified != true): null(신규) + false(1/2 진행 중) 모두 포함.
+  // (isNull 만 쓰면 1명 승인으로 vVerified=false 가 된 제보가 큐에서 사라지는 버그)
+  const conds = [sql`${report.vVerified} is distinct from true`];
   if (params.domain) conds.push(eq(report.domain, params.domain));
   const where = and(...conds);
   const rows = await db
