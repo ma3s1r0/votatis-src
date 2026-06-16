@@ -106,7 +106,7 @@ export type EvidenceLink = {
 export type Verification = {
   confidence: number | null;
   validity: string | null;
-  severity: number | null;
+  severity: string | null;
   legalIssue: boolean | null;
   verified: boolean;
   method: string;
@@ -170,7 +170,7 @@ export async function fetchReport(id: string): Promise<AdminReportDetail> {
 export type VerificationInput = {
   confidence?: number;
   validity?: string;
-  severity?: number;
+  severity?: string;
   legalIssue?: boolean;
   verified: boolean;
   method: string;

@@ -177,4 +177,23 @@ describe("ReportDetailPage 교차검증(0017)", () => {
       screen.getByRole("button", { name: /검증 승인\(동의\)/ }),
     ).toBeDisabled();
   });
+
+  // 회귀: 심각도를 숫자로 보내면 서버가 severity out_of_range(문자열 "1".."5" 기대)로 거부 → 검증 불가.
+  it("심각도를 문자열로 전송한다(severity out_of_range 회귀 방지)", async () => {
+    mockLoad(baseDetail);
+    renderDetail();
+    await screen.findByText("이상 득표율 제보");
+    await fillEvidence();
+    await userEvent.type(screen.getByLabelText("심각도 (1–5)"), "3");
+    await userEvent.click(
+      screen.getByRole("button", { name: /검증 승인\(동의\)/ }),
+    );
+
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    const post = fetchMock.mock.calls.find((c) => c[1]?.method === "POST");
+    expect(post).toBeTruthy();
+    const body = JSON.parse((post as unknown as [string, { body: string }])[1].body);
+    expect(body.severity).toBe("3");
+    expect(typeof body.severity).toBe("string");
+  });
 });

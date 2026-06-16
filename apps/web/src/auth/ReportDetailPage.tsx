@@ -130,7 +130,7 @@ export default function ReportDetailPage() {
       evidenceLinks,
       ...(confidence ? { confidence: Number(confidence) } : {}),
       ...(validity ? { validity } : {}),
-      ...(severity ? { severity: Number(severity) } : {}),
+      ...(severity ? { severity } : {}),
       ...(notes ? { notes } : {}),
       ...(unverifiedClaims ? { unverifiedClaims } : {}),
     });
