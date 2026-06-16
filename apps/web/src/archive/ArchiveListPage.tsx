@@ -7,7 +7,7 @@ import {
 } from "./api";
 import { categoriesForDomain } from "../categories";
 import { fetchElections, type Election } from "../elections";
-import { formatDateTime } from "../format";
+import { shortDate, formatCount } from "../format";
 import TabBar from "../TabBar";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
 
@@ -39,8 +39,13 @@ const SIDO_OPTIONS = [
   "제주특별자치도",
 ];
 
+// 시도 접미사 축약(Figma 06: "서울 강서구", "경기 부천").
+function shortSido(s: string | null): string {
+  if (!s) return "";
+  return s.replace(/(특별자치시|특별자치도|특별시|광역시|도)$/, "");
+}
 function regionLabel(r: ArchiveItem): string {
-  return [r.sido, r.sigungu].filter(Boolean).join(" ") || "지역 미상";
+  return [shortSido(r.sido), r.sigungu].filter(Boolean).join(" ") || "지역 미상";
 }
 
 // 쿼리스트링(useSearchParams)을 검색·필터·페이지의 단일 소스로 사용한다.
@@ -277,8 +282,10 @@ export default function ArchiveListPage() {
                   <p className="archive-item__verified">✓ 검증됨</p>
                   <div className="archive-item__meta">
                     <span>{regionLabel(r)}</span>
-                    {r.category && <span> · {r.category}</span>}
-                    {r.collectedAt && <span> · {formatDateTime(r.collectedAt)}</span>}
+                    {r.collectedAt && <span> · {shortDate(r.collectedAt)}</span>}
+                    {typeof r.viewCount === "number" && (
+                      <span> · 조회 {formatCount(r.viewCount)}</span>
+                    )}
                   </div>
                 </div>
               </li>

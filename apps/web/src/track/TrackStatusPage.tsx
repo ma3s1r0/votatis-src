@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import TabBar from "../TabBar";
 import { fetchTrackingStatus, type TrackingStatus, type TrackingStage } from "./api";
-import { getMyReports } from "./storage";
+import { getMyReports, type MyReport } from "./storage";
 
 type State =
   | { status: "idle" }
@@ -31,8 +31,14 @@ function stageStatusClass(stage: TrackingStage): string {
     : "status--verifying";
 }
 
-// 내 제보 카드: 접수번호 + 현재 단계(익명 설계 — 제목/도메인 미보관).
-type MyItem = { number: string; stage: TrackingStage | null };
+function domainLabel(domain?: string): string {
+  if (domain === "assembly") return "집회 현장";
+  if (domain === "election") return "선거 의혹";
+  return "";
+}
+
+// 내 제보 카드: 제출 시 저장된 메타(제목/도메인/날짜) + 조회한 현재 단계.
+type MyItem = MyReport & { stage: TrackingStage | null };
 
 export default function TrackStatusPage() {
   const [params, setParams] = useSearchParams();
@@ -65,13 +71,13 @@ export default function TrackStatusPage() {
   // 내 제보 목록(localStorage 접수번호) — 각 번호의 현재 단계를 병렬 조회.
   useEffect(() => {
     let alive = true;
-    const nums = getMyReports();
-    if (nums.length === 0) return;
+    const reports = getMyReports();
+    if (reports.length === 0) return;
     Promise.all(
-      nums.map(async (number) => {
-        const res = await fetchTrackingStatus(number);
+      reports.map(async (r) => {
+        const res = await fetchTrackingStatus(r.number);
         return {
-          number,
+          ...r,
           stage: res.ok ? res.status.currentStage : null,
         } as MyItem;
       }),
@@ -174,12 +180,19 @@ export default function TrackStatusPage() {
                     }}
                   >
                     <span className="my-reports__body">
-                      <span className="my-reports__number">{m.number}</span>
+                      <span className="my-reports__title">
+                        {m.title ?? m.number}
+                      </span>
                       {m.stage && (
                         <span className={`status ${stageStatusClass(m.stage)}`}>
                           <span className="status__dot" /> {STAGE_LABEL[m.stage]}
                         </span>
                       )}
+                      <span className="my-reports__sub">
+                        {[domainLabel(m.domain), m.createdAt?.slice(0, 10)]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
                     </span>
                     <span className="my-reports__action">상태 조회 →</span>
                   </Link>

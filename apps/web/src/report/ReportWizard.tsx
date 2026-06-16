@@ -199,7 +199,14 @@ export default function ReportWizard() {
 
     setSubmitting(false);
     sessionStorage.removeItem(DRAFT_KEY);
-    if (result.trackingNumber) addMyReport(result.trackingNumber);
+    // 내 제보(이 기기) — 제출 시점 메타를 함께 저장(서버 매핑 없음, 익명 유지).
+    if (result.trackingNumber)
+      addMyReport({
+        number: result.trackingNumber,
+        title: deriveTitle(draft),
+        domain: draft.domain,
+        createdAt: new Date().toISOString(),
+      });
     setDone({ id: result.id, trackingNumber: result.trackingNumber, attachment });
   }
 

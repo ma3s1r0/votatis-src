@@ -61,7 +61,7 @@ describe("ReportForm 접수번호 추적(0013)", () => {
     await submitOnce();
 
     await screen.findByRole("heading", { name: "제보가 접수되었습니다" });
-    expect(getMyReports()).toContain("VT-2026-0615-0042");
+    expect(getMyReports().map((r) => r.number)).toContain("VT-2026-0615-0042");
   });
 
   it("상태 조회 링크가 /track 으로 연결된다", async () => {
