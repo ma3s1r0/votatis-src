@@ -47,7 +47,7 @@ specs/
 | 0018 | 지도 뷰 (시도 분포) + 공개 상세 조회수 | completed | 2026-06-15 | completed/0018-map-view-and-view-counts.md |
 | 0019 | 제보폼 단일 페이지화 (Figma 02 정렬) | completed | 2026-06-16 | completed/0019-single-page-report-form.md |
 | 0020 | AWS 최소·저비용 테스트 배포 (구성 A — 서버리스/프리티어) | completed | 2026-06-16 | completed/0020-aws-test-deploy.md |
-| 0021 | EXIF GPS → 시군구 자동 입력 (오프라인 폴리곤 역지오코딩) | in-progress | 2026-06-16 | in-progress/0021-exif-gps-region-autofill.md |
+| 0021 | EXIF GPS → 시군구 자동 입력 (오프라인 폴리곤 역지오코딩) | in-review | 2026-06-16 | in-review/0021-exif-gps-region-autofill.md |
 
 ## 권장 개발 순서 (MVP 백로그)
 
