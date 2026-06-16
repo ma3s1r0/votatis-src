@@ -114,7 +114,8 @@ export async function uploadAttachment(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         filename: file.name,
-        contentType: file.type,
+        // 서버 계약 필드명은 mime (contentType 아님) — 불일치 시 400 unsupported_media_type.
+        mime: file.type,
         size: file.size,
       }),
     },

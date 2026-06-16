@@ -78,5 +78,9 @@ describe("ReportForm 첨부", () => {
     expect(calls[2][0]).toBe("https://s3.example/upload");
     expect(calls[2][1].method).toBe("PUT");
     expect(calls[3][0]).toBe("/api/reports/rep_1/attachments/att_1/finalize");
+    // 회귀: create 본문은 서버 계약대로 mime 필드를 보낸다(contentType 아님 — 불일치 시 400).
+    const createBody = JSON.parse(calls[1][1].body as string);
+    expect(createBody.mime).toBe("image/png");
+    expect(createBody.contentType).toBeUndefined();
   });
 });

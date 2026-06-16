@@ -49,7 +49,12 @@ const requireRoot = createMiddleware<Env>(async (c, next) => {
   await next();
 });
 
-export function createAuthApp(db: Db, opts: { inviteBaseUrl?: string } = {}) {
+export function createAuthApp(
+  db: Db,
+  opts: { inviteBaseUrl?: string; secureCookies?: boolean } = {},
+) {
+  // 운영(HTTPS)은 secure 쿠키. dev/LAN(HTTP)에선 false 여야 브라우저가 세션 쿠키를 저장한다.
+  const secureCookies = opts.secureCookies ?? true;
   const app = new Hono<Env>();
   const inviteBaseUrl = opts.inviteBaseUrl ?? "https://console.votatis.local/invite";
 
@@ -79,7 +84,7 @@ export function createAuthApp(db: Db, opts: { inviteBaseUrl?: string } = {}) {
     }
     setCookie(c, SESSION_COOKIE, result.token, {
       httpOnly: true,
-      secure: true,
+      secure: secureCookies,
       sameSite: "Lax",
       path: "/",
     });

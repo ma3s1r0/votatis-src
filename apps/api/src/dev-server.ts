@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import { createHash } from "node:crypto";
 import { buildApp } from "./app.js";
 import { makeMigratedDb } from "./db/test-db.js";
 import { InMemoryStorage } from "./storage.js";
@@ -14,7 +15,8 @@ const WEB_ORIGIN = process.env.WEB_ORIGIN ?? "http://localhost:5173";
 
 export async function startDevServer() {
   const db = await makeMigratedDb();
-  const storage = new InMemoryStorage();
+  // dev 업로드가 실제로 동작하도록 presignPut 이 수신 라우트(/api/dev/blob/)를 가리키게 한다.
+  const storage = new InMemoryStorage("/api/dev/blob/");
   const result = await seed(db, storage);
 
   const app = buildApp({
@@ -24,6 +26,20 @@ export async function startDevServer() {
     corsOrigins: [WEB_ORIGIN],
     submitterSalt: "votatis-dev-salt",
     inviteBaseUrl: `${WEB_ORIGIN}/invite`,
+    // dev/LAN 은 HTTP — secure 쿠키면 모바일(http://192.168…)에서 세션 저장이 안 돼 로그인 실패.
+    secureCookies: false,
+  });
+
+  // dev 전용 업로드 수신: presignPut 의 /api/dev/blob/<key> 로 PUT 된 바이트를
+  // InMemoryStorage 에 저장해 finalize(headObject) 가 통과하도록 한다(운영은 실 S3).
+  app.put("/api/dev/blob/*", async (c) => {
+    const key = decodeURIComponent(
+      c.req.path.replace(/^\/api\/dev\/blob\//, ""),
+    );
+    const buf = Buffer.from(await c.req.arrayBuffer());
+    const sha256 = createHash("sha256").update(buf).digest("hex");
+    storage.put(key, buf.length, sha256);
+    return c.body(null, 200);
   });
 
   const port = Number(process.env.PORT ?? 8787);
