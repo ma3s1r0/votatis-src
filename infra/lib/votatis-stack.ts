@@ -233,9 +233,21 @@ export class VotatisStack extends Stack {
       ],
     });
 
-    new s3deploy.BucketDeployment(this, "WebDeploy", {
-      sources: [s3deploy.Source.asset(WEB_ASSET)],
+    // 해시된 자산(assets/*)은 불변이라 장기 캐시, index.html 등 루트는 항상 재검증.
+    // (index.html 이 stale 하면 브라우저가 옛 JS 해시를 물어 신규 배포가 안 보임 → 캐시 버그)
+    new s3deploy.BucketDeployment(this, "WebAssets", {
+      sources: [s3deploy.Source.asset(WEB_ASSET, { exclude: ["index.html"] })],
       destinationBucket: webBucket,
+      prune: false,
+      cacheControl: [
+        s3deploy.CacheControl.fromString("public, max-age=31536000, immutable"),
+      ],
+    });
+    new s3deploy.BucketDeployment(this, "WebHtml", {
+      sources: [s3deploy.Source.asset(WEB_ASSET, { exclude: ["assets/**"] })],
+      destinationBucket: webBucket,
+      prune: false,
+      cacheControl: [s3deploy.CacheControl.fromString("no-cache")],
       distribution,
       distributionPaths: ["/*"],
     });
