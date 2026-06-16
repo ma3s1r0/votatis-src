@@ -33,15 +33,18 @@ function itemStatus(r: AdminReport): { cls: string; label: string } {
   return { cls: "status--unverified", label: "대기" };
 }
 
+type StageFilter = "pending" | "reviewing" | "done" | null;
+
 export default function QueuePage() {
   const [state, setState] = useState<State>({ status: "loading" });
   const [domain, setDomain] = useState<DomainOption>(null);
+  const [stage, setStage] = useState<StageFilter>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     let alive = true;
     setState({ status: "loading" });
-    fetchReports(20, 0, domain ?? undefined)
+    fetchReports(20, 0, domain ?? undefined, stage ?? undefined)
       .then((res) => {
         if (alive)
           setState({
@@ -56,7 +59,12 @@ export default function QueuePage() {
     return () => {
       alive = false;
     };
-  }, [domain]);
+  }, [domain, stage]);
+
+  // KPI 카드 클릭 → 해당 단계로 필터(같은 카드 다시 누르면 해제 = 활성 큐).
+  function onStage(s: Exclude<StageFilter, null>) {
+    setStage((prev) => (prev === s ? null : s));
+  }
 
   async function onLogout() {
     await logout();
@@ -83,21 +91,46 @@ export default function QueuePage() {
       </p>
 
       <div className="kpi-row">
-        <div className="kpi-card">
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "pending" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "pending"}
+          onClick={() => onStage("pending")}
+        >
           <span className="kpi-card__num">{kpiPending}</span>
           <span className="kpi-card__label">대기</span>
-        </div>
-        <div className="kpi-card">
+        </button>
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "reviewing" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "reviewing"}
+          onClick={() => onStage("reviewing")}
+        >
           <span className="kpi-card__num">{kpiReviewing}</span>
           <span className="kpi-card__label">검증중</span>
-        </div>
-        <div className="kpi-card">
+        </button>
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "done" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "done"}
+          onClick={() => onStage("done")}
+        >
           <span className="kpi-card__num">{kpiDone}</span>
           <span className="kpi-card__label">처리</span>
-        </div>
+        </button>
       </div>
 
       <DomainSegment value={domain} onChange={setDomain} includeAll />
+
+      {stage && (
+        <p className="queue-filter-note">
+          {stage === "pending" ? "대기" : stage === "reviewing" ? "검증중" : "처리"}{" "}
+          제보만 표시 중 ·{" "}
+          <button type="button" className="link-btn" onClick={() => setStage(null)}>
+            필터 해제
+          </button>
+        </p>
+      )}
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && <p role="alert">목록을 불러오지 못했습니다.</p>}

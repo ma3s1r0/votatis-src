@@ -89,8 +89,13 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
     const limit = Math.min(Number(c.req.query("limit") ?? 20) || 20, 100);
     const offset = Math.max(Number(c.req.query("offset") ?? 0) || 0, 0);
     const domain = c.req.query("domain") || undefined;
-    const rows = await listPendingReports(db, { limit, offset, domain });
-    // 단계별 집계(대기/검증중/처리) — 큐는 처리(verified)를 제외하므로 KPI는 별도 집계로 계산.
+    const stageRaw = c.req.query("stage");
+    const stage =
+      stageRaw === "pending" || stageRaw === "reviewing" || stageRaw === "done"
+        ? stageRaw
+        : undefined;
+    const rows = await listPendingReports(db, { limit, offset, domain, stage });
+    // 단계별 집계(대기/검증중/처리)는 stage 필터와 무관하게 항상 전체 KPI 로 제공.
     const stats = await countReportsByStage(db, { domain });
     return c.json({ items: rows.map(adminReport), stats, limit, offset });
   });

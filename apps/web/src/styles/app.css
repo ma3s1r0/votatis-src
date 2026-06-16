@@ -698,6 +698,30 @@ textarea.input {
   padding: var(--space-3);
   background: #d9d9d9; /* Figma KPI 카드 */
   border-radius: var(--radius-md);
+  /* 클릭형 버튼 — 전역 button 스타일 상쇄 */
+  appearance: none;
+  border: 2px solid transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.kpi-card--active {
+  border-color: var(--color-navy);
+  background: var(--color-navy-soft);
+}
+.queue-filter-note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.link-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-navy);
+  text-decoration: underline;
+  cursor: pointer;
 }
 .kpi-card__num {
   font-size: 1.375rem; /* Figma 22px */

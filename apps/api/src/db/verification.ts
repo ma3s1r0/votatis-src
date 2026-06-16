@@ -233,13 +233,20 @@ export async function submitVerification(
 
 // 검토 큐: 미검증(verified != true) 제보. 관리자 전용 — 공개 0002 와 가시성 분리.
 // domain 미지정 시 두 도메인 모두(0014).
+// 검수 단계 필터. 미지정=활성 큐(대기+검증중). pending/reviewing/done 단일 버킷.
+function stageCondition(stage?: string) {
+  if (stage === "pending") return isNull(report.vVerified);
+  if (stage === "reviewing") return eq(report.vVerified, false);
+  if (stage === "done") return eq(report.vVerified, true);
+  // 기본: 미검증(verified != true) = null(대기) + false(검증중).
+  return sql`${report.vVerified} is distinct from true`;
+}
+
 export async function listPendingReports(
   db: Db,
-  params: { limit: number; offset: number; domain?: string },
+  params: { limit: number; offset: number; domain?: string; stage?: string },
 ) {
-  // 미검증(verified != true): null(신규) + false(1/2 진행 중) 모두 포함.
-  // (isNull 만 쓰면 1명 승인으로 vVerified=false 가 된 제보가 큐에서 사라지는 버그)
-  const conds = [sql`${report.vVerified} is distinct from true`];
+  const conds = [stageCondition(params.stage)];
   if (params.domain) conds.push(eq(report.domain, params.domain));
   const where = and(...conds);
   const rows = await db

@@ -146,6 +146,7 @@ export async function fetchReports(
   limit = 20,
   offset = 0,
   domain?: string,
+  stage?: "pending" | "reviewing" | "done",
 ): Promise<{
   items: AdminReport[];
   stats?: QueueStats;
@@ -157,6 +158,7 @@ export async function fetchReports(
     offset: String(offset),
   });
   if (domain) params.set("domain", domain);
+  if (stage) params.set("stage", stage);
   const res = await fetch(`${ADMIN_BASE}/reports?${params.toString()}`, {
     credentials: "include",
   });

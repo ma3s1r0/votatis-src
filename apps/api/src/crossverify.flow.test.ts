@@ -142,4 +142,30 @@ describe("0017 교차검증 플로우 — 서로 다른 2인 동의로 verified 
     expect(s2.reviewing).toBe(s1.reviewing - 1);
     expect(s2.done).toBe(s1.done + 1);
   });
+
+  // stage 필터: ?stage=done 은 처리(verified)만, ?stage=reviewing 은 1/2 만.
+  it("stage 필터로 단계별 목록을 조회한다", async () => {
+    const reviewing = await makeReport(ctx.db, "검증중 대상");
+    await approve(reviewing.id, cookie1); // 1/2
+    const done = await makeReport(ctx.db, "처리 대상");
+    await approve(done.id, cookie1);
+    await approve(done.id, cookie2); // 2/2
+
+    const list = async (stage: string) =>
+      (
+        (await (
+          await ctx.app.request(`/api/admin/reports?stage=${stage}`, {
+            headers: { cookie: cookie1 },
+          })
+        ).json()) as { items: { id: string }[] }
+      ).items.map((i) => i.id);
+
+    const reviewingIds = await list("reviewing");
+    expect(reviewingIds).toContain(reviewing.id);
+    expect(reviewingIds).not.toContain(done.id);
+
+    const doneIds = await list("done");
+    expect(doneIds).toContain(done.id);
+    expect(doneIds).not.toContain(reviewing.id);
+  });
 });
