@@ -85,6 +85,8 @@ type CreateReportBody = {
   domain?: string;
   consent?: boolean;
   license?: string;
+  // 위치 출처(0021). 클라가 EXIF GPS 자동입력 시 "exif-gps" 전송. 그 외는 무시(수동).
+  locationSource?: string;
   sources?: SourceInput[];
   // honeypot: 봇이 채우면 거부(결정 5). 사람은 비워둠.
   website?: string;
@@ -168,6 +170,8 @@ export function createReportApp(opts: {
       sido: body.sido,
       sigungu: body.sigungu,
       eupMyeonDong: body.eupMyeonDong,
+      // 서버 권위: 허용된 출처 값만 저장(그 외는 수동=null).
+      locationSource: body.locationSource === "exif-gps" ? "exif-gps" : undefined,
       occurredAt: body.occurredAt ? new Date(body.occurredAt) : undefined,
       category: body.category,
       electionId: body.electionId,

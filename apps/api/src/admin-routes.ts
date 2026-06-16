@@ -51,6 +51,7 @@ function adminReport(r: {
   sido: string | null;
   sigungu: string | null;
   eupMyeonDong: string | null;
+  locationSource: string | null;
   domain: string;
   occurredAt: Date | null;
   collectedAt: Date;
@@ -64,6 +65,8 @@ function adminReport(r: {
     sido: r.sido,
     sigungu: r.sigungu,
     eupMyeonDong: r.eupMyeonDong,
+    // 0021: 위치 출처(검수자가 자동입력/수동 구분). "exif-gps" | null.
+    locationSource: r.locationSource,
     domain: r.domain,
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,

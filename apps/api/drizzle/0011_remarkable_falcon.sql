@@ -1,0 +1,1 @@
+ALTER TABLE "report" ADD COLUMN "location_source" text;

@@ -76,6 +76,8 @@ export type AdminReport = {
   sido: string | null;
   sigungu: string | null;
   eupMyeonDong: string | null;
+  // 0021: 위치 출처. "exif-gps"=사진 GPS 자동입력 / null=수동.
+  locationSource?: string | null;
   occurredAt: string | null;
   collectedAt: string | null;
   verified: boolean;

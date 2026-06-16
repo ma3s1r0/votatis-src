@@ -211,6 +211,8 @@ export default function ReportWizard() {
       electionId: draft.electionId || undefined,
       sido: parseSido(draft.location),
       sigungu: draft.location || undefined,
+      // 0021: 위치가 사진 GPS 로 자동입력된 상태면 출처 표식 전송(사용자가 수정하면 해제됨).
+      locationSource: geoFilled ? "exif-gps" : undefined,
       sources: draft.sourceUrl ? [draft.sourceUrl] : undefined,
       consent: draft.consent,
     });

@@ -20,11 +20,17 @@ function renderWizard() {
 
 // /api/elections 는 빈 목록, /api/geocode/reverse 는 시군구 반환.
 function routedFetch() {
-  return vi.fn(async (url: string) => {
+  return vi.fn(async (url: string, init?: RequestInit) => {
     if (typeof url === "string" && url.includes("/geocode/reverse")) {
       return new Response(
         JSON.stringify({ region: { sido: "서울특별시", sigungu: "강남구" } }),
         { status: 200 },
+      );
+    }
+    if (url === "/api/reports" && init?.method === "POST") {
+      return new Response(
+        JSON.stringify({ id: "r1", status: "received", trackingNumber: "VT-2026-0616-0001" }),
+        { status: 201 },
       );
     }
     return new Response(JSON.stringify({ items: [] }), { status: 200 });
@@ -49,6 +55,31 @@ describe("ReportForm 위치 자동입력(0021 EXIF GPS)", () => {
     const loc = screen.getByLabelText("위치") as HTMLInputElement;
     await waitFor(() => expect(loc.value).toBe("서울특별시 강남구"));
     expect(screen.getByText(/사진 위치에서 자동 입력됨/)).toBeInTheDocument();
+  });
+
+  it("자동입력 후 제출하면 locationSource='exif-gps' 를 전송한다", async () => {
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    renderWizard();
+    const img = new File(["x"], "photo.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("사진/PDF 첨부"), img);
+    await waitFor(() =>
+      expect((screen.getByLabelText("위치") as HTMLInputElement).value).toBe(
+        "서울특별시 강남구",
+      ),
+    );
+    await userEvent.type(screen.getByLabelText("상세 설명"), "관찰 정황");
+    await userEvent.click(screen.getByLabelText(/동의/));
+    await userEvent.click(screen.getByRole("button", { name: "제보 제출" }));
+
+    await waitFor(() => {
+      const createCall = fetchMock.mock.calls.find(
+        (c) => c[0] === "/api/reports" && c[1]?.method === "POST",
+      );
+      expect(createCall).toBeTruthy();
+      expect(JSON.parse(createCall![1].body as string).locationSource).toBe(
+        "exif-gps",
+      );
+    });
   });
 
   it("이미 위치를 입력했으면 자동입력이 덮어쓰지 않는다", async () => {

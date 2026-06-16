@@ -29,6 +29,27 @@ describe("제보 생성", () => {
     expect(row.submitter).not.toContain("10.0.0.1");
   });
 
+  // 0021: 위치 출처 — "exif-gps" 만 저장, 그 외 값/미지정은 null(수동).
+  it("locationSource='exif-gps' 는 저장된다", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "GPS 자동", sido: "서울특별시", locationSource: "exif-gps" }),
+    );
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.locationSource).toBe("exif-gps");
+  });
+
+  it("허용 외 locationSource 는 무시되어 null", async () => {
+    const res = await ctx.app.request(
+      "/reports",
+      jsonReq({ title: "수동", sido: "서울특별시", locationSource: "spoofed" }),
+    );
+    const { id } = (await res.json()) as { id: string };
+    const [row] = await ctx.db.select().from(report).where(eq(report.id, id));
+    expect(row.locationSource).toBeNull();
+  });
+
   // 수용 기준: 필수 필드 누락 → 400 + 어떤 필드인지.
   it("title 누락 → 400 + 필드 표기", async () => {
     const res = await ctx.app.request("/reports", jsonReq({ body: "내용만" }));

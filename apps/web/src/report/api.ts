@@ -8,6 +8,8 @@ export type ReportInput = {
   sido?: string;
   sigungu?: string;
   eupMyeonDong?: string;
+  // 위치 출처(0021). "exif-gps"=사진 GPS 자동입력. 미지정/그 외=수동.
+  locationSource?: string;
   occurredAt?: string;
   domain?: string;
   category?: string;

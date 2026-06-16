@@ -40,6 +40,8 @@ export const report = pgTable("report", {
   sido: text("sido"),
   sigungu: text("sigungu"),
   eupMyeonDong: text("eup_myeon_dong"),
+  // 위치 출처(0021). "exif-gps"=사진 GPS 자동입력 / null=수동. 무결성: 자동값을 수동과 구분.
+  locationSource: text("location_source"),
   // 공개 접수번호(0013). VT-YYYY-MMDD-NNNN. 발급 후 불변. 유니크.
   trackingNumber: text("tracking_number").unique(),
   // 도메인 세그먼트(0014). election | assembly. 앱 레벨 enum 검증(DB enum 타입 아님).

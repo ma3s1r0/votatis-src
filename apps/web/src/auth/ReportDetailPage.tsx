@@ -182,6 +182,9 @@ export default function ReportDetailPage() {
       </div>
       <div className="meta-row">
         <span>{regionLabel(r)}</span>
+        {r.locationSource === "exif-gps" && (
+          <span title="첨부 사진의 EXIF GPS 에서 자동 입력된 위치"> · 📍 사진 GPS 자동</span>
+        )}
         {r.occurredAt && <span> · 발생 {formatDateTime(r.occurredAt)}</span>}
         {r.collectedAt && <span> · 수집 {formatDateTime(r.collectedAt)}</span>}
       </div>
