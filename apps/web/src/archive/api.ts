@@ -17,6 +17,8 @@ export type ArchiveItem = {
   electionId: string | null;
   domain?: string;
   viewCount: number;
+  // 첫 이미지 첨부 썸네일(단기 presigned URL, 공개 게이트 적용). 없으면 미첨부/비이미지.
+  thumbnailUrl?: string;
 };
 
 export type ArchiveListResponse = {

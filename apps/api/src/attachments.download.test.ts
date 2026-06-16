@@ -228,6 +228,33 @@ describe("관리 첨부 다운로드", () => {
     expect(a.url).toBeUndefined();
   });
 
+  // 회귀: 검수 큐 목록에 첫 이미지 첨부 썸네일(presigned url) 동봉(회색 빈칸 방지).
+  it("검수 큐 목록 — stored 이미지 첨부가 있으면 thumbnailUrl 동봉", async () => {
+    const r = await makeReport(ctx.db, "썸네일 제보");
+    await storedAttachment(r.id); // image/png stored
+    const res = await ctx.app.request(`/api/admin/reports`, {
+      headers: { cookie },
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      items: { id: string; thumbnailUrl?: string }[];
+    };
+    const item = json.items.find((x) => x.id === r.id)!;
+    expect(item.thumbnailUrl).toMatch(/^https?:\/\//);
+  });
+
+  it("검수 큐 목록 — 첨부 없으면 thumbnailUrl 없음", async () => {
+    const r = await makeReport(ctx.db, "첨부없는 제보");
+    const res = await ctx.app.request(`/api/admin/reports`, {
+      headers: { cookie },
+    });
+    const json = (await res.json()) as {
+      items: { id: string; thumbnailUrl?: string }[];
+    };
+    const item = json.items.find((x) => x.id === r.id)!;
+    expect(item.thumbnailUrl).toBeUndefined();
+  });
+
   it("비active(disabled) 세션 → 403", async () => {
     const r = await makeReport(ctx.db, "제보");
     const attachmentId = await storedAttachment(r.id);

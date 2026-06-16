@@ -12,6 +12,7 @@ import {
   type EvidenceLink,
 } from "./db/verification.js";
 import { getStoredAttachmentForReview } from "./db/intake.js";
+import { firstImageThumbKeys } from "./db/thumbnails.js";
 import type { MosaicPort } from "./mosaic.js";
 import { processMosaicForReport } from "./db/mosaic.js";
 
@@ -97,7 +98,26 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
     const rows = await listPendingReports(db, { limit, offset, domain, stage });
     // 단계별 집계(대기/검증중/처리)는 stage 필터와 무관하게 항상 전체 KPI 로 제공.
     const stats = await countReportsByStage(db, { domain });
-    return c.json({ items: rows.map(adminReport), stats, limit, offset });
+    // 검수 썸네일: 검토 목적이므로 원본 키(gate=false)로 첫 이미지 첨부 presigned URL.
+    const thumbs = await firstImageThumbKeys(
+      db,
+      rows.map((r) => ({ id: r.id, domain: r.domain })),
+      { gate: false },
+    );
+    const items = await Promise.all(
+      rows.map(async (r) => ({
+        ...adminReport(r),
+        thumbnailUrl: thumbs.has(r.id)
+          ? (
+              await storage.presignGet({
+                key: thumbs.get(r.id)!,
+                expiresInSeconds: DOWNLOAD_TTL_SECONDS,
+              })
+            ).url
+          : undefined,
+      })),
+    );
+    return c.json({ items, stats, limit, offset });
   });
 
   // 검토 상세: verified 무관 전체 + 첨부·출처·현재 판정·판정 이력.

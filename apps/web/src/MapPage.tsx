@@ -102,6 +102,13 @@ export default function MapPage() {
     if (!el) return;
     try {
       let map = mapRef.current;
+      // 컨테이너가 교체된(리마운트) 경우 옛 인스턴스를 버리고 재초기화한다.
+      // (도메인 토글 등으로 div 가 새로 마운트되면 옛 map 은 분리된 DOM 에 묶여 표시 안 됨)
+      if (map && map.getContainer() !== el) {
+        map.remove();
+        map = null;
+        mapRef.current = null;
+      }
       if (!map) {
         map = L.map(el, { scrollWheelZoom: false }).setView([36.3, 127.8], 6);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -162,13 +169,14 @@ export default function MapPage() {
           assemblyLabel="집회 신고"
         />
 
-        {state.status === "loading" && <p>불러오는 중…</p>}
-        {state.status === "error" && (
+        {state.status === "error" ? (
           <p role="alert">지도 집계를 불러오지 못했습니다.</p>
-        )}
-
-        {state.status === "ready" && (
+        ) : (
           <>
+            {state.status === "loading" && <p>불러오는 중…</p>}
+
+            {/* 지도 컨테이너는 loading↔ready 사이에 계속 마운트한다(도메인 토글 시
+                언마운트되면 Leaflet 인스턴스가 분리돼 지도가 사라지는 버그 방지). */}
             <div
               ref={containerRef}
               className="map-view"
@@ -176,7 +184,9 @@ export default function MapPage() {
               aria-label="시도별 제보 분포 지도"
             />
 
-            {/* 접근성/키보드: 지역별 목록 링크(마커와 동일 이동) */}
+            {state.status === "ready" && (
+              <>
+                {/* 접근성/키보드: 지역별 목록 링크(마커와 동일 이동) */}
             <ul className="sr-only">
               {pins.map(({ it }) => (
                 <li key={it.sido}>
@@ -215,6 +225,8 @@ export default function MapPage() {
                   미지정 지역 {unmappedTotal}건
                 </button>
               </p>
+            )}
+              </>
             )}
           </>
         )}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createReport,
@@ -37,7 +37,19 @@ type Progress =
   | { phase: "upload_failed"; fileName: string };
 
 // 미리보기용 첨부 항목(파일 + EXIF 경고 여부).
-type Picked = { file: File; warn: boolean };
+type Picked = { file: File; warn: boolean; previewUrl?: string };
+
+// 이미지 파일의 로컬 미리보기 object URL(jsdom 등 미지원 환경 가드).
+function makePreviewUrl(f: File): string | undefined {
+  if (!f.type.startsWith("image/")) return undefined;
+  if (typeof URL.createObjectURL !== "function") return undefined;
+  return URL.createObjectURL(f);
+}
+function revokePreview(p: Picked): void {
+  if (p.previewUrl && typeof URL.revokeObjectURL === "function") {
+    URL.revokeObjectURL(p.previewUrl);
+  }
+}
 
 const emptyDraft: Draft = {
   body: "",
@@ -82,6 +94,15 @@ export default function ReportWizard() {
   const [draft, setDraft] = useState<Draft>(loadDraft);
   const [elections, setElections] = useState<Election[]>([]);
   const [files, setFiles] = useState<Picked[]>([]);
+  // 언마운트 시 남은 미리보기 object URL 정리(누수 방지).
+  const filesRef = useRef<Picked[]>([]);
+  filesRef.current = files;
+  useEffect(
+    () => () => {
+      for (const p of filesRef.current) revokePreview(p);
+    },
+    [],
+  );
   const [fileError, setFileError] = useState<string | null>(null);
   const [block, setBlock] = useState<BlockReason | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
@@ -140,13 +161,21 @@ export default function ReportWizard() {
         setBlock(verdict.reason);
         continue;
       }
-      added.push({ file: f, warn: verdict.kind === "warn" });
+      added.push({
+        file: f,
+        warn: verdict.kind === "warn",
+        previewUrl: makePreviewUrl(f),
+      });
     }
     if (added.length > 0) setFiles((prev) => [...prev, ...added].slice(0, MAX_FILES));
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const target = prev[index];
+      if (target) revokePreview(target);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   async function onSubmit() {
@@ -396,7 +425,16 @@ export default function ReportWizard() {
                 <div className="upload-grid">
                   {files.map((p, i) => (
                     <div key={`${p.file.name}-${i}`} className="upload-thumb">
-                      <div className="upload-thumb__img" aria-hidden="true" />
+                      {p.previewUrl ? (
+                        <img
+                          className="upload-thumb__img"
+                          src={p.previewUrl}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <div className="upload-thumb__img" aria-hidden="true" />
+                      )}
                       <button
                         type="button"
                         className="upload-thumb__x"

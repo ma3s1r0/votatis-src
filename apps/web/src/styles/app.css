@@ -766,6 +766,7 @@ textarea.input {
   height: 98px;
   border-radius: var(--radius-md);
   background: #eef1f5;
+  object-fit: cover;
 }
 .archive-item__body {
   flex: 1 1 auto;
@@ -1197,6 +1198,8 @@ textarea.input {
   height: 60px;
   border-radius: var(--radius-sm);
   background: var(--color-border);
+  object-fit: cover;
+  display: block;
 }
 .upload-thumb__x {
   position: absolute;

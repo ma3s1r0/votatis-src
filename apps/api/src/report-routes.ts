@@ -18,6 +18,7 @@ import {
   mapStats,
   incrementViewCount,
 } from "./db/intake.js";
+import { firstImageThumbKeys } from "./db/thumbnails.js";
 import { isReportCategory, isReportDomain, type ReportDomain } from "./categories.js";
 import { currentStage, buildTimeline } from "./tracking.js";
 import { ORIGINAL_PREFIX } from "./mosaic.js";
@@ -358,12 +359,27 @@ export function createReportApp(opts: {
       electionId,
       domain,
     });
-    return c.json({
-      items: rows.map(publicReport),
-      total,
-      limit,
-      offset,
-    });
+    // 리스트 썸네일: 공개 게이트(assembly=publicKey, election=storageKey) 적용한
+    // 첫 이미지 첨부 presigned URL. (원본 original/ 키는 assembly 에서 절대 미노출)
+    const thumbs = await firstImageThumbKeys(
+      db,
+      rows.map((r) => ({ id: r.id, domain: r.domain })),
+      { gate: true },
+    );
+    const items = await Promise.all(
+      rows.map(async (r) => ({
+        ...publicReport(r),
+        thumbnailUrl: thumbs.has(r.id)
+          ? (
+              await storage.presignGet({
+                key: thumbs.get(r.id)!,
+                expiresInSeconds: PRESIGN_TTL_SECONDS,
+              })
+            ).url
+          : undefined,
+      })),
+    );
+    return c.json({ items, total, limit, offset });
   });
 
   // B5. 공개 지도 통계(0018) — 시도별 상태 버킷 카운트. 카운트만(본문·식별정보 0).

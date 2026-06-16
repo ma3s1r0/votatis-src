@@ -82,6 +82,8 @@ export type AdminReport = {
   domain?: string;
   // 검수 단계: pending=대기(0동의) / reviewing=검증중(1/2) / done=처리(2/2).
   stage?: "pending" | "reviewing" | "done";
+  // 첫 이미지 첨부 썸네일(단기 presigned URL). 없으면 미첨부/비이미지.
+  thumbnailUrl?: string;
 };
 
 export type QueueStats = { pending: number; reviewing: number; done: number };
