@@ -130,7 +130,7 @@ export default function ReportDetailPage() {
       evidenceLinks,
       ...(confidence ? { confidence: Number(confidence) } : {}),
       ...(validity ? { validity } : {}),
-      ...(severity ? { severity: Number(severity) } : {}),
+      ...(severity ? { severity } : {}),
       ...(notes ? { notes } : {}),
       ...(unverifiedClaims ? { unverifiedClaims } : {}),
     });
@@ -200,7 +200,11 @@ export default function ReportDetailPage() {
             검증 완료 (공개됨)
           </p>
         ) : (
-          <p>서로 다른 검토자 {required}인의 동의가 모이면 공개됩니다.</p>
+          <p>
+            서로 다른 검토자 {required}인의 동의가 모이면 공개됩니다.
+            {approvals > 0 &&
+              ` 다른 검토자 ${required - approvals}명의 동의가 더 필요합니다.`}
+          </p>
         )}
       </section>
 
@@ -457,7 +461,7 @@ export default function ReportDetailPage() {
 
           {alreadyApproved && !completed && (
             <p role="status" className="text-muted">
-              이미 동의하셨습니다.
+              이미 동의하셨습니다 — 다른 검토자의 동의를 기다리는 중입니다.
             </p>
           )}
 

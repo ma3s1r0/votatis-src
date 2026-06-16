@@ -93,4 +93,79 @@ describe("0017 교차검증 플로우 — 서로 다른 2인 동의로 verified 
     expect(json.crossVerification.approvers).toContain(ctx.reviewer.id);
     expect(json.verified).toBe(false);
   });
+
+  // 회귀: 1인 동의(1/2, vVerified=false)한 제보가 검수 큐에서 사라지면 안 된다.
+  // (큐 필터가 isNull(vVerified) 였을 때 1명 승인 후 큐에서 누락되던 버그)
+  it("1인 동의(1/2)한 제보도 검수 큐에 계속 보인다", async () => {
+    const r = await makeReport(ctx.db, "1/2 진행 중 제보");
+    await approve(r.id, cookie1); // 1/2 (verified=false)
+
+    const after = await ctx.app.request("/api/admin/reports", {
+      headers: { cookie: cookie1 },
+    });
+    const body = (await after.json()) as { items: { id: string }[] };
+    expect(body.items.some((i) => i.id === r.id)).toBe(true);
+  });
+
+  // 보강: 2/2 확정된 제보는 검수 큐에서 빠진다(공개로 이동).
+  it("2/2 확정된 제보는 검수 큐에서 빠진다", async () => {
+    const r = await makeReport(ctx.db, "2/2 확정 제보");
+    await approve(r.id, cookie1);
+    await approve(r.id, cookie2);
+
+    const after = await ctx.app.request("/api/admin/reports", {
+      headers: { cookie: cookie1 },
+    });
+    const body = (await after.json()) as { items: { id: string }[] };
+    expect(body.items.some((i) => i.id === r.id)).toBe(false);
+  });
+
+  // 검수 KPI 집계: 동의 수에 따라 대기(0)→검증중(1/2)→처리(2/2) 카운트가 이동한다.
+  it("stats: 동의 수에 따라 대기/검증중/처리 집계가 갱신된다", async () => {
+    const stats = async () =>
+      (
+        (await (
+          await ctx.app.request("/api/admin/reports", { headers: { cookie: cookie1 } })
+        ).json()) as { stats: { pending: number; reviewing: number; done: number } }
+      ).stats;
+
+    const r = await makeReport(ctx.db, "집계 대상");
+    const s0 = await stats(); // 대기(0동의)
+
+    await approve(r.id, cookie1); // 1/2 → 검증중
+    const s1 = await stats();
+    expect(s1.pending).toBe(s0.pending - 1);
+    expect(s1.reviewing).toBe(s0.reviewing + 1);
+
+    await approve(r.id, cookie2); // 2/2 → 처리
+    const s2 = await stats();
+    expect(s2.reviewing).toBe(s1.reviewing - 1);
+    expect(s2.done).toBe(s1.done + 1);
+  });
+
+  // stage 필터: ?stage=done 은 처리(verified)만, ?stage=reviewing 은 1/2 만.
+  it("stage 필터로 단계별 목록을 조회한다", async () => {
+    const reviewing = await makeReport(ctx.db, "검증중 대상");
+    await approve(reviewing.id, cookie1); // 1/2
+    const done = await makeReport(ctx.db, "처리 대상");
+    await approve(done.id, cookie1);
+    await approve(done.id, cookie2); // 2/2
+
+    const list = async (stage: string) =>
+      (
+        (await (
+          await ctx.app.request(`/api/admin/reports?stage=${stage}`, {
+            headers: { cookie: cookie1 },
+          })
+        ).json()) as { items: { id: string }[] }
+      ).items.map((i) => i.id);
+
+    const reviewingIds = await list("reviewing");
+    expect(reviewingIds).toContain(reviewing.id);
+    expect(reviewingIds).not.toContain(done.id);
+
+    const doneIds = await list("done");
+    expect(doneIds).toContain(done.id);
+    expect(doneIds).not.toContain(reviewing.id);
+  });
 });

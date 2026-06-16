@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchReports, logout, type AdminReport } from "./api";
+import {
+  fetchReports,
+  logout,
+  type AdminReport,
+  type QueueStats,
+} from "./api";
 import { formatDateTime } from "../format";
 import DomainSegment, { type DomainOption } from "../DomainSegment";
+
+const ZERO_STATS: QueueStats = { pending: 0, reviewing: 0, done: 0 };
 
 type State =
   | { status: "loading" }
   | { status: "error" }
-  | { status: "ready"; items: AdminReport[] };
+  | { status: "ready"; items: AdminReport[]; stats: QueueStats };
 
 function regionLabel(r: AdminReport): string {
   return [r.sido, r.sigungu, r.eupMyeonDong].filter(Boolean).join(" ") || "지역 미상";
@@ -17,25 +24,34 @@ function domainLabel(r: AdminReport): string {
   return r.domain === "assembly" ? "집회" : "선거";
 }
 
-// 항목 검증 상태 → 상태 dot/라벨(공용 .status 클래스 재사용).
+// 항목 단계 → 상태 dot/라벨. pending=대기(0동의) / reviewing=검증중(1/2) / done=처리(2/2).
 function itemStatus(r: AdminReport): { cls: string; label: string } {
-  if (r.verified) return { cls: "status--verified", label: "검증됨" };
-  if (r.status === "submitted" || r.status === "pending_review")
+  if (r.stage === "done" || r.verified)
+    return { cls: "status--verified", label: "처리" };
+  if (r.stage === "reviewing")
     return { cls: "status--verifying", label: "검증중" };
-  return { cls: "status--unverified", label: "미검증" };
+  return { cls: "status--unverified", label: "대기" };
 }
+
+type StageFilter = "pending" | "reviewing" | "done" | null;
 
 export default function QueuePage() {
   const [state, setState] = useState<State>({ status: "loading" });
   const [domain, setDomain] = useState<DomainOption>(null);
+  const [stage, setStage] = useState<StageFilter>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     let alive = true;
     setState({ status: "loading" });
-    fetchReports(20, 0, domain ?? undefined)
+    fetchReports(20, 0, domain ?? undefined, stage ?? undefined)
       .then((res) => {
-        if (alive) setState({ status: "ready", items: res.items });
+        if (alive)
+          setState({
+            status: "ready",
+            items: res.items,
+            stats: res.stats ?? ZERO_STATS,
+          });
       })
       .catch(() => {
         if (alive) setState({ status: "error" });
@@ -43,20 +59,23 @@ export default function QueuePage() {
     return () => {
       alive = false;
     };
-  }, [domain]);
+  }, [domain, stage]);
+
+  // KPI 카드 클릭 → 해당 단계로 필터(같은 카드 다시 누르면 해제 = 활성 큐).
+  function onStage(s: Exclude<StageFilter, null>) {
+    setStage((prev) => (prev === s ? null : s));
+  }
 
   async function onLogout() {
     await logout();
     navigate("/admin/login");
   }
 
-  // KPI는 현재 로드된 목록에서 파생(별도 집계 엔드포인트 없음).
-  const items = state.status === "ready" ? state.items : [];
-  const kpiDone = items.filter((i) => i.verified).length;
-  const kpiPending = items.filter(
-    (i) => !i.verified && (i.status === "submitted" || i.status === "pending_review"),
-  ).length;
-  const kpiReviewing = items.length - kpiDone - kpiPending;
+  // KPI/통계는 서버 단계별 집계(stats) 사용 — 큐 목록은 처리(verified)를 제외하므로 목록 파생 불가.
+  const stats = state.status === "ready" ? state.stats : ZERO_STATS;
+  const kpiPending = stats.pending;
+  const kpiReviewing = stats.reviewing;
+  const kpiDone = stats.done;
 
   return (
     <>
@@ -72,21 +91,46 @@ export default function QueuePage() {
       </p>
 
       <div className="kpi-row">
-        <div className="kpi-card">
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "pending" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "pending"}
+          onClick={() => onStage("pending")}
+        >
           <span className="kpi-card__num">{kpiPending}</span>
           <span className="kpi-card__label">대기</span>
-        </div>
-        <div className="kpi-card">
+        </button>
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "reviewing" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "reviewing"}
+          onClick={() => onStage("reviewing")}
+        >
           <span className="kpi-card__num">{kpiReviewing}</span>
           <span className="kpi-card__label">검증중</span>
-        </div>
-        <div className="kpi-card">
+        </button>
+        <button
+          type="button"
+          className={"kpi-card" + (stage === "done" ? " kpi-card--active" : "")}
+          aria-pressed={stage === "done"}
+          onClick={() => onStage("done")}
+        >
           <span className="kpi-card__num">{kpiDone}</span>
           <span className="kpi-card__label">처리</span>
-        </div>
+        </button>
       </div>
 
       <DomainSegment value={domain} onChange={setDomain} includeAll />
+
+      {stage && (
+        <p className="queue-filter-note">
+          {stage === "pending" ? "대기" : stage === "reviewing" ? "검증중" : "처리"}{" "}
+          제보만 표시 중 ·{" "}
+          <button type="button" className="link-btn" onClick={() => setStage(null)}>
+            필터 해제
+          </button>
+        </p>
+      )}
 
       {state.status === "loading" && <p>불러오는 중…</p>}
       {state.status === "error" && <p role="alert">목록을 불러오지 못했습니다.</p>}

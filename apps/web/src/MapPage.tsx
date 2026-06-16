@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import TabBar from "./TabBar";
 import DomainSegment, { type DomainOption } from "./DomainSegment";
 import { fetchMapStats, type MapStatItem } from "./map/api";
-import { sidoCoord } from "./map/sido-coords";
+import { sidoLatLng } from "./map/sido-coords";
 
-// 0018 지도 뷰. 실 타일/지오코딩 비목표 — 시도 정적 좌표 + SVG 핀.
-// 핀 색 = 시도별 우세 상태(검증됨 초록 / 검증중 주황 / 미검증 빨강).
-// 핀 클릭 → /archive?sido= 로 0005 목록 필터.
+// 0018 지도 뷰. 외부 지도(Leaflet + OpenStreetMap)에 시도 대표 좌표로 원형 마커.
+// 마커 색 = 시도별 우세 상태(검증됨 초록 / 검증중 주황 / 미검증 빨강). 클릭 → /archive?sido=.
 
 type State =
   | { status: "loading" }
@@ -16,13 +17,12 @@ type State =
 
 type StatusKey = "verified" | "reviewing" | "unverified";
 
-const STATUS_CLASS: Record<StatusKey, string> = {
-  verified: "verified",
-  reviewing: "verifying",
-  unverified: "unverified",
+const STATUS_COLOR: Record<StatusKey, string> = {
+  verified: "#1a7f5a",
+  reviewing: "#9a6700",
+  unverified: "#b3261e",
 };
 
-// 시도별 우세 상태(검증됨 우선 동률 처리: verified > reviewing > unverified).
 function dominantStatus(item: MapStatItem): StatusKey {
   const { verified, reviewing, unverified } = item.byStatus;
   if (verified >= reviewing && verified >= unverified) return "verified";
@@ -40,6 +40,10 @@ export default function MapPage() {
   const navigate = useNavigate();
   const [state, setState] = useState<State>({ status: "loading" });
   const domain = domainOf(searchParams);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const layerRef = useRef<L.LayerGroup | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -70,13 +74,14 @@ export default function MapPage() {
 
   const items = state.status === "ready" ? state.items : [];
 
-  // 좌표가 있는 시도(핀)와 없는/null 시도(미지정 버킷)를 분리한다.
+  // 위경도가 있는 시도(마커)와 없는/null 시도(미지정 버킷)를 분리.
   const pins = items
-    .map((it) => ({ it, coord: sidoCoord(it.sido) }))
-    .filter((p): p is { it: MapStatItem; coord: { x: number; y: number } } =>
-      p.coord !== null,
+    .map((it) => ({ it, ll: sidoLatLng(it.sido), status: dominantStatus(it) }))
+    .filter(
+      (p): p is { it: MapStatItem; ll: { lat: number; lng: number }; status: StatusKey } =>
+        p.ll !== null,
     );
-  const unmapped = items.filter((it) => sidoCoord(it.sido) === null);
+  const unmapped = items.filter((it) => sidoLatLng(it.sido) === null);
 
   const totals = items.reduce(
     (acc, it) => {
@@ -88,8 +93,59 @@ export default function MapPage() {
     },
     { total: 0, verified: 0, reviewing: 0, unverified: 0 },
   );
-
   const unmappedTotal = unmapped.reduce((n, it) => n + it.total, 0);
+
+  // Leaflet 지도 + 마커 (데이터 준비 후). jsdom 등 비브라우저 환경은 try/catch 로 안전 폴백.
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    const el = containerRef.current;
+    if (!el) return;
+    try {
+      let map = mapRef.current;
+      if (!map) {
+        map = L.map(el, { scrollWheelZoom: false }).setView([36.3, 127.8], 6);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 18,
+        }).addTo(map);
+        mapRef.current = map;
+      }
+      layerRef.current?.remove();
+      const group = L.layerGroup().addTo(map);
+      layerRef.current = group;
+      for (const { it, ll, status } of pins) {
+        const marker = L.circleMarker([ll.lat, ll.lng], {
+          radius: 9,
+          color: "#ffffff",
+          weight: 2,
+          fillColor: STATUS_COLOR[status],
+          fillOpacity: 1,
+        });
+        marker.bindTooltip(`${it.sido} ${it.total}건`, { direction: "top" });
+        marker.on("click", () =>
+          navigate(`/archive?sido=${encodeURIComponent(it.sido as string)}`),
+        );
+        marker.addTo(group);
+      }
+      map.invalidateSize();
+    } catch {
+      // 지도 초기화 실패(비브라우저/사이즈 0) — 마커 없이 넘어간다(목록 링크로 폴백).
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, navigate]);
+
+  // 언마운트 시 지도 정리. (비브라우저 환경 teardown 오류는 무시)
+  useEffect(() => {
+    return () => {
+      try {
+        mapRef.current?.remove();
+      } catch {
+        // ignore
+      }
+      mapRef.current = null;
+      layerRef.current = null;
+    };
+  }, []);
 
   return (
     <>
@@ -113,30 +169,23 @@ export default function MapPage() {
 
         {state.status === "ready" && (
           <>
-            <div className="map-view">
-              <svg
-                className="map-view__svg"
-                viewBox="0 0 100 100"
-                role="img"
-                aria-label="시도별 제보 분포"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {pins.map(({ it, coord }) => {
-                  const s = dominantStatus(it);
-                  // Figma 10: 균일 크기 단색 원형 핀(숫자 없음). 건수는 aria-label에.
-                  return (
-                    <Link
-                      key={it.sido}
-                      to={`/archive?sido=${encodeURIComponent(it.sido as string)}`}
-                      aria-label={`${it.sido} ${it.total}건`}
-                      className={`map-pin map-pin--${STATUS_CLASS[s]}`}
-                    >
-                      <circle cx={coord.x} cy={coord.y} r={3.2} />
-                    </Link>
-                  );
-                })}
-              </svg>
-            </div>
+            <div
+              ref={containerRef}
+              className="map-view"
+              role="application"
+              aria-label="시도별 제보 분포 지도"
+            />
+
+            {/* 접근성/키보드: 지역별 목록 링크(마커와 동일 이동) */}
+            <ul className="sr-only">
+              {pins.map(({ it }) => (
+                <li key={it.sido}>
+                  <Link to={`/archive?sido=${encodeURIComponent(it.sido as string)}`}>
+                    {it.sido} {it.total}건
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
             <p className="map-hint">핀을 탭하면 해당 지역 제보 목록으로 이동</p>
 

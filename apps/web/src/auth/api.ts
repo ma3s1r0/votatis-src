@@ -80,7 +80,11 @@ export type AdminReport = {
   collectedAt: string | null;
   verified: boolean;
   domain?: string;
+  // 검수 단계: pending=대기(0동의) / reviewing=검증중(1/2) / done=처리(2/2).
+  stage?: "pending" | "reviewing" | "done";
 };
+
+export type QueueStats = { pending: number; reviewing: number; done: number };
 
 export type Attachment = {
   id: string;
@@ -106,7 +110,7 @@ export type EvidenceLink = {
 export type Verification = {
   confidence: number | null;
   validity: string | null;
-  severity: number | null;
+  severity: string | null;
   legalIssue: boolean | null;
   verified: boolean;
   method: string;
@@ -142,18 +146,26 @@ export async function fetchReports(
   limit = 20,
   offset = 0,
   domain?: string,
-): Promise<{ items: AdminReport[]; limit: number; offset: number }> {
+  stage?: "pending" | "reviewing" | "done",
+): Promise<{
+  items: AdminReport[];
+  stats?: QueueStats;
+  limit: number;
+  offset: number;
+}> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
   if (domain) params.set("domain", domain);
+  if (stage) params.set("stage", stage);
   const res = await fetch(`${ADMIN_BASE}/reports?${params.toString()}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error(`reports_fetch_failed:${res.status}`);
   return (await res.json()) as {
     items: AdminReport[];
+    stats?: QueueStats;
     limit: number;
     offset: number;
   };
@@ -170,7 +182,7 @@ export async function fetchReport(id: string): Promise<AdminReportDetail> {
 export type VerificationInput = {
   confidence?: number;
   validity?: string;
-  severity?: number;
+  severity?: string;
   legalIssue?: boolean;
   verified: boolean;
   method: string;

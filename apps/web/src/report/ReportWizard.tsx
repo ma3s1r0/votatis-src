@@ -216,17 +216,6 @@ export default function ReportWizard() {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  function startNewReport() {
-    setFiles([]);
-    setFileError(null);
-    setBlock(null);
-    setFieldErrors([]);
-    setSubmitError(null);
-    setProgress(null);
-    setDone(null);
-    setDraft(emptyDraft);
-  }
-
   // EXIF/위장 차단 전용 화면(Figma 11). 폼 대신 전체화면으로 안내.
   if (block) {
     const notOriginal = block === "not_original";
@@ -353,13 +342,6 @@ export default function ReportWizard() {
             <Link to="/" className="btn btn-secondary btn-block">
               홈으로 돌아가기
             </Link>
-            <button
-              type="button"
-              onClick={startNewReport}
-              className="hero__track-link"
-            >
-              새 제보 작성
-            </button>
           </nav>
         </main>
         <TabBar />

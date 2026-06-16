@@ -6,6 +6,7 @@ import { loadSession, requireReviewer } from "./auth-routes.js";
 import {
   submitVerification,
   listPendingReports,
+  countReportsByStage,
   getReportForReview,
   REQUIRED_APPROVALS,
   type EvidenceLink,
@@ -66,6 +67,8 @@ function adminReport(r: {
     occurredAt: r.occurredAt,
     collectedAt: r.collectedAt,
     verified: r.vVerified ?? false,
+    // 검수 단계: null=대기(0동의) / false=검증중(1/2) / true=처리(2/2).
+    stage: r.vVerified === true ? "done" : r.vVerified === false ? "reviewing" : "pending",
   };
 }
 
@@ -86,8 +89,15 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
     const limit = Math.min(Number(c.req.query("limit") ?? 20) || 20, 100);
     const offset = Math.max(Number(c.req.query("offset") ?? 0) || 0, 0);
     const domain = c.req.query("domain") || undefined;
-    const rows = await listPendingReports(db, { limit, offset, domain });
-    return c.json({ items: rows.map(adminReport), limit, offset });
+    const stageRaw = c.req.query("stage");
+    const stage =
+      stageRaw === "pending" || stageRaw === "reviewing" || stageRaw === "done"
+        ? stageRaw
+        : undefined;
+    const rows = await listPendingReports(db, { limit, offset, domain, stage });
+    // 단계별 집계(대기/검증중/처리)는 stage 필터와 무관하게 항상 전체 KPI 로 제공.
+    const stats = await countReportsByStage(db, { domain });
+    return c.json({ items: rows.map(adminReport), stats, limit, offset });
   });
 
   // 검토 상세: verified 무관 전체 + 첨부·출처·현재 판정·판정 이력.

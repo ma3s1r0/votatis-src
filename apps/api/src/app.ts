@@ -18,13 +18,20 @@ export function createApp(opts: {
   mosaic?: MosaicPort;
   submitterSalt?: string;
   inviteBaseUrl?: string;
+  secureCookies?: boolean;
 }) {
   const app = new Hono();
   const mosaic = opts.mosaic ?? new FakeMosaic();
 
   app.get("/health", (c) => c.json({ ok: true, service: "votatis-api" }));
 
-  app.route("/api/auth", createAuthApp(opts.db, { inviteBaseUrl: opts.inviteBaseUrl }));
+  app.route(
+    "/api/auth",
+    createAuthApp(opts.db, {
+      inviteBaseUrl: opts.inviteBaseUrl,
+      secureCookies: opts.secureCookies,
+    }),
+  );
   app.route(
     "/api/admin",
     createAdminApp({ db: opts.db, storage: opts.storage, mosaic }),
@@ -52,6 +59,7 @@ export function buildApp(opts: {
   corsOrigins: string[];
   submitterSalt?: string;
   inviteBaseUrl?: string;
+  secureCookies?: boolean;
 }) {
   const app = new Hono();
 
@@ -74,6 +82,7 @@ export function buildApp(opts: {
       mosaic: opts.mosaic,
       submitterSalt: opts.submitterSalt,
       inviteBaseUrl: opts.inviteBaseUrl,
+      secureCookies: opts.secureCookies,
     }),
   );
 

@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, asc } from "drizzle-orm";
+import { and, desc, eq, isNull, asc, sql } from "drizzle-orm";
 import type { Db } from "./repository.js";
 import {
   report,
@@ -233,11 +233,20 @@ export async function submitVerification(
 
 // 검토 큐: 미검증(verified != true) 제보. 관리자 전용 — 공개 0002 와 가시성 분리.
 // domain 미지정 시 두 도메인 모두(0014).
+// 검수 단계 필터. 미지정=활성 큐(대기+검증중). pending/reviewing/done 단일 버킷.
+function stageCondition(stage?: string) {
+  if (stage === "pending") return isNull(report.vVerified);
+  if (stage === "reviewing") return eq(report.vVerified, false);
+  if (stage === "done") return eq(report.vVerified, true);
+  // 기본: 미검증(verified != true) = null(대기) + false(검증중).
+  return sql`${report.vVerified} is distinct from true`;
+}
+
 export async function listPendingReports(
   db: Db,
-  params: { limit: number; offset: number; domain?: string },
+  params: { limit: number; offset: number; domain?: string; stage?: string },
 ) {
-  const conds = [isNull(report.vVerified)];
+  const conds = [stageCondition(params.stage)];
   if (params.domain) conds.push(eq(report.domain, params.domain));
   const where = and(...conds);
   const rows = await db
@@ -248,6 +257,24 @@ export async function listPendingReports(
     .limit(params.limit)
     .offset(params.offset);
   return rows;
+}
+
+// 검수 단계별 집계: vVerified null=대기(0동의) / false=검증중(1/2) / true=처리(2/2).
+// 검수큐 KPI·통계줄용. domain 지정 시 해당 도메인만.
+export async function countReportsByStage(
+  db: Db,
+  params: { domain?: string } = {},
+): Promise<{ pending: number; reviewing: number; done: number }> {
+  const where = params.domain ? eq(report.domain, params.domain) : undefined;
+  const [r] = await db
+    .select({
+      pending: sql<number>`count(*) filter (where ${report.vVerified} is null)::int`,
+      reviewing: sql<number>`count(*) filter (where ${report.vVerified} = false)::int`,
+      done: sql<number>`count(*) filter (where ${report.vVerified} = true)::int`,
+    })
+    .from(report)
+    .where(where);
+  return { pending: r.pending, reviewing: r.reviewing, done: r.done };
 }
 
 // 관리자 상세: verified 무관 전체 + 첨부·출처·현재 판정·판정 이력.

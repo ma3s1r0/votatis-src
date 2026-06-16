@@ -33,8 +33,12 @@ export interface StoragePort {
 export class InMemoryStorage implements StoragePort {
   private objects = new Map<string, { size: number; sha256: string }>();
 
+  // uploadBase: presignPut URL 접두. 기본은 가짜 절대 URL(테스트용). dev 서버는
+  // 실제 수신 라우트 접두("/api/dev/blob/")를 주입해 브라우저 PUT 이 동작하게 한다.
+  constructor(private uploadBase = "https://fake-s3.local/") {}
+
   async presignPut(input: PresignPutInput) {
-    const url = `https://fake-s3.local/${input.key}?expires=${input.expiresInSeconds}`;
+    const url = `${this.uploadBase}${input.key}?expires=${input.expiresInSeconds}`;
     return { url, expiresInSeconds: input.expiresInSeconds };
   }
 
