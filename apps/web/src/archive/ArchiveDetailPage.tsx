@@ -28,6 +28,8 @@ export default function ArchiveDetailPage() {
   const [state, setState] = useState<State>({ status: "loading" });
   // 첨부 다운로드 발급 실패 시 사용자 피드백(존재 여부 누설 없는 일반 문구).
   const [downloadError, setDownloadError] = useState(false);
+  // 이미지 첨부는 인라인 표시 — 마운트 후 단기 presigned URL 을 받아 보관(id→url).
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let alive = true;
@@ -46,6 +48,27 @@ export default function ArchiveDetailPage() {
       alive = false;
     };
   }, [id]);
+
+  // ready 가 되면 이미지 첨부에 대해 presigned URL 을 받아 인라인 표시한다.
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    let alive = true;
+    const images = state.report.attachments.filter((a) =>
+      a.mime?.startsWith("image/"),
+    );
+    for (const a of images) {
+      requestAttachmentDownloadUrl(state.report.id, a.id)
+        .then((url) => {
+          if (alive) setImageUrls((prev) => ({ ...prev, [a.id]: url }));
+        })
+        .catch(() => {
+          /* 개별 이미지 실패는 무시(다운로드 버튼 폴백 유지) */
+        });
+    }
+    return () => {
+      alive = false;
+    };
+  }, [state]);
 
   if (state.status === "loading")
     return (
@@ -122,10 +145,20 @@ export default function ArchiveDetailPage() {
         {r.attachments.length === 0 ? (
           <p>첨부 없음</p>
         ) : (
-          <ul>
-            {/* 다운로드 URL은 상세 응답에 없다 — 클릭 시 별도 엔드포인트에서 단기 URL을 발급받아 이동(0008). */}
+          <ul className="attachment-list">
+            {/* 다운로드 URL은 상세 응답에 없다 — 별도 엔드포인트에서 단기 URL을 발급(0008).
+                이미지는 마운트 시 받아 인라인 표시, 그 외(PDF 등)는 다운로드 버튼. */}
             {r.attachments.map((a) => (
               <li key={a.id}>
+                {a.mime?.startsWith("image/") && imageUrls[a.id] && (
+                  <figure className="attachment-figure">
+                    <img
+                      className="attachment-image"
+                      src={imageUrls[a.id]}
+                      alt={a.filename ?? "첨부 이미지"}
+                    />
+                  </figure>
+                )}
                 <span>{a.filename ?? "(파일명 미상)"}</span>
                 {a.size !== null && (
                   <span style={{ color: "var(--color-text-muted)" }}> · {a.size.toLocaleString()} bytes</span>

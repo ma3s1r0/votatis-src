@@ -65,6 +65,26 @@ describe("ReportDetailPage", () => {
     expect(screen.getByText(/example\.com\/orig/)).toBeInTheDocument();
   });
 
+  it("이미지 첨부는 인라인 <img>로 표시한다(url+image mime)", async () => {
+    mockOnce({
+      ...detail,
+      attachments: [
+        {
+          id: "img1",
+          filename: "evidence.png",
+          mime: "image/png",
+          status: "stored",
+          url: "https://s3.example/evidence.png?sig=1",
+        },
+      ],
+    });
+    renderDetail();
+
+    const img = (await screen.findByAltText("evidence.png")) as HTMLImageElement;
+    expect(img.tagName).toBe("IMG");
+    expect(img.src).toContain("https://s3.example/evidence.png");
+  });
+
   it("지역·발생/수집 시점 맥락을 표시하고 날짜는 ISO 원문이 아니다", async () => {
     mockOnce(detail);
     renderDetail();

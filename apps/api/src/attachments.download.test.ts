@@ -187,6 +187,47 @@ describe("관리 첨부 다운로드", () => {
     expect(res.status).toBe(401);
   });
 
+  // 회귀: 어드민 상세가 첨부를 화면에 인라인 표시할 수 있도록 filename+mime+presigned url 동봉.
+  // (이전엔 누락되어 어드민 화면 링크가 죽고 이미지가 표시되지 않았음.)
+  it("어드민 상세 — stored 첨부에 filename·mime·presigned url 동봉", async () => {
+    const r = await makeReport(ctx.db, "이미지 첨부 제보");
+    const attachmentId = await storedAttachment(r.id);
+
+    const res = await ctx.app.request(`/api/admin/reports/${r.id}`, {
+      headers: { cookie },
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      attachments: {
+        id: string;
+        filename: string | null;
+        mime: string | null;
+        status: string;
+        url?: string;
+      }[];
+    };
+    const a = json.attachments.find((x) => x.id === attachmentId)!;
+    expect(a.filename).toBe("a.png");
+    expect(a.mime).toBe("image/png");
+    expect(a.status).toBe("stored");
+    expect(a.url).toMatch(/^https?:\/\//);
+  });
+
+  it("어드민 상세 — pending(미저장) 첨부는 url 없음", async () => {
+    const r = await makeReport(ctx.db, "미저장 첨부 제보");
+    const attachmentId = await pendingAttachment(r.id);
+
+    const res = await ctx.app.request(`/api/admin/reports/${r.id}`, {
+      headers: { cookie },
+    });
+    const json = (await res.json()) as {
+      attachments: { id: string; status: string; url?: string }[];
+    };
+    const a = json.attachments.find((x) => x.id === attachmentId)!;
+    expect(a.status).toBe("pending");
+    expect(a.url).toBeUndefined();
+  });
+
   it("비active(disabled) 세션 → 403", async () => {
     const r = await makeReport(ctx.db, "제보");
     const attachmentId = await storedAttachment(r.id);

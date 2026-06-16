@@ -88,8 +88,12 @@ export type QueueStats = { pending: number; reviewing: number; done: number };
 
 export type Attachment = {
   id: string;
-  filename: string;
-  url: string;
+  filename: string | null;
+  mime?: string | null;
+  size?: number | null;
+  status?: string;
+  // stored 첨부만 단기 presigned URL 동봉(없으면 미저장).
+  url?: string;
 };
 
 export type Source = {

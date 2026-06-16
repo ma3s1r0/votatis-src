@@ -233,10 +233,23 @@ export default function ReportDetailPage() {
         {r.attachments.length === 0 ? (
           <p>첨부 없음</p>
         ) : (
-          <ul>
+          <ul className="attachment-list">
             {r.attachments.map((a) => (
               <li key={a.id}>
-                <a href={a.url}>{a.filename}</a>
+                {a.url && a.mime?.startsWith("image/") ? (
+                  <figure className="attachment-figure">
+                    <img
+                      className="attachment-image"
+                      src={a.url}
+                      alt={a.filename ?? "첨부 이미지"}
+                    />
+                    <figcaption>{a.filename ?? "(파일명 미상)"}</figcaption>
+                  </figure>
+                ) : a.url ? (
+                  <a href={a.url}>{a.filename ?? "(파일명 미상)"}</a>
+                ) : (
+                  <span>{a.filename ?? "(파일명 미상)"} (미저장)</span>
+                )}
               </li>
             ))}
           </ul>

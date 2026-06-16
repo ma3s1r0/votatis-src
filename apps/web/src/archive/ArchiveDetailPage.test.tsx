@@ -79,6 +79,28 @@ describe("ArchiveDetailPage", () => {
     expect(screen.getByText(/abc123/)).toBeInTheDocument();
   });
 
+  it("이미지 첨부는 마운트 후 presigned URL 을 받아 인라인 <img>로 표시한다", async () => {
+    mockOnce({
+      ...detail,
+      attachments: [
+        {
+          id: "img1",
+          filename: "evidence.jpg",
+          mime: "image/jpeg",
+          size: 2048,
+          sha256: "img",
+        },
+      ],
+    });
+    // 이미지 첨부의 단기 다운로드 URL 발급 응답
+    mockOnce({ url: "https://s3.example/evidence.jpg?sig=1", expiresInSeconds: 300 });
+    renderDetail();
+
+    const img = (await screen.findByAltText("evidence.jpg")) as HTMLImageElement;
+    expect(img.tagName).toBe("IMG");
+    expect(img.src).toContain("s3.example/evidence.jpg");
+  });
+
   it("검토 요약(확인 범위·심각도·방법·확인되지 않은 주장)을 표시한다", async () => {
     mockOnce(detail);
     renderDetail();

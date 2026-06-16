@@ -104,15 +104,30 @@ export function createAdminApp(opts: { db: Db; storage: StoragePort; mosaic: Mos
   app.get("/reports/:id", async (c) => {
     const graph = await getReportForReview(db, c.req.param("id"));
     if (!graph) return c.json({ error: "not_found" }, 404);
-    return c.json({
-      ...adminReport(graph.report),
-      attachments: graph.attachments.map((a) => ({
+    // 검토용 첨부는 화면에 바로 표시(이미지 인라인)할 수 있게 단기 presigned URL 동봉.
+    // stored 인 것만 발급(pending 은 객체 없음 → url 없음).
+    const attachments = await Promise.all(
+      graph.attachments.map(async (a) => ({
         id: a.id,
+        filename: a.filename,
         mime: a.mime,
         size: a.size,
         sha256: a.sha256,
         status: a.status,
+        url:
+          a.status === "stored"
+            ? (
+                await storage.presignGet({
+                  key: a.storageKey,
+                  expiresInSeconds: DOWNLOAD_TTL_SECONDS,
+                })
+              ).url
+            : undefined,
       })),
+    );
+    return c.json({
+      ...adminReport(graph.report),
+      attachments,
       sources: graph.sources.map((s) => ({
         id: s.id,
         kind: s.kind,
