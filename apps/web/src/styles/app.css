@@ -1459,3 +1459,9 @@ textarea.input {
   font-size: 12px;
   color: var(--color-text-muted, #6b7280);
 }
+
+/* 0021 현재 위치 채우기 버튼 */
+.location-geo-btn {
+  margin-top: 6px;
+  align-self: flex-start;
+}

@@ -106,8 +106,13 @@ export default function ReportWizard() {
   );
   const [fileError, setFileError] = useState<string | null>(null);
   const [block, setBlock] = useState<BlockReason | null>(null);
-  // 0021: 사진 EXIF GPS 로 위치를 자동 채웠는지(안내 표시용).
-  const [geoFilled, setGeoFilled] = useState(false);
+  // 0021: 위치 자동입력 출처. "exif-gps"=사진 GPS / "geolocation"=현재 위치 / null=수동.
+  const [locSource, setLocSource] = useState<"exif-gps" | "geolocation" | null>(
+    null,
+  );
+  // 현재 위치 채우기 진행/결과 안내.
+  const [geoLocating, setGeoLocating] = useState(false);
+  const [geoLocateMsg, setGeoLocateMsg] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -181,7 +186,7 @@ export default function ReportWizard() {
         const region = await reverseGeocode(gps.lat, gps.lng);
         if (region) {
           set("location", `${region.sido} ${region.sigungu}`);
-          setGeoFilled(true);
+          setLocSource("exif-gps");
         }
         break;
       }
@@ -194,6 +199,39 @@ export default function ReportWizard() {
       if (target) revokePreview(target);
       return prev.filter((_, i) => i !== index);
     });
+  }
+
+  // 0021 보완: 폰 현재 위치로 시군구 채우기(사진 GPS 가 막힌 모바일용). Geolocation API.
+  function fillFromCurrentLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoLocateMsg("이 브라우저에서 위치를 사용할 수 없습니다");
+      return;
+    }
+    setGeoLocateMsg(null);
+    setGeoLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const region = await reverseGeocode(
+            pos.coords.latitude,
+            pos.coords.longitude,
+          );
+          if (region) {
+            set("location", `${region.sido} ${region.sigungu}`);
+            setLocSource("geolocation");
+          } else {
+            setGeoLocateMsg("현재 위치의 시군구를 찾지 못했습니다");
+          }
+        } finally {
+          setGeoLocating(false);
+        }
+      },
+      () => {
+        setGeoLocating(false);
+        setGeoLocateMsg("위치 권한이 거부되었거나 가져오지 못했습니다");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   }
 
   async function onSubmit() {
@@ -212,7 +250,7 @@ export default function ReportWizard() {
       sido: parseSido(draft.location),
       sigungu: draft.location || undefined,
       // 0021: 위치가 사진 GPS 로 자동입력된 상태면 출처 표식 전송(사용자가 수정하면 해제됨).
-      locationSource: geoFilled ? "exif-gps" : undefined,
+      locationSource: locSource ?? undefined,
       sources: draft.sourceUrl ? [draft.sourceUrl] : undefined,
       consent: draft.consent,
     });
@@ -487,7 +525,7 @@ export default function ReportWizard() {
             )}
           </div>
 
-          {/* 위치: 단일 입력칸(Figma 02). 0021: 사진 GPS 로 자동 채워질 수 있음(수정 가능). */}
+          {/* 위치: 단일 입력칸(Figma 02). 0021: 사진 GPS / 현재 위치로 자동 채움(수정 가능). */}
           <label className="field">
             <span className="field__label">위치 *</span>
             <input
@@ -497,12 +535,28 @@ export default function ReportWizard() {
               value={draft.location}
               onChange={(e) => {
                 set("location", e.target.value);
-                if (geoFilled) setGeoFilled(false);
+                if (locSource) setLocSource(null);
               }}
               placeholder="📍 시/도 · 구/군 · 투표소명 (GPS 자동)"
             />
-            {geoFilled && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm location-geo-btn"
+              onClick={fillFromCurrentLocation}
+              disabled={geoLocating}
+            >
+              {geoLocating ? "위치 확인 중…" : "📍 현재 위치로 채우기"}
+            </button>
+            {locSource === "exif-gps" && (
               <p className="field__hint">📍 사진 위치에서 자동 입력됨 · 수정 가능</p>
+            )}
+            {locSource === "geolocation" && (
+              <p className="field__hint">📍 현재 위치에서 입력됨 · 수정 가능</p>
+            )}
+            {geoLocateMsg && (
+              <p className="field__hint" role="alert">
+                {geoLocateMsg}
+              </p>
             )}
           </label>
 

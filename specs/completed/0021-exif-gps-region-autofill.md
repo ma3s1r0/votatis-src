@@ -73,3 +73,4 @@ depends_on: [0015, 0019]
 - 2026-06-16: 통계청 2018 시군구 경계 공개데이터를 단순화(0.82MB)해 번들·탑재 → 자동입력 end-to-end
   동작. locationSource(출처 마킹)만 후속 증분으로 분리하고 본 스펙은 in-review.
 - 2026-06-16: locationSource(0011 마이그레이션) 추가·라이브 검증(생성 저장·어드민 노출·허용외 null) → completed.
+- 2026-06-16: 모바일 보완 — 안드로이드가 브라우저 업로드 시 사진 GPS 를 리덕션하는 제약 때문에, "현재 위치로 채우기"(Geolocation API) 버튼 추가(locationSource="geolocation").

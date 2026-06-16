@@ -171,7 +171,10 @@ export function createReportApp(opts: {
       sigungu: body.sigungu,
       eupMyeonDong: body.eupMyeonDong,
       // 서버 권위: 허용된 출처 값만 저장(그 외는 수동=null).
-      locationSource: body.locationSource === "exif-gps" ? "exif-gps" : undefined,
+      locationSource:
+        body.locationSource === "exif-gps" || body.locationSource === "geolocation"
+          ? body.locationSource
+          : undefined,
       occurredAt: body.occurredAt ? new Date(body.occurredAt) : undefined,
       category: body.category,
       electionId: body.electionId,
