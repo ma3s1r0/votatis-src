@@ -220,6 +220,78 @@ export default function ReportWizard() {
     setDraft(emptyDraft);
   }
 
+  // EXIF/위장 차단 전용 화면(Figma 11). 폼 대신 전체화면으로 안내.
+  if (block) {
+    const notOriginal = block === "not_original";
+    return (
+      <>
+        <main className="container">
+          <div className="page-head">
+            <button
+              type="button"
+              className="page-back"
+              aria-label="제보폼으로"
+              onClick={() => setBlock(null)}
+            >
+              ←
+            </button>
+            <h1 className="page-head__title">파일 업로드</h1>
+          </div>
+
+          <div className="exif-block">
+            <div className="exif-block__icon" aria-hidden="true">
+              🚫
+            </div>
+            <h2 className="exif-block__title">
+              {notOriginal
+                ? "원본 사진이 아닙니다"
+                : "파일 형식이 확장자와 일치하지 않습니다"}
+            </h2>
+            <p className="exif-block__desc">
+              {notOriginal
+                ? "업로드하신 파일에 EXIF 정보가 없습니다. 캡처·메신저로 전달받은 사진은 제보로 인정되지 않습니다."
+                : "선택한 파일의 실제 형식이 확장자와 달라 첨부할 수 없습니다. 원본 파일을 다시 선택해 주세요."}
+            </p>
+
+            <div className="exif-reason">
+              <p className="exif-reason__title">EXIF란?</p>
+              <p className="exif-reason__body">
+                카메라로 직접 촬영한 사진에 자동으로 기록되는 촬영 시각·GPS·기기
+                정보입니다. 캡처·다운로드·메신저 전달 시 이 정보가 제거됩니다.
+                Votatis는 포렌식 검증을 위해 EXIF가 있는 원본 파일만 접수합니다.
+              </p>
+            </div>
+
+            <input
+              id="exif-retry-input"
+              className="upload-zone__input"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              aria-label="사진/PDF 첨부"
+              onChange={onFileChange}
+            />
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() => document.getElementById("exif-retry-input")?.click()}
+            >
+              📷 원본 사진으로 다시 올리기
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-block"
+              onClick={() => setBlock(null)}
+            >
+              ← 제보폼으로 돌아가기
+            </button>
+          </div>
+        </main>
+        <TabBar />
+      </>
+    );
+  }
+
   if (done) {
     const att = done.attachment;
     return (
@@ -364,44 +436,6 @@ export default function ReportWizard() {
               <p role="alert" className="text-danger">
                 {fileError}
               </p>
-            )}
-            {block && (
-              <div role="alert" className="block-card">
-                {block === "not_original" ? (
-                  <>
-                    <h3 className="block-card__title">원본 사진이 아닙니다</h3>
-                    <p className="page-intro">
-                      이 사진에는 카메라가 기록하는 촬영 정보(EXIF)가 없습니다.
-                      EXIF 는 촬영 시각·기기 같은 메타데이터로, 직접 찍은 사진에는
-                      보통 담겨 있습니다. 스크린샷·캡처본이나 메신저로 전달받은
-                      사진은 이 정보가 사라집니다.
-                    </p>
-                    <p className="page-intro">
-                      직접 촬영한 원본 사진만 인정됩니다. 캡처본·전달본이 아닌
-                      원본 파일을 다시 선택해 주세요.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="block-card__title">
-                      파일 형식이 확장자와 일치하지 않습니다
-                    </h3>
-                    <p className="page-intro">
-                      선택한 파일의 실제 형식이 확장자와 달라 첨부할 수 없습니다.
-                      원본 파일을 다시 선택해 주세요.
-                    </p>
-                  </>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() =>
-                    document.getElementById("report-file-input")?.click()
-                  }
-                >
-                  다른 파일 선택
-                </button>
-              </div>
             )}
           </div>
 
