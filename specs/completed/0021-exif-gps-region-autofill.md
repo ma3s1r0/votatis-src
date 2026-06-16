@@ -1,7 +1,7 @@
 ---
 id: 0021
 title: EXIF GPS → 시군구 자동 입력 (오프라인 폴리곤 역지오코딩)
-status: in-review
+status: completed
 owner: backend-dev + frontend-dev
 created: 2026-06-16
 updated: 2026-06-16
@@ -39,8 +39,9 @@ depends_on: [0015, 0019]
 - [x] **데이터셋**: 통계청(KOSTAT) 2018 시군구 경계(southkorea-maps) → DP(≈130m) 단순화 +
       4자리 반올림으로 18MB→0.82MB, 250개 `RegionPolygon[]`(`sigungu.json`) 번들. 시도명은
       코드 2자리 prefix → 정본 시도명. → `apps/api/src/geocode/dataset.test.ts`(종로/해운대/제주 검증).
-- [ ] (후속) 무결성: 자동입력 위치 `locationSource: "exif-gps"` 기록 — report 스키마 확장 필요,
-      별도 증분으로 분리(자동입력 자체는 동작, 출처 마킹만 후속).
+- [x] 무결성: 자동입력 위치 `locationSource: "exif-gps"` 기록(수동과 구분). report 스키마 확장
+      (drizzle 0011) + 서버 권위(허용값만 저장) + 어드민 상세 표식.
+      → `apps/api/src/reports.create.test.ts`, `ReportWizard.geofill.test.tsx`
 - [x] 회귀: 자동입력은 0015 EXIF 차단 판정과 독립(차단 파일은 추가 안 되므로 GPS 미사용).
 
 ## 테스트 계획 (TDD — Red 먼저)
@@ -71,3 +72,4 @@ depends_on: [0015, 0019]
 - 2026-06-16: 머신러리 구현(EXIF GPS 파싱·point-in-polygon·/api/geocode/reverse·클라 자동입력) TDD 완료.
 - 2026-06-16: 통계청 2018 시군구 경계 공개데이터를 단순화(0.82MB)해 번들·탑재 → 자동입력 end-to-end
   동작. locationSource(출처 마킹)만 후속 증분으로 분리하고 본 스펙은 in-review.
+- 2026-06-16: locationSource(0011 마이그레이션) 추가·라이브 검증(생성 저장·어드민 노출·허용외 null) → completed.
